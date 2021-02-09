@@ -6,4 +6,4 @@ seaborn
 matplotlib
 praw
 python-decouple
-python-twitter
+tweepy
