@@ -1,5 +1,6 @@
 import praw
 import pandas as pd
+import numpy as np
 import datetime as dt
 from decouple import config
 
@@ -41,7 +42,12 @@ class GetReddit():
                             ,"url": []
                             ,"comms_num":[]
                             ,"created":[]
-                            ,"body":[]}
+                            ,"body": []
+                            ,"vote_up" :[]
+                            ,"vote_down": []
+                            ,"vote_ratio" :[]
+                            ,'visits' : []
+                            }
 
         def set_subreddit(topic=None):
             if topic is None:
@@ -53,21 +59,50 @@ class GetReddit():
     def get_date(self, x):
         return dt.datetime.fromtimestamp(x)
 
-    def get_threads(self, thread_type="top", limit=None):
-        if thread_type == "top":
-            self.top_subreddit = self.subreddit.top(limit=limit)
+    def remove_unicode(self, x):
+        x = x.encode("ascii", "ignore")
+        x = x.decode()
+        return x
 
-            for i in self.top_subreddit:
-                self.reddit_dict["title"].append(i.title)
-                self.reddit_dict["score"].append(i.score)
-                self.reddit_dict["id"].append(i.id)
-                self.reddit_dict["url"].append(i.url)
-                self.reddit_dict["comms_num"].append(i.num_comments)
-                self.reddit_dict["created"].append(i.created)
-                self.reddit_dict["body"].append(i.selftext)
+    def get_threads(self, thread_type="hot", limit=None):
+
+        sts = '2021-02-08 00:00:00'
+        print(sts)
+        sts = np.datetime64(sts)
+        est = sts + np.timedelta64(2, 'D')
+
+        sts = sts.astype('uint64') / 1e6
+        est = est.astype('uint64') / 1e6
+
+        print(sts)
+        print(est)
+
+
+        if thread_type == "hot":
+
+            thread = self.subreddit.hot(limit=limit)
+
+            for i in thread:
+                if not i.stickied:
+
+                    self.reddit_dict["title"].append(i.title.lower())
+                    self.reddit_dict["score"].append(i.score)
+                    self.reddit_dict["id"].append(i.id)
+                    self.reddit_dict["url"].append(i.url)
+                    self.reddit_dict["comms_num"].append(i.num_comments)
+                    self.reddit_dict["created"].append(i.created)
+                    self.reddit_dict["body"].append(i.selftext.lower())
+                    self.reddit_dict["vote_up"].append(i.ups)
+                    self.reddit_dict["vote_down"].append(i.ups)
+                    self.reddit_dict["vote_ratio"].append(i.upvote_ratio)
+                    self.reddit_dict['visits'].append(i.visited)
 
             df = pd.DataFrame(self.reddit_dict)
-            df["created"] = df["created"].apply(self.get_date)
+
+            df["timestamp"] = df["created"].apply(self.get_date)
+
+            df['title'] = df['title'].apply(lambda x: self.remove_unicode(x))
+            df['body'] = df['body'].apply(lambda x: self.remove_unicode(x))
 
             print(len(df))
 
