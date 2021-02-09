@@ -11,6 +11,22 @@ class GetReddit():
         self.username = config('USER_NAME')
         self.password = config('USER_PASSWORD')
 
+        """ sign up for and configure reddit app
+        references:
+        ** step by step for git app** 
+        https://www.storybench.org/how-to-scrape-reddit-with-python/
+        
+        https://towardsdatascience.com/auto-generated-faq-with-python-dash-text-analysis-and-reddit-api-90fb66a86633
+        https://docs.google.com/document/d/1hepA07dBfL_7JMQW0G3SAQekAbd3uNrDFxpzt9MPlvo/edit
+        
+        in your .env file 
+        CLIENT_ID=<reddit app client id>
+        CLIENT_SECRET=<reddit app client secret>
+        USER_AGENT=<reddit app user name>
+        USER_NAME=<reddit user name>
+        USER_PASSWORD=<reddit user name password>
+        """
+
         self.reddit = praw.Reddit(client_id=self.client_id
                                   , client_secret=self.client_secret
                                   , user_agent=self.user_agent
