@@ -1,9 +1,6 @@
 
 
 
-# https://api.pushshift.io/reddit/search/comment/?subreddit=wallstreetbets&after=2196d
-
-
 
 #TODO get reddit and or twitter data for at least 1-2020 to 1-2021, more is better, if possible.
 
