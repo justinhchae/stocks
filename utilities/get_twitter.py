@@ -10,8 +10,6 @@ class GetTwitter():
         self.auth = tweepy.AppAuthHandler(self.api_key, self.api_secret)
         self.api = tweepy.API(self.auth)
 
-
-
     def test_func(self):
         for tweet in tweepy.Cursor(self.api.search, q='tweepy').items(10):
             print(tweet.text)
