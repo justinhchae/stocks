@@ -2,7 +2,7 @@ import json
 import pandas as pd
 
 
-def get_dummies():
+def get_news_dummies():
     """
     :return: pandas df from dict of dummy news data
     """
@@ -10,5 +10,15 @@ def get_dummies():
         data = json.load(f)
 
     df = pd.DataFrame(data)
+
+    return df
+
+def get_stock_dummies():
+    """
+    :return: pandas df from dict of dummy news data
+    """
+    filename = 'data/dummies/price_minute.csv'
+    df = pd.read_csv(filename, index_col=0)
+
 
     return df

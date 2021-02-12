@@ -3,11 +3,14 @@ from utilities.get_data import *
 from utilities.clean_data import *
 from utilities.sentiment_data import *
 
-df = get_dummies()
-df = cleaner(df, 'title')
-df = score_sentiment(df, 'title')
+news_df = get_news_dummies()
+news_df = cleaner(news_df, 'title')
+news_df = score_sentiment(news_df, 'title')
 
-print(df)
+stock_df = get_stock_dummies()
+print(stock_df)
+
+#TODO: run stata arima
 ###
 
 #TODO get reddit and or twitter data for at least 1-2020 to 1-2021, more is better, if possible.
