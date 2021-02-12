@@ -2,13 +2,16 @@
 from utilities.get_data import *
 from utilities.clean_data import *
 from utilities.sentiment_data import *
+from utilities.run_arima import *
 
 news_df = get_news_dummies()
 news_df = cleaner(news_df, 'title')
 news_df = score_sentiment(news_df, 'title')
 
 stock_df = get_stock_dummies()
-print(stock_df)
+
+train_arima(stock_df,'t')
+
 
 #TODO: run stata arima
 ###
