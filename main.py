@@ -3,6 +3,7 @@ from utilities.get_data import *
 from utilities.clean_data import *
 from utilities.sentiment_data import *
 from utilities.run_arima import *
+from utilities.prep_stock_data import *
 
 news_df = get_news_dummies()
 news_df = cleaner(news_df, 'title')
@@ -10,8 +11,9 @@ news_df = score_sentiment(news_df, 'title')
 
 stock_df = get_stock_dummies()
 
-train_arima(stock_df,'t')
+# train_arima(timeseries=stock_df, time_col='t')
 
+train, valid, test = split_stock_data(df=stock_df, time_col='t')
 
 #TODO: run stata arima
 ###
