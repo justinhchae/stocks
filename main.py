@@ -24,12 +24,13 @@ train_data = train[['t', 'c']].copy()
 # develop lstm model approach #1 on train_data, then do again with scaled data
 train_model_1(train_data)
 
-
 # scale stock data
 train_scaled, valid_scaled, test_scaled = scale_stock_data(train=train
                                                            , valid=valid
                                                            , test=test
                                                            )
+train_data = train_scaled[['t', 'c']].copy()
+# train_model_1(train_data)
 
 ###
 
