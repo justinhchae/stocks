@@ -8,7 +8,7 @@ from torch.autograd import Variable
 import random
 import numpy as np
 
-def make_sequence(data, data_col, seq_len=100):
+def make_sequence(data, data_col, seq_len=59):
     x, y = [], []
     arr = data[data_col]
 
@@ -40,7 +40,7 @@ def prep_arr(df, time_col, data_col):
 
 class Model(nn.Module):
     # https://stackabuse.com/time-series-prediction-using-lstm-with-pytorch-in-python/
-    def __init__(self, input_size=1, hidden_layer_size=100, output_size=1):
+    def __init__(self, input_size=1, hidden_layer_size=59, output_size=1):
         super().__init__()
         self.hidden_layer_size = hidden_layer_size
 
@@ -57,10 +57,10 @@ class Model(nn.Module):
         return predictions[-1]
 
 
-def train_model_1(df):
+def train_model_1(df, epochs=1):
     data = prep_arr(df, time_col='t', data_col='c')
 
-    x_train, y_train = make_sequence(data=data, data_col='c', seq_len=100)
+    x_train, y_train = make_sequence(data=data, data_col='c')
 
     model = Model()
     model.train()
@@ -68,27 +68,44 @@ def train_model_1(df):
     loss_function = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-    # simulate a single loop
-    optimizer.zero_grad()
+    for i in range(epochs):
 
-    model.hidden_cell = (torch.zeros(1, 1, model.hidden_layer_size),
-                         torch.zeros(1, 1, model.hidden_layer_size))
+        for idx, input in enumerate(x_train):
+            optimizer.zero_grad()
+            model.hidden_cell = (torch.zeros(1, 1, model.hidden_layer_size),
+                                 torch.zeros(1, 1, model.hidden_layer_size))
 
-    y_pred = model(x_train[0])
-    test = torch.tensor([y_train[0][0]])
+            # print(input[0], y_train[idx][0])
 
-    loss = loss_function(y_pred, test)
-    
-    loss.backward()
+            optimizer.zero_grad()
 
-    optimizer.step()
+            model.hidden_cell = (torch.zeros(1, 1, model.hidden_layer_size),
+                                 torch.zeros(1, 1, model.hidden_layer_size))
 
-    # complete a single sequence
+            y_pred = model(input)
 
-    print(loss)
+            y = torch.tensor([y_train[idx][0]])
+
+            loss = loss_function(y_pred, y)
+
+            loss.backward()
+
+            optimizer.step()
+
+        # complete a single sequence
+
+        print(loss)
 
 
-
+# def predict_model_1():
+#     model.eval()
+#
+#     for i in range(fut_pred):
+#         seq = torch.FloatTensor(test_inputs[-train_window:])
+#         with torch.no_grad():
+#             model.hidden = (torch.zeros(1, 1, model.hidden_layer_size),
+#                             torch.zeros(1, 1, model.hidden_layer_size))
+#             test_inputs.append(model(seq).item())
 
 
 
