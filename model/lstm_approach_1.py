@@ -150,6 +150,7 @@ def train_model_1(df, epochs=3, learning_rate=0.01):
     plt.figure()
     plt.plot(losses, label='train loss')
     plt.title('loss graph lstm approach 1')
+    plt.legend()
     plt.savefig('figures/lstm_approach_1_loss.png')
     plt.show()
 
@@ -157,8 +158,6 @@ def train_model_1(df, epochs=3, learning_rate=0.01):
     plt.plot(targets, label='targets')
     plt.plot(preds, label='predictions')
     plt.title('price prediction to target lstm approach 1')
+    plt.legend()
     plt.savefig('figures/lstm_approach_1_predictions.png')
     plt.show()
-
-
-
