@@ -17,6 +17,12 @@ stock_df = get_stock_dummies()
 # split data into train, validation, and testing
 train, valid, test = split_stock_data(df=stock_df, time_col='t')
 
+# run dev against by-the-minute closing prices c and time t
+train_data = train[['t', 'c']]
+
+# develop lstm model approach #1 on train_data, then do again with scaled data
+print(train_data)
+
 # scale stock data
 train_scaled, valid_scaled, test_scaled = scale_stock_data(train=train
                                                            , valid=valid
