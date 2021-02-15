@@ -57,7 +57,7 @@ class Model(nn.Module):
         return predictions[-1]
 
 
-def train_model_1(df, epochs=1):
+def train_model_1(df, epochs=150):
     data = prep_arr(df, time_col='t', data_col='c')
 
     x_train, y_train = make_sequence(data=data, data_col='c')
@@ -71,6 +71,8 @@ def train_model_1(df, epochs=1):
     for i in range(epochs):
 
         for idx, input in enumerate(x_train):
+            if idx == 0:
+                print('staring sequence:', idx)
             optimizer.zero_grad()
             model.hidden_cell = (torch.zeros(1, 1, model.hidden_layer_size),
                                  torch.zeros(1, 1, model.hidden_layer_size))
@@ -93,6 +95,9 @@ def train_model_1(df, epochs=1):
             optimizer.step()
 
         # complete a single sequence
+
+        if i%25 ==1:
+            print(f'epoch: {i:3} loss: {loss.item():10.8f}')
 
         print(loss)
 
