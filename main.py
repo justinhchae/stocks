@@ -4,6 +4,7 @@ from utilities.clean_data import *
 from utilities.sentiment_data import *
 from utilities.run_arima import *
 from utilities.prep_stock_data import *
+from model.lstm_approach_1 import *
 
 news_df = get_news_dummies()
 news_df = cleaner(news_df, 'title')
@@ -22,6 +23,9 @@ train_data = train[['t', 'c']]
 
 # develop lstm model approach #1 on train_data, then do again with scaled data
 print(train_data)
+
+
+
 
 # scale stock data
 train_scaled, valid_scaled, test_scaled = scale_stock_data(train=train
