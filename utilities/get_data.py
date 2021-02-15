@@ -21,5 +21,7 @@ def get_stock_dummies():
     df = pd.read_csv(filename, index_col=0)
     df['t'] = pd.to_datetime(df['t'])
 
+    date_min = pd.to_datetime('2020-07-01')
+    df = df[df['t'] > date_min].copy()
 
     return df

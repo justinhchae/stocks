@@ -7,6 +7,8 @@ from torch.autograd import Variable
 
 import random
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 def make_sequence(data, data_col, seq_len=59):
     x, y = [], []
@@ -40,7 +42,7 @@ def prep_arr(df, time_col, data_col):
 
 class Model(nn.Module):
     # https://stackabuse.com/time-series-prediction-using-lstm-with-pytorch-in-python/
-    def __init__(self, input_size=1, hidden_layer_size=59, output_size=1):
+    def __init__(self, input_size=1, hidden_layer_size=59, output_size=1, device="cpu"):
         super().__init__()
         self.hidden_layer_size = hidden_layer_size
 
@@ -50,6 +52,11 @@ class Model(nn.Module):
 
         self.hidden_cell = (torch.zeros(1,1,self.hidden_layer_size),
                             torch.zeros(1,1,self.hidden_layer_size))
+
+        if device == "gpu" and torch.cuda.is_available():
+            self.device = torch.device("cuda")
+        else:
+            self.device =  torch.device("cpu")
 
     def forward(self, input_seq):
         lstm_out, self.hidden_cell = self.lstm(input_seq.view(len(input_seq) ,1, -1), self.hidden_cell)
@@ -62,44 +69,59 @@ def train_model_1(df, epochs=150):
 
     x_train, y_train = make_sequence(data=data, data_col='c')
 
+
     model = Model()
+    model= model.to(model.device)
     model.train()
 
     loss_function = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
+    x_train = x_train.to(model.device)
+    y_train = y_train.to(model.device)
+
     for i in range(epochs):
+        losses = []
 
         for idx, input in enumerate(x_train):
-            if idx == 0:
-                print('staring sequence:', idx)
-            optimizer.zero_grad()
-            model.hidden_cell = (torch.zeros(1, 1, model.hidden_layer_size),
-                                 torch.zeros(1, 1, model.hidden_layer_size))
-
-            # print(input[0], y_train[idx][0])
 
             optimizer.zero_grad()
 
-            model.hidden_cell = (torch.zeros(1, 1, model.hidden_layer_size),
-                                 torch.zeros(1, 1, model.hidden_layer_size))
+            model.hidden_cell = (torch.zeros(1, 1, model.hidden_layer_size, device=model.device),
+                                 torch.zeros(1, 1, model.hidden_layer_size, device=model.device))
 
+            # print('input', input[-3:])
+            # print('target', y_train[idx][:3])
             y_pred = model(input)
+            # print('pred:', y_pred)
 
             y = torch.tensor([y_train[idx][0]])
 
             loss = loss_function(y_pred, y)
+            # print('loss', loss)
+
+            losses.append(loss.item())
 
             loss.backward()
 
             optimizer.step()
 
+            if idx == 1000:
+                break
+
+        plt.figure()
+        plt.plot(losses)
+        plt.show()
+        break
+
         # complete a single sequence
 
-        if i%25 ==1:
-            print(f'epoch: {i:3} loss: {loss.item():10.8f}')
+        # if i%25 ==1:
+        #     print(f'epoch: {i:3} loss: {loss.item():10.8f}')
+        #
+        # print(loss)
 
-        print(loss)
+
 
 
 # def predict_model_1():
