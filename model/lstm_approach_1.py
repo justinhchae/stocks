@@ -44,24 +44,27 @@ class Model(nn.Module):
     # https://stackabuse.com/time-series-prediction-using-lstm-with-pytorch-in-python/
     def __init__(self, input_size=1, hidden_layer_size=59, output_size=1, device="cpu"):
         super().__init__()
-        self.hidden_layer_size = hidden_layer_size
-
-        self.lstm = nn.LSTM(input_size, hidden_layer_size)
-
-        self.linear = nn.Linear(hidden_layer_size, output_size)
-
-        self.hidden_cell = (torch.zeros(1,1,self.hidden_layer_size),
-                            torch.zeros(1,1,self.hidden_layer_size))
 
         if device == "gpu" and torch.cuda.is_available():
             self.device = torch.device("cuda")
         else:
             self.device =  torch.device("cpu")
 
+        self.hidden_layer_size = hidden_layer_size
+
+        self.lstm = nn.LSTM(input_size, hidden_layer_size)
+
+        self.linear = nn.Linear(hidden_layer_size, output_size)
+
+        self.hidden_cell = (torch.zeros(1,1,self.hidden_layer_size, device=self.device),
+                            torch.zeros(1,1,self.hidden_layer_size, device=self.device))
+
+
     def forward(self, input_seq):
         lstm_out, self.hidden_cell = self.lstm(input_seq.view(len(input_seq) ,1, -1), self.hidden_cell)
-        predictions = self.linear(lstm_out.view(len(input_seq), -1))
-        return predictions[-1]
+        # predictions = self.linear(lstm_out.view(len(input_seq), -1))
+        # return predictions[-1]
+        return lstm_out, self.hidden_cell
 
 
 def train_model_1(df, epochs=150):
@@ -82,17 +85,19 @@ def train_model_1(df, epochs=150):
 
     for i in range(epochs):
         losses = []
+        optimizer.zero_grad()
 
         for idx, input in enumerate(x_train):
 
-            optimizer.zero_grad()
-
-            model.hidden_cell = (torch.zeros(1, 1, model.hidden_layer_size, device=model.device),
-                                 torch.zeros(1, 1, model.hidden_layer_size, device=model.device))
+            # model.hidden_cell = (torch.zeros(1, 1, model.hidden_layer_size, device=model.device),
+            #                      torch.zeros(1, 1, model.hidden_layer_size, device=model.device))
 
             # print('input', input[-3:])
             # print('target', y_train[idx][:3])
-            y_pred = model(input)
+            output, state = model(input)
+            model.hidden_cell = state
+            predictions = model.linear(output.view(len(input), -1))
+            y_pred = predictions[-1]
             # print('pred:', y_pred)
 
             y = torch.tensor([y_train[idx][0]])
@@ -102,12 +107,11 @@ def train_model_1(df, epochs=150):
 
             losses.append(loss.item())
 
-            loss.backward()
+            loss.backward(retain_graph=True)
 
-            optimizer.step()
-
-            if idx == 1000:
+            if idx == 100:
                 break
+        optimizer.step()
 
         plt.figure()
         plt.plot(losses)
