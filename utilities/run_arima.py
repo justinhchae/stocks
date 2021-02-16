@@ -12,6 +12,7 @@ def train_arima(timeseries, time_col, date_min=None, date_max=None):
 
     test_vals = df['c'].values
     model = sarima(test_vals, (2,1,2))
+
     yhat = model.predict(1,len(df))
 
     df['arima'] = yhat

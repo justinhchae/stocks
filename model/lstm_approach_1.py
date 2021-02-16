@@ -32,6 +32,7 @@ def make_sequence(data, data_col, seq_len=sequence_length, step_size=1):
 
     for i in range(len(arr) - seq_len):
         x_i = arr[i : i + seq_len]
+        # TODO, fix slicing
         y_i = arr[i + step_size : i + seq_len + step_size]
 
         x.append(x_i)
@@ -87,7 +88,6 @@ def prep_arr(df, time_col, data_col):
     arr = np.array(data_values)
 
     dataset = Data(arr, seq_length)
-
 
     data_load = DataLoader(dataset
                            , batch_size=batch_size
@@ -161,14 +161,16 @@ def train_model_1(df, epochs=3, learning_rate=0.01, run_model=True):
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     if run_model:
+
         for idx, input in enumerate(x_train):
+
             model.zero_grad()
             model.hidden = model.init_hidden()
 
             y_pred = model(input)
             preds.append(y_pred.item())
-
-            y = torch.tensor([y_train[idx][0]])
+            #FIXME (when reshaping the y target slicing)
+            y = torch.tensor([y_train[idx][-1]])
             targets.append(y.item())
 
             # compare the last time step prediction to the first value of the next time step

@@ -11,6 +11,7 @@ def get_news_dummies():
 
     df = pd.DataFrame(data)
     df['pub_time'] = pd.to_datetime(df['pub_time'])
+    #TODO rectify datetime UTC conversion
     return df
 
 def get_stock_dummies():
