@@ -10,7 +10,7 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-sequence_length = 59
+sequence_length = 59 #FIXME move global var to training func param
 
 try:
   print('Number of GPUs:',torch.cuda.device_count())
@@ -45,8 +45,8 @@ class Data(Dataset):
 class Model(nn.Module):
 
     def __init__(self
-                 , input_dim=sequence_length
-                 , hidden_dim=sequence_length
+                 , input_dim=sequence_length #FIXME move to func param
+                 , hidden_dim=sequence_length #FIXME move to func param
                  , output_dim=1
                  , num_layers=1
                  , device=device
@@ -93,7 +93,7 @@ def train_model_1(df, epochs=3, learning_rate=0.01, run_model=True):
     model = model.to(model.device)
     model.train()
 
-
+    # FIXME move sequence_lenth to func param
     data = Data(df, sequence_length)
     data_load = DataLoader(data
                            , batch_size=20)
