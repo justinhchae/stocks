@@ -1,7 +1,7 @@
 from sklearn.preprocessing import StandardScaler
 import numpy as np
 from torch.autograd import Variable
-
+import torch
 def split_stock_data(df, time_col, pct_train=.7, pct_valid=.15, pct_test=.15):
     """
     split into train, validation, test

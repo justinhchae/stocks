@@ -10,7 +10,6 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-sequence_length = 59 #FIXME move global var to training func param
 
 try:
   print('Number of GPUs:',torch.cuda.device_count())
@@ -29,6 +28,7 @@ class Data(Dataset):
         self.size = self.__getsize__()
 
     def __getitem__(self, index):
+        #FIXME: check slicing and target - prediction loss
         x = self.data.iloc[index: index + self.window, 1:]
         y = self.data.iloc[index + self.window + self.step_size, 1:]
         return torch.tensor(x.to_numpy(), dtype=torch.float32), torch.tensor(y, dtype=torch.float32)
@@ -45,8 +45,8 @@ class Data(Dataset):
 class Model(nn.Module):
 
     def __init__(self
-                 , input_dim=sequence_length #FIXME move to func param
-                 , hidden_dim=sequence_length #FIXME move to func param
+                 , input_dim
+                 , hidden_dim
                  , output_dim=1
                  , num_layers=1
                  , device=device
@@ -73,55 +73,44 @@ class Model(nn.Module):
 
     def forward(self, x):
         # Forward pass through LSTM layer
-
         lstm_out, self.hidden = self.lstm(x.view(len(x), 1, -1), self.hidden)
-        # Only take the output from the final timestep
-
         predictions = self.linear(lstm_out.view(len(x), -1))
         return predictions
 
 
-def train_model_1(df, epochs=3, learning_rate=0.01, run_model=True):
-
-    #TODO: batching, nn layers, early stopping
+def train_model_1(df, epochs=10, learning_rate=0.01, run_model=True, sequence_length=59):
+    #TODO early stopping
 
     losses = []
     preds = []
     targets = []
 
-    model = Model(num_layers=2)
+    model = Model(num_layers=2, input_dim=sequence_length, hidden_dim=sequence_length)
     model = model.to(model.device)
     model.train()
 
-    # FIXME move sequence_lenth to func param
     data = Data(df, sequence_length)
-    data_load = DataLoader(data
-                           , batch_size=20)
+    data_load = DataLoader(data, batch_size=20, drop_last=True)
 
     loss_function = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     if run_model:
-        for epoch in range(2):
+        for epoch in range(epochs):
             epoch_preds = []
             epoch_targets = []
+
             for idx, (x, y) in enumerate(data_load):
-                if idx == 1000:
-                    break
                 x, y = x.to(device), y.to(device)
 
                 model.zero_grad()
                 model.hidden = model.init_hidden()
 
                 y_pred = model(x)
-                #FIXME (when reshaping the y target slicing)
 
                 epoch_preds.append(y_pred.detach().numpy())
-                # y = torch.tensor([y_train[idx][-1]])
                 epoch_targets.append(y.detach().numpy())
 
-
-                # compare the last time step prediction to the first value of the next time step
                 y_pred = y_pred.to(model.device)
                 y = y.to(model.device)
                 loss = loss_function(y_pred, y)
@@ -134,11 +123,10 @@ def train_model_1(df, epochs=3, learning_rate=0.01, run_model=True):
 
                 optimizer.step()
 
-                if idx % 1000 == 0:
-                    print('Epoch: {}.............'.format(idx), end=' ')
-                    print("Loss: {:.4f}".format(loss.item()))
 
-                # end loop 1
+            print('Epoch: {}.............'.format(epoch), end=' ')
+            print("Loss: {:.4f}".format(loss.item()))
+
             preds.append(epoch_preds)
             targets.append(epoch_targets)
 
