@@ -25,3 +25,5 @@ def get_stock_dummies():
     df = df[df['t'] > date_min].copy()
 
     return df
+
+

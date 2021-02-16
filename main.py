@@ -22,7 +22,7 @@ train, valid, test = split_stock_data(df=stock_df, time_col='t')
 train_data = train[['t', 'c']].copy()
 
 # develop lstm model approach #1 on train_data, then do again with scaled data
-train_model_1(train_data)
+train_model_1(train_data, run_model=False)
 
 # scale stock data
 train_scaled, valid_scaled, test_scaled = scale_stock_data(train=train

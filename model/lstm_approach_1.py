@@ -4,6 +4,7 @@
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
+from torch.utils.data import DataLoader, Dataset
 
 import random
 import numpy as np
@@ -20,7 +21,7 @@ except:
   device = torch.device("cpu")
 
 
-def make_sequence(data, data_col, seq_len=sequence_length):
+def make_sequence(data, data_col, seq_len=sequence_length, step_size=1):
     """
     return sequenced stock data as torch tensors
     of shape len(data) by sequence length
@@ -31,7 +32,7 @@ def make_sequence(data, data_col, seq_len=sequence_length):
 
     for i in range(len(arr) - seq_len):
         x_i = arr[i : i + seq_len]
-        y_i = arr[i + 1 : i + seq_len + 1]
+        y_i = arr[i + step_size : i + seq_len + step_size]
 
         x.append(x_i)
         y.append(y_i)
@@ -44,6 +45,29 @@ def make_sequence(data, data_col, seq_len=sequence_length):
 
     return x_var, y_var
 
+#TODO, implement dataloader / dataset class for batching and training.
+
+class Data(Dataset):
+    def __init__(self, data, window, step_size=1):
+        self.data = torch.Tensor(data)
+        self.window = window
+        self.step_size = step_size
+        self.shape = self.__getshape__()
+        self.size = self.__getsize__()
+
+    def __getitem__(self, index):
+        x = self.data[index : index + self.window]
+        y = self.data[index + self.step_size : index + self.window + self.step_size]
+        return x, y
+
+    def __len__(self):
+        return len(self.data) - self.window
+
+    def __getshape__(self):
+        return (self.__len__(), *self.__getitem__(0)[0].shape)
+
+    def __getsize__(self):
+        return (self.__len__())
 
 
 def prep_arr(df, time_col, data_col):
@@ -54,6 +78,24 @@ def prep_arr(df, time_col, data_col):
 
     data_dict.update({time_col:time_index})
     data_dict.update({data_col:data_values})
+
+    batch_size = 20
+    seq_length = sequence_length
+    pin_memory = True
+    num_workers = 4
+
+    arr = np.array(data_values)
+
+    dataset = Data(arr, seq_length)
+
+
+    data_load = DataLoader(dataset
+                           , batch_size=batch_size
+                           , drop_last=True
+                           , num_workers=num_workers
+                           , pin_memory=pin_memory)
+
+    print(data_load)
 
     return data_dict
 
@@ -96,7 +138,7 @@ class Model(nn.Module):
         return predictions[-1]
 
 
-def train_model_1(df, epochs=3, learning_rate=0.01):
+def train_model_1(df, epochs=3, learning_rate=0.01, run_model=True):
 
     #TODO: batching, nn layers, early stopping
 
@@ -109,6 +151,7 @@ def train_model_1(df, epochs=3, learning_rate=0.01):
     model.train()
 
     data = prep_arr(df, time_col='t', data_col='c')
+
     x_train, y_train = make_sequence(data=data, data_col='c')
 
     x_train = x_train.to(model.device)
@@ -117,47 +160,49 @@ def train_model_1(df, epochs=3, learning_rate=0.01):
     loss_function = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
-    # start loop step 1
-    for idx, input in enumerate(x_train):
-        model.zero_grad()
-        model.hidden = model.init_hidden()
+    if run_model:
+        for idx, input in enumerate(x_train):
+            model.zero_grad()
+            model.hidden = model.init_hidden()
 
-        y_pred = model(input)
-        preds.append(y_pred.item())
+            y_pred = model(input)
+            preds.append(y_pred.item())
 
-        y = torch.tensor([y_train[idx][0]])
-        targets.append(y.item())
+            y = torch.tensor([y_train[idx][0]])
+            targets.append(y.item())
 
-        # compare the last time step prediction to the first value of the next time step
-        y_pred = y_pred.to(model.device)
-        y = y.to(model.device)
-        loss = loss_function(y_pred, y)
+            # compare the last time step prediction to the first value of the next time step
+            y_pred = y_pred.to(model.device)
+            y = y.to(model.device)
+            loss = loss_function(y_pred, y)
 
-        losses.append(loss.item())
+            losses.append(loss.item())
 
-        optimizer.zero_grad()
+            optimizer.zero_grad()
 
-        loss.backward()
+            loss.backward()
 
-        optimizer.step()
+            optimizer.step()
 
-        if idx % 1000 == 0:
-            print('Epoch: {}.............'.format(idx), end=' ')
-            print("Loss: {:.4f}".format(loss.item()))
+            if idx % 1000 == 0:
+                print('Epoch: {}.............'.format(idx), end=' ')
+                print("Loss: {:.4f}".format(loss.item()))
 
-        # end loop 1
+            # end loop 1
 
-    plt.figure()
-    plt.plot(losses, label='train loss')
-    plt.title('loss graph lstm approach 1\nwith actual prices')
-    plt.legend()
-    plt.savefig('figures/lstm_approach_1_loss_actual.png')
-    plt.show()
+        plt.figure()
+        plt.plot(losses, label='train loss')
+        plt.title('loss graph lstm approach 1\nwith actual prices')
+        plt.legend()
+        plt.savefig('figures/lstm_approach_1_loss_actual.png')
+        plt.show()
 
-    plt.figure()
-    plt.plot(targets, label='targets')
-    plt.plot(preds, label='predictions')
-    plt.title('price prediction to target lstm approach 1\nwith actual prices')
-    plt.legend()
-    plt.savefig('figures/lstm_approach_1_predictions_actual.png')
-    plt.show()
+        plt.figure()
+        plt.plot(targets, label='targets')
+        plt.plot(preds, label='predictions')
+        plt.title('price prediction to target lstm approach 1\nwith actual prices')
+        plt.legend()
+        plt.savefig('figures/lstm_approach_1_predictions_actual.png')
+        plt.show()
+    else:
+        print('not running model')
