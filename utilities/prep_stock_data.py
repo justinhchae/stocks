@@ -1,5 +1,6 @@
 from sklearn.preprocessing import StandardScaler
 import numpy as np
+from torch.autograd import Variable
 
 def split_stock_data(df, time_col, pct_train=.7, pct_valid=.15, pct_test=.15):
     """
@@ -52,5 +53,58 @@ def scale_stock_data(train, valid, test, cols=None):
 
 
     return train, valid, test, scaler
+
+
+def prep_arr(df, time_col, data_col):
+    """
+    this function deprecated and not currently used, keeping for comparison purposes
+    usage data = prep_arr(df, time_col='t', data_col='c')
+    :param df: a pandas df having time cols and data cols
+    :param time_col: a string of the time col
+    :param data_col: a string of the date col
+    :return:
+    """
+    data_dict = {}
+
+    time_index = df[time_col].values
+    data_values = df[data_col].values
+
+    data_dict.update({time_col:time_index})
+    data_dict.update({data_col:data_values})
+
+    return data_dict
+
+
+def make_sequence(data, data_col, seq_len, step_size=1):
+    """
+    usage
+    this function deprecated and not currently used, keeping for comparison purposes
+    # x_train, y_train = make_sequence(data=data, data_col='c')
+
+    # x_train = x_train.to(model.device)
+    # y_train = y_train.to(model.device)
+
+    return sequenced stock data as torch tensors
+    of shape len(data) by sequence length
+    """
+    x, y = [], []
+
+    arr = data[data_col]
+
+    for i in range(len(arr) - seq_len):
+        x_i = arr[i: i + seq_len]
+        # TODO, fix slicing
+        y_i = arr[i + step_size: i + seq_len + step_size]
+
+        x.append(x_i)
+        y.append(y_i)
+
+    x_arr = np.array(x).reshape(-1, seq_len)
+    y_arr = np.array(y).reshape(-1, seq_len)
+
+    x_var = Variable(torch.from_numpy(x_arr).float())
+    y_var = Variable(torch.from_numpy(y_arr).float())
+
+    return x_var, y_var
 
 

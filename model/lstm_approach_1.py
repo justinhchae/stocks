@@ -20,34 +20,6 @@ except:
   print("No GPU this session, learning with CPU.")
   device = torch.device("cpu")
 
-
-def make_sequence(data, data_col, seq_len=sequence_length, step_size=1):
-    """
-    return sequenced stock data as torch tensors
-    of shape len(data) by sequence length
-    """
-    x, y = [], []
-
-    arr = data[data_col]
-
-    for i in range(len(arr) - seq_len):
-        x_i = arr[i : i + seq_len]
-        # TODO, fix slicing
-        y_i = arr[i + step_size : i + seq_len + step_size]
-
-        x.append(x_i)
-        y.append(y_i)
-
-    x_arr = np.array(x).reshape(-1, seq_len)
-    y_arr = np.array(y).reshape(-1, seq_len)
-
-    x_var = Variable(torch.from_numpy(x_arr).float())
-    y_var = Variable(torch.from_numpy(y_arr).float())
-
-    return x_var, y_var
-
-#TODO, implement dataloader / dataset class for batching and training.
-
 class Data(Dataset):
     def __init__(self, data, window, step_size=1):
         self.data = data
@@ -69,37 +41,6 @@ class Data(Dataset):
 
     def __getsize__(self):
         return (self.__len__())
-
-
-def prep_arr(df, time_col, data_col):
-    data_dict = {}
-
-    time_index = df[time_col].values
-    data_values = df[data_col].values
-
-    data_dict.update({time_col:time_index})
-    data_dict.update({data_col:data_values})
-
-    batch_size = 20
-    seq_length = sequence_length
-    pin_memory = True
-    num_workers = 4
-
-    arr = np.array(data_values)
-
-    dataset = Data(arr, seq_length)
-    print(dataset[0])
-
-    # data_load = DataLoader(dataset
-    #                        , batch_size=batch_size
-    #                        , drop_last=True
-    #                        , num_workers=num_workers
-    #                        , pin_memory=pin_memory)
-    #
-    # print(data_load)
-    print(data_dict)
-    return data_dict
-
 
 class Model(nn.Module):
 
@@ -152,15 +93,10 @@ def train_model_1(df, epochs=3, learning_rate=0.01, run_model=True):
     model = model.to(model.device)
     model.train()
 
-    # data = prep_arr(df, time_col='t', data_col='c')
+
     data = Data(df, sequence_length)
     data_load = DataLoader(data
                            , batch_size=20)
-
-    # x_train, y_train = make_sequence(data=data, data_col='c')
-
-    # x_train = x_train.to(model.device)
-    # y_train = y_train.to(model.device)
 
     loss_function = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
