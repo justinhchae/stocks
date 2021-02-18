@@ -78,8 +78,9 @@ class Model(nn.Module):
         return predictions
 
 
-def train_model_1(df, epochs=10, learning_rate=0.01, run_model=True, sequence_length=59):
+def train_model_1(df, epochs=10, learning_rate=0.01, run_model=True, sequence_length=59, is_scaled=False):
     #TODO early stopping
+    #TODO run validation and test iterations
 
     losses = []
     preds = []
@@ -94,6 +95,11 @@ def train_model_1(df, epochs=10, learning_rate=0.01, run_model=True, sequence_le
 
     loss_function = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+
+    if is_scaled:
+        scale_type = 'scaled'
+    else:
+        scale_type = 'not scaled'
 
     if run_model:
         for epoch in range(epochs):
@@ -132,7 +138,8 @@ def train_model_1(df, epochs=10, learning_rate=0.01, run_model=True, sequence_le
 
         plt.figure()
         plt.plot(losses, label='train loss')
-        plt.title('loss graph lstm approach 1\nwith actual prices')
+        title = str('LSTM Loss Graph\n' + scale_type)
+        plt.title(title)
         plt.legend()
         plt.savefig('figures/lstm_approach_1_loss_actual.png')
         plt.show()
@@ -142,7 +149,8 @@ def train_model_1(df, epochs=10, learning_rate=0.01, run_model=True, sequence_le
         plt.figure()
         plt.plot(targets0, label='targets')
         plt.plot(preds0, label='predictions')
-        plt.title('price prediction to target lstm approach 1\nwith actual prices')
+        title = str('LSTM Predictions Graph\n' + scale_type)
+        plt.title(title)
         plt.legend()
         # plt.savefig('figures/lstm_approach_1_predictions_actual.png')
         plt.show()
@@ -152,7 +160,8 @@ def train_model_1(df, epochs=10, learning_rate=0.01, run_model=True, sequence_le
         plt.figure()
         plt.plot(targets0, label='targets')
         plt.plot(preds0, label='predictions')
-        plt.title('price prediction to target lstm approach 1\nwith actual prices')
+        title = str('LSTM Predictions Graph\n' + scale_type)
+        plt.title(title)
         plt.legend()
         # plt.savefig('figures/lstm_approach_1_predictions_actual.png')
         plt.show()

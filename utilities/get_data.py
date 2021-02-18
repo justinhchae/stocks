@@ -1,6 +1,7 @@
 import json
 import pandas as pd
-
+from utilities.clean_data import cleaner
+from utilities.sentiment_data import score_sentiment
 
 def get_news_dummies(date_col='pub_time', date_conversion='US/Eastern'):
     """
@@ -17,6 +18,10 @@ def get_news_dummies(date_col='pub_time', date_conversion='US/Eastern'):
         date_est =  date_col + '_est'
         df[date_est] = df[date_col].dt.tz_convert(None)
         df.drop(columns=date_col, inplace=True)
+
+    df = cleaner(df, 'text')
+
+    df = score_sentiment(df, 'text', 'pub_time_est')
 
     return df
 

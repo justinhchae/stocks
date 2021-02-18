@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 
-def train_arima(timeseries, time_col, date_min=None, date_max=None):
+def train_arima(timeseries, time_col, date_min=None, date_max=None, run_model=True):
     date_min = pd.to_datetime('2020-07-01')
     df = timeseries[timeseries[time_col] > date_min].copy()
 
@@ -12,17 +12,19 @@ def train_arima(timeseries, time_col, date_min=None, date_max=None):
     df = df[['c']]
 
     test_vals = df['c'].values
-    model = sarima(test_vals, (2,1,2))
 
-    yhat = model.predict(1,len(df))
+    if run_model:
+        model = sarima(test_vals, (2,1,2))
 
-    df['arima'] = yhat
+        yhat = model.predict(1,len(df))
 
-    # this is a canned example, the input and output need tuning
+        df['arima'] = yhat
 
-    plt.figure()
-    sns.lineplot(data=df)
-    plt.show()
+        plt.figure()
+        sns.lineplot(data=df)
+        plt.show()
+    else:
+        print('skipped run model')
 
 
 
