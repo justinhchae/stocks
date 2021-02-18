@@ -11,13 +11,13 @@ news_df = cleaner(news_df, 'text')
 news_df = score_sentiment(news_df, 'text', 'pub_time_est')
 
 stock_df = get_stock_dummies()
-# uncomment below to run arima model
+# train arima on stock data only
 # train_arima(timeseries=stock_df, time_col='t')
 
 # split data into train, validation, and testing
 train, valid, test = split_stock_data(df=stock_df, time_col='t')
 
-# train on unscaled data
+# train lstm on unscaled data
 train_model_1(train, run_model=False)
 
 # scale stock data
@@ -25,7 +25,7 @@ train_scaled, valid_scaled, test_scaled, scaler = scale_stock_data(train=train
                                                                    , valid=valid
                                                                    , test=test
                                                                    )
-# train on scaled data
+# train lstm on scaled data
 train_model_1(train_scaled, run_model=False)
 
 ###
