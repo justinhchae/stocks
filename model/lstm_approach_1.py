@@ -82,6 +82,7 @@ def train_model_1(df, epochs=10, learning_rate=0.01, run_model=True, sequence_le
     #TODO early stopping
     #TODO run validation and test iterations
     #TODO save pickled model/binarys
+    #GIST given by-the-minute data about a stock, train on 59 minutes and predict the 60th minute price
 
     losses = []
     preds = []
