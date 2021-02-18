@@ -54,6 +54,8 @@ def trading_days(df1, df2, date_col = 't'):
     start_time = '09:00'
     end_time = '16:00'
 
+    #TODO exclude holidays from the training set with custom business days (GOTHAM)
+
     df = df[df.index.dayofweek < 5]
     df = df.between_time(start_time,end_time)
 

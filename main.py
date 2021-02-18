@@ -31,7 +31,7 @@ train_model_1(train_scaled, run_model=False, is_scaled=True)
 
 ###
 
-# new split on data having closing price c and sentiment compound
+# split on data having closing price 'c' and sentiment score 'compound'
 train, valid, test = split_stock_data(df=df, time_col='t')
 train_model_1(train, run_model=False, is_scaled=False)
 

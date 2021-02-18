@@ -81,6 +81,7 @@ class Model(nn.Module):
 def train_model_1(df, epochs=10, learning_rate=0.01, run_model=True, sequence_length=59, is_scaled=False):
     #TODO early stopping
     #TODO run validation and test iterations
+    #TODO save pickled model/binarys
 
     losses = []
     preds = []
