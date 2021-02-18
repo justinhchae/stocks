@@ -34,7 +34,17 @@ def get_stock_dummies(date_col='t', data_col='c'):
     df = df[[date_col, data_col]]
 
     df = df.set_index(date_col)
-    df = df.resample('1D').last().dropna().reset_index()
+
+    df = df.resample('1min').fillna('nearest')
+    df['c'] = df['c'].rolling(2880).mean()
+    df.reset_index(inplace=True)
+
+    # print(df.tail())
+    # df = df.resample('1D').last().dropna().reset_index()
+
+    date_min = pd.to_datetime('2020-10-11')
+    df = df[df[date_col] > date_min].copy()
+    df.reset_index(inplace=True, drop=True)
 
     return df
 

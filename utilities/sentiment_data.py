@@ -1,6 +1,8 @@
 import pandas as pd
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 analyzer = SentimentIntensityAnalyzer()
+import matplotlib.pyplot as plt
+
 
 def score_sentiment(df
                     , data_col
@@ -14,6 +16,8 @@ def score_sentiment(df
     :param col: a string (name of col to clean)
     :return: a dataframe with sentiment scores from vader
 
+    fake data: resample to produce a score for each minute of the dataframe
+
     The compound score is the overall sentiment where 0 is neutral,
     negative is arbitrarily worse and positive is arbitrarily better
     """
@@ -25,8 +29,22 @@ def score_sentiment(df
     # df['neu'] = [analyzer.polarity_scores(v)['neu'] for v in df[col]]
     # df['pos'] = [analyzer.polarity_scores(v)['pos'] for v in df[col]]
 
-    df = df[[date_col, score_type]].groupby(
-        [pd.Grouper(key=date_col, freq=frequency)]).agg('mean').dropna().reset_index()
+
+    df = df[[date_col, score_type]]
+    df = df.set_index(date_col)
+    df = df.resample('1min').fillna('nearest')
+    df['compound'] = df['compound'].rolling(2880).mean()
+
+    df.reset_index(inplace=True)
+
+    # this aggs score by day
+    # df = df[[date_col, score_type]].groupby(
+    #     [pd.Grouper(key=date_col, freq=frequency)]).agg('mean').dropna().reset_index()
+    date_min = pd.to_datetime('2020-10-11')
+    df = df[df[date_col] > date_min].copy()
+    df.reset_index(inplace=True, drop=True)
+
+    df.rename(columns={date_col:'t'}, inplace=True)
 
     return df
 

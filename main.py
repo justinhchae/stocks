@@ -2,7 +2,7 @@
 from utilities.get_data import *
 from utilities.clean_data import *
 from utilities.sentiment_data import *
-# from utilities.run_arima import *
+from utilities.run_arima import *
 from utilities.prep_stock_data import *
 from model.lstm_approach_1 import *
 
@@ -15,9 +15,9 @@ stock_df = get_stock_dummies()
 # train_arima(timeseries=stock_df, time_col='t')
 
 # split data into train, validation, and testing
-train, valid, test = split_stock_data(df=stock_df[['t', 'c']], time_col='t')
+train, valid, test = split_stock_data(df=stock_df, time_col='t')
 
-# develop lstm model approach #1 on train_data, then do again with scaled data
+# train on unscaled data
 train_model_1(train, run_model=False)
 
 # scale stock data
@@ -25,15 +25,18 @@ train_scaled, valid_scaled, test_scaled, scaler = scale_stock_data(train=train
                                                                    , valid=valid
                                                                    , test=test
                                                                    )
-# train_data = train_scaled[['t', 'c']].copy()
-# train_model_1(train_scaled, run_model=True)
+# train on scaled data
+train_model_1(train_scaled, run_model=False)
 
 ###
 
-#TODO get reddit and or twitter data for at least 1-2020 to 1-2021, more is better, if possible.
-
-#TODO make cleaner module (for social media data)
-
-#TODO prepare stock data for time series analysis
-
-#TOD prepare nueral network for sentiment/stock price learning
+# minute-by-minute sentiment score and stock price
+df = trading_days(news_df, stock_df)
+train, valid, test = split_stock_data(df=df, time_col='t')
+train_scaled, valid_scaled, test_scaled, scaler = scale_stock_data(train=train
+                                                                   , valid=valid
+                                                                   , test=test
+                                                                   )
+#TODO: configure data loader and train model to handle sentiment features 'compound'
+# train on combined sentiment and stock data
+train_model_1(train_scaled, run_model=False)

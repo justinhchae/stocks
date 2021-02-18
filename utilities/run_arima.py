@@ -3,6 +3,7 @@ from utilities.stata_models import *
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
+
 def train_arima(timeseries, time_col, date_min=None, date_max=None):
     date_min = pd.to_datetime('2020-07-01')
     df = timeseries[timeseries[time_col] > date_min].copy()
@@ -16,7 +17,6 @@ def train_arima(timeseries, time_col, date_min=None, date_max=None):
     yhat = model.predict(1,len(df))
 
     df['arima'] = yhat
-    print(df)
 
     # this is a canned example, the input and output need tuning
 
