@@ -2,16 +2,24 @@ import json
 import pandas as pd
 
 
-def get_news_dummies():
+def get_news_dummies(date_col='pub_time'):
     """
     :return: pandas df from dict of dummy news data
     """
+
     with open('data/dummies/dummy_news.json') as f:
         data = json.load(f)
 
     df = pd.DataFrame(data)
-    df['pub_time'] = pd.to_datetime(df['pub_time'])
-    #TODO rectify datetime UTC conversion
+    df[date_col] = pd.to_datetime(df[date_col])
+
+    date_check = str(df[date_col].dtypes)
+
+    if "UTC" in date_check:
+        date_est =  date_col + '_est'
+        df[date_est] = df[date_col].dt.tz_convert('US/Eastern')
+        df.drop(columns=date_col, inplace=True)
+
     return df
 
 def get_stock_dummies():
