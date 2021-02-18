@@ -38,20 +38,19 @@ def split_stock_data(df, time_col, pct_train=.7, pct_valid=.15, pct_test=.15):
 
     return train, valid, test
 
-def scale_stock_data(train, valid, test, cols=None):
+def scale_stock_data(train, valid, test, col=None):
     # returning the scaler allows for doing .inverse_transform()
-    if cols is None:
+    if col is None:
         # scale all but the time column
-        cols = ['v', 'vw', 'o', 'c', 'h', 'l', 'n']
+        col = ['c']
 
     scaler = StandardScaler()
 
-    train[cols] = scaler.fit_transform(train[cols])
-    valid[cols] = scaler.transform(valid[cols])
-    test[cols] = scaler.transform(test[cols])
+    train[col] = scaler.fit_transform(train[col])
+    valid[col] = scaler.transform(valid[col])
+    test[col] = scaler.transform(test[col])
 
     print('Scaled stock data. Fit_transform on train, transformed validation, and test.')
-
 
     return train, valid, test, scaler
 

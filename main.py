@@ -7,8 +7,8 @@ from utilities.prep_stock_data import *
 from model.lstm_approach_1 import *
 
 news_df = get_news_dummies()
-news_df = cleaner(news_df, 'title')
-news_df = score_sentiment(news_df, 'title')
+news_df = cleaner(news_df, 'text')
+news_df = score_sentiment(news_df, 'text', 'pub_time_est')
 
 stock_df = get_stock_dummies()
 # uncomment below to run arima model
@@ -17,17 +17,13 @@ stock_df = get_stock_dummies()
 # split data into train, validation, and testing
 train, valid, test = split_stock_data(df=stock_df[['t', 'c']], time_col='t')
 
-# run dev against by-the-minute closing prices c and time t
-# train_data = train[['t', 'c']].copy()
-
 # develop lstm model approach #1 on train_data, then do again with scaled data
-# train_model_1(train_data, run_model=True)
+train_model_1(train, run_model=False)
 
 # scale stock data
 train_scaled, valid_scaled, test_scaled, scaler = scale_stock_data(train=train
                                                                    , valid=valid
                                                                    , test=test
-                                                                   , cols=['c']
                                                                    )
 # train_data = train_scaled[['t', 'c']].copy()
 # train_model_1(train_scaled, run_model=True)
