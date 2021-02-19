@@ -30,6 +30,7 @@ class Data(Dataset):
         self.size = self.__getsize__()
 
     def __getitem__(self, index):
+        # TODO: only pass data columns, not time
         #FIXME: check slicing and target - prediction loss
         x = self.data.iloc[index: index + self.window, 1:]
         y = self.data.iloc[index + self.window, self.yhat:self.yhat+1]
@@ -48,7 +49,8 @@ class Model(nn.Module):
 
     def __init__(self
                  , input_dim
-                 , hidden_dim
+                 , seq_length
+                 , hidden_dim=20
                  , output_dim=1
                  , num_layers=1
                  , device=device
@@ -58,29 +60,34 @@ class Model(nn.Module):
 
         self.device = device
         self.input_dim = input_dim
+        self.seq_length = seq_length
         self.hidden_dim = hidden_dim
         self.hidden = None
         self.num_layers = num_layers
 
         # Define the LSTM layer
-        self.lstm = nn.LSTM(input_size=self.input_dim, hidden_size=self.hidden_dim, num_layers=self.num_layers)
+        self.lstm = nn.LSTM(input_size=self.input_dim,
+                            hidden_size=self.hidden_dim,
+                            num_layers=self.num_layers,
+                            batch_first=True)
 
         # Define the output layer
-        self.linear = nn.Linear(self.hidden_dim, output_dim)
+        self.linear = nn.Linear(self.hidden_dim * self.seq_length, output_dim)
 
-    def init_hidden(self):
+    def init_hidden(self, batch_size):
         # This is what we'll initialise our hidden state as
-        return (torch.zeros(self.num_layers, 1, self.hidden_dim, device=self.device),
-                torch.zeros(self.num_layers, 1, self.hidden_dim, device=self.device))
+        self.hidden = (torch.zeros(self.num_layers, batch_size, self.hidden_dim, device=self.device),
+                       torch.zeros(self.num_layers, batch_size, self.hidden_dim, device=self.device))
 
     def forward(self, x):
+        batch_size, seq_len, _ = x.size()
         # Forward pass through LSTM layer
-        lstm_out, self.hidden = self.lstm(x.view(len(x), 1, -1), self.hidden)
-        predictions = self.linear(lstm_out.view(len(x), -1))
+        lstm_out, self.hidden = self.lstm(x, self.hidden)
+        predictions = self.linear(lstm_out.contiguous().view(batch_size, -1))
         return predictions
 
 
-def train_model_1(df, epochs=3, learning_rate=0.01, run_model=True, sequence_length=59, is_scaled=False):
+def train_model_1(df, epochs=3, learning_rate=0.01, run_model=True, sequence_length=14, is_scaled=False):
     #TODO early stopping
     #TODO run validation and test iterations
     #TODO save pickled model/binarys
@@ -90,12 +97,14 @@ def train_model_1(df, epochs=3, learning_rate=0.01, run_model=True, sequence_len
     preds = []
     targets = []
 
-    model = Model(num_layers=2, input_dim=sequence_length * (len(df.columns) - 1), hidden_dim=sequence_length)
+
+    batch_size = 20
+    data = Data(df, sequence_length)
+    data_load = DataLoader(data, batch_size=batch_size)
+
+    model = Model(num_layers=2, input_dim=len(df.columns) - 1, seq_length=sequence_length)
     model = model.to(model.device)
     model.train()
-
-    data = Data(df, sequence_length)
-    data_load = DataLoader(data, batch_size=20)
     # x, y = data[0]
     # print(x.shape)
     # print(x)
@@ -119,7 +128,7 @@ def train_model_1(df, epochs=3, learning_rate=0.01, run_model=True, sequence_len
             for idx, (x, y) in enumerate(data_load):
                 x, y = x.to(device), y.to(device)
 
-                model.hidden = model.init_hidden()
+                model.init_hidden(x.size(0))
 
                 y_pred = model(x)
 
@@ -133,7 +142,7 @@ def train_model_1(df, epochs=3, learning_rate=0.01, run_model=True, sequence_len
                 loss.backward()
                 optimizer.step()
 
-            optimizer.zero_grad()
+                optimizer.zero_grad()
 
             print('Epoch: {}.............'.format(epoch), end=' ')
             print("Loss: {:.4f}".format(loss.item()))
