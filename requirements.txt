@@ -9,3 +9,4 @@ python-decouple
 tweepy
 texthero
 vaderSentiment
+statsmodels
