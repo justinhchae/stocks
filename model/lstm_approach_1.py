@@ -87,29 +87,26 @@ class Model(nn.Module):
         return predictions
 
 
-def train_model_1(df, epochs=10, learning_rate=0.01, run_model=True, sequence_length=14, is_scaled=False):
+def train_model_1(train, valid, epochs=10, learning_rate=0.01, run_model=True, sequence_length=14, is_scaled=False):
     #TODO early stopping
     #TODO run validation and test iterations
     #TODO save pickled model/binarys
     #GIST given by-the-minute data about a stock, train on 59 minutes and predict the 60th minute price
 
     losses = []
+    losses_valid = []
     preds = []
     targets = []
 
 
     batch_size = 20
-    data = Data(df, sequence_length)
-    data_load = DataLoader(data, batch_size=batch_size)
+    train_set = Data(train, sequence_length)
+    train_load = DataLoader(train_set, batch_size=batch_size)
+    valid_set = Data(valid, sequence_length)
+    valid_load = DataLoader(valid_set, batch_size=batch_size)
 
-    model = Model(num_layers=2, input_dim=len(df.columns) - 1, seq_length=sequence_length)
+    model = Model(num_layers=2, input_dim=len(train.columns) - 1, seq_length=sequence_length)
     model = model.to(model.device)
-    model.train()
-    # x, y = data[0]
-    # print(x.shape)
-    # print(x)
-    # print(y)
-    # print(y.shape)
 
     loss_function = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -120,12 +117,15 @@ def train_model_1(df, epochs=10, learning_rate=0.01, run_model=True, sequence_le
         scale_type = 'not scaled'
 
     if run_model:
-        for epoch in range(epochs):
+        for epoch in range(3):
+            model.train(True)
             epoch_preds = []
             epoch_targets = []
+            epoch_preds_valid = []
+            epoch_targets_valid = []
             model.zero_grad()
 
-            for idx, (x, y) in enumerate(data_load):
+            for idx, (x, y) in enumerate(train_load):
                 x, y = x.to(device), y.to(device)
 
                 model.init_hidden(x.size(0))
@@ -146,6 +146,27 @@ def train_model_1(df, epochs=10, learning_rate=0.01, run_model=True, sequence_le
 
             print('Epoch: {}.............'.format(epoch), end=' ')
             print("Loss: {:.4f}".format(loss.item()))
+
+            with torch.no_grad():
+                model.train(False)
+                for idx, (x, y) in enumerate(valid_load):
+                    x, y = x.to(device), y.to(device)
+
+                    model.init_hidden(x.size(0))
+
+                    y_pred = model(x)
+
+                    epoch_preds_valid.append(y_pred.detach().numpy())
+                    epoch_targets_valid.append(y.detach().numpy())
+
+                    y_pred = y_pred.to(model.device)
+                    loss_v = loss_function(y_pred, y)
+
+                    losses_valid.append(loss_v.item())
+
+                    optimizer.zero_grad()
+
+
 
             preds.append(epoch_preds)
             targets.append(epoch_targets)
