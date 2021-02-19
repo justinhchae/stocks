@@ -33,7 +33,7 @@ preds = train_model_1(train_scaled, run_model=False, is_scaled=True)
 
 # split on data having closing price 'c' and sentiment score 'compound'
 train, valid, test = split_stock_data(df=df[['t', 'c']], time_col='t')
-train_model_1(train, run_model=True, is_scaled=False)
+# train_model_1(train, run_model=True, is_scaled=False)
 
 train_scaled, valid_scaled, test_scaled, scaler = scale_stock_data(train=train
                                                                    , valid=valid
@@ -41,4 +41,4 @@ train_scaled, valid_scaled, test_scaled, scaler = scale_stock_data(train=train
                                                                    )
 #TODO: configure data loader and train model to handle sentiment features 'compound'
 # train on combined sentiment and stock data
-train_model_1(train_scaled, run_model=False, is_scaled=True)
+train_model_1(train_scaled, run_model=True, is_scaled=True)

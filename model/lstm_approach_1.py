@@ -32,7 +32,7 @@ class Data(Dataset):
     def __getitem__(self, index):
         #FIXME: check slicing and target - prediction loss
         x = self.data.iloc[index: index + self.window, 1:]
-        y = self.data.iloc[index + self.window + self.step_size, self.yhat:self.yhat+1]
+        y = self.data.iloc[index + self.window, self.yhat:self.yhat+1]
         return torch.tensor(x.to_numpy(), dtype=torch.float32), torch.tensor(y, dtype=torch.float32)
 
     def __len__(self):
@@ -96,11 +96,11 @@ def train_model_1(df, epochs=3, learning_rate=0.01, run_model=True, sequence_len
 
     data = Data(df, sequence_length)
     data_load = DataLoader(data, batch_size=20)
-    x, y = data[0]
-    print(x.shape)
-    print(x)
-    print(y)
-    print(y.shape)
+    # x, y = data[0]
+    # print(x.shape)
+    # print(x)
+    # print(y)
+    # print(y.shape)
 
     loss_function = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -114,12 +114,11 @@ def train_model_1(df, epochs=3, learning_rate=0.01, run_model=True, sequence_len
         for epoch in range(epochs):
             epoch_preds = []
             epoch_targets = []
+            model.zero_grad()
 
             for idx, (x, y) in enumerate(data_load):
-                print(y)
                 x, y = x.to(device), y.to(device)
 
-                model.zero_grad()
                 model.hidden = model.init_hidden()
 
                 y_pred = model(x)
@@ -128,17 +127,13 @@ def train_model_1(df, epochs=3, learning_rate=0.01, run_model=True, sequence_len
                 epoch_targets.append(y.detach().numpy())
 
                 y_pred = y_pred.to(model.device)
-                y = y.to(model.device)
                 loss = loss_function(y_pred, y)
 
                 losses.append(loss.item())
-
-                optimizer.zero_grad()
-
                 loss.backward()
-
                 optimizer.step()
 
+            optimizer.zero_grad()
 
             print('Epoch: {}.............'.format(epoch), end=' ')
             print("Loss: {:.4f}".format(loss.item()))
@@ -154,21 +149,17 @@ def train_model_1(df, epochs=3, learning_rate=0.01, run_model=True, sequence_len
         plt.savefig('figures/lstm_approach_1_loss_actual.png')
         plt.show()
 
-        targets0 = np.concatenate(targets[0])
-        print(np.shape(preds))
-        preds0 = np.concatenate(preds[0])
-        print(preds0.shape)
-        plt.figure()
-        plt.plot(targets0, label='targets')
-        plt.plot(preds0, label='predictions')
-        title = str('LSTM Predictions Graph\n' + scale_type)
-        plt.title(title)
-        plt.legend()
-        # plt.savefig('figures/lstm_approach_1_predictions_actual.png')
-        plt.show()
+        # plt.figure()
+        # plt.plot(epoch_targets, label='targets')
+        # plt.plot(epoch_preds, label='predictions')
+        # title = str('LSTM Predictions Graph\n' + scale_type)
+        # plt.title(title)
+        # plt.legend()
+        # # plt.savefig('figures/lstm_approach_1_predictions_actual.png')
+        # plt.show()
 
-        targets0 = np.concatenate(targets[1])
-        preds0 = np.concatenate(preds[1])
+        targets0 = np.concatenate(targets[0])
+        preds0 = np.concatenate(preds[0])
         plt.figure()
         plt.plot(targets0, label='targets')
         plt.plot(preds0, label='predictions')
