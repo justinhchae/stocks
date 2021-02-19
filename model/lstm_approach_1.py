@@ -50,7 +50,7 @@ class Model(nn.Module):
     def __init__(self
                  , input_dim
                  , seq_length
-                 , hidden_dim=20
+                 , hidden_dim=50
                  , output_dim=1
                  , num_layers=1
                  , device=device
@@ -87,7 +87,7 @@ class Model(nn.Module):
         return predictions
 
 
-def train_model_1(df, epochs=3, learning_rate=0.01, run_model=True, sequence_length=14, is_scaled=False):
+def train_model_1(df, epochs=10, learning_rate=0.01, run_model=True, sequence_length=14, is_scaled=False):
     #TODO early stopping
     #TODO run validation and test iterations
     #TODO save pickled model/binarys
@@ -167,8 +167,8 @@ def train_model_1(df, epochs=3, learning_rate=0.01, run_model=True, sequence_len
         # # plt.savefig('figures/lstm_approach_1_predictions_actual.png')
         # plt.show()
 
-        targets0 = np.concatenate(targets[0])
-        preds0 = np.concatenate(preds[0])
+        targets0 = np.concatenate(targets[-1])
+        preds0 = np.concatenate(preds[-1])
         plt.figure()
         plt.plot(targets0, label='targets')
         plt.plot(preds0, label='predictions')
