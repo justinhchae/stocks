@@ -14,12 +14,12 @@ stock_df = get_stock_dummies()
 df = trading_days(news_df, stock_df)
 
 # train arima on stock data only
-train_arima(timeseries=df[['t','c']], time_col='t', run_model=False)
+# train_arima(timeseries=df[['t','c']], time_col='t', run_model=False)
 
 # split data into train, validation, and testing
 train, valid, test = split_stock_data(df=df[['t','c']], time_col='t')
 # train lstm on unscaled data
-train_model_1(train, run_model=False, is_scaled=False)
+# train_model_1(train, run_model=False, is_scaled=False)
 
 # scale stock data
 train_scaled, valid_scaled, test_scaled, scaler = scale_stock_data(train=train
@@ -27,13 +27,13 @@ train_scaled, valid_scaled, test_scaled, scaler = scale_stock_data(train=train
                                                                    , test=test
                                                                    )
 # train lstm on scaled data
-train_model_1(train_scaled, run_model=False, is_scaled=True)
+preds = train_model_1(train_scaled, run_model=False, is_scaled=True)
 
 ###
 
 # split on data having closing price 'c' and sentiment score 'compound'
-train, valid, test = split_stock_data(df=df, time_col='t')
-train_model_1(train, run_model=False, is_scaled=False)
+train, valid, test = split_stock_data(df=df[['t', 'c']], time_col='t')
+train_model_1(train, run_model=True, is_scaled=False)
 
 train_scaled, valid_scaled, test_scaled, scaler = scale_stock_data(train=train
                                                                    , valid=valid

@@ -20,17 +20,19 @@ except:
   device = torch.device("cpu")
 
 class Data(Dataset):
-    def __init__(self, data, window, step_size=1):
+    def __init__(self, data, window, yhat='c', step_size=1):
         self.data = data
         self.window = window
         self.step_size = step_size
+        # self._xdata = # index of times
+        self.yhat = data.columns.get_loc(yhat)
         self.shape = self.__getshape__()
         self.size = self.__getsize__()
 
     def __getitem__(self, index):
         #FIXME: check slicing and target - prediction loss
         x = self.data.iloc[index: index + self.window, 1:]
-        y = self.data.iloc[index + self.window + self.step_size, 1:]
+        y = self.data.iloc[index + self.window + self.step_size, self.yhat:self.yhat+1]
         return torch.tensor(x.to_numpy(), dtype=torch.float32), torch.tensor(y, dtype=torch.float32)
 
     def __len__(self):
@@ -78,7 +80,7 @@ class Model(nn.Module):
         return predictions
 
 
-def train_model_1(df, epochs=10, learning_rate=0.01, run_model=True, sequence_length=59, is_scaled=False):
+def train_model_1(df, epochs=3, learning_rate=0.01, run_model=True, sequence_length=59, is_scaled=False):
     #TODO early stopping
     #TODO run validation and test iterations
     #TODO save pickled model/binarys
@@ -88,12 +90,17 @@ def train_model_1(df, epochs=10, learning_rate=0.01, run_model=True, sequence_le
     preds = []
     targets = []
 
-    model = Model(num_layers=2, input_dim=sequence_length, hidden_dim=sequence_length)
+    model = Model(num_layers=2, input_dim=sequence_length * (len(df.columns) - 1), hidden_dim=sequence_length)
     model = model.to(model.device)
     model.train()
 
     data = Data(df, sequence_length)
-    data_load = DataLoader(data, batch_size=20, drop_last=True)
+    data_load = DataLoader(data, batch_size=20)
+    x, y = data[0]
+    print(x.shape)
+    print(x)
+    print(y)
+    print(y.shape)
 
     loss_function = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -109,6 +116,7 @@ def train_model_1(df, epochs=10, learning_rate=0.01, run_model=True, sequence_le
             epoch_targets = []
 
             for idx, (x, y) in enumerate(data_load):
+                print(y)
                 x, y = x.to(device), y.to(device)
 
                 model.zero_grad()
@@ -147,7 +155,9 @@ def train_model_1(df, epochs=10, learning_rate=0.01, run_model=True, sequence_le
         plt.show()
 
         targets0 = np.concatenate(targets[0])
+        print(np.shape(preds))
         preds0 = np.concatenate(preds[0])
+        print(preds0.shape)
         plt.figure()
         plt.plot(targets0, label='targets')
         plt.plot(preds0, label='predictions')
