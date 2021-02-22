@@ -18,7 +18,8 @@ df = trading_days(news_df, stock_df)
 train_arima(timeseries=df[['t','c']], time_col='t', run_model=False, window_size=15)
 
 # train prophet on stock data only
-train_prophet(df[['t', 'c']], time_col='t', data_col='c')
+train_prophet(df[['t', 'c']], time_col='t', data_col='c', run_model=False)
+
 # split data into train, validation, and testing
 train, valid, test = split_stock_data(df=df[['t','c']], time_col='t')
 # train lstm on unscaled data
