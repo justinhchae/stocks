@@ -10,3 +10,5 @@ tweepy
 texthero
 vaderSentiment
 statsmodels
+pystan
+fbprophet
