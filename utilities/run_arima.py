@@ -31,18 +31,20 @@ def train_arima(timeseries
     else:
         df = timeseries.copy()
 
-    plt.figure()
-    lag_plot(df['c'])
-    plt.title('Amazon Stock (Dev Data) - Autocorrelation Plot')
-    plt.show()
+    if run_model:
 
-    fig, ax = plt.subplots()
-    ax.plot(df["t"], df["c"])
-    plt.xlabel('Time')
-    plt.ylabel('Stock Price')
-    ax.set_title('Amazon Stock (Dev Data) - Minute-by-Minute Closing Prices')
-    fig.autofmt_xdate()
-    plt.show()
+        plt.figure()
+        lag_plot(df['c'])
+        plt.title('Amazon Stock (Dev Data) - Autocorrelation Plot')
+        plt.show()
+
+        fig, ax = plt.subplots()
+        ax.plot(df["t"], df["c"])
+        plt.xlabel('Time')
+        plt.ylabel('Stock Price')
+        ax.set_title('Amazon Stock (Dev Data) - Minute-by-Minute Closing Prices')
+        fig.autofmt_xdate()
+        plt.show()
 
     train, valid, test = split_stock_data(df=df, time_col='t')
     train_data = train['c'].values
