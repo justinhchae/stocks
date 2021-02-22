@@ -20,7 +20,8 @@ def get_news_dummies(filepath='data/dummies/dummy_news.json'
 
     if date_conversion:
         date_est =  date_col + '_est'
-        df[date_est] = df[date_col].dt.tz_convert(None)
+        df[date_est] = (df[date_col].dt.tz_convert(date_conversion))
+        df[date_est] = df[date_est].dt.tz_localize(tz=None)
         df.drop(columns=date_col, inplace=True)
 
     df = cleaner(df, 'text')
