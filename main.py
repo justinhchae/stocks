@@ -14,7 +14,7 @@ stock_df = get_stock_dummies()
 df = trading_days(news_df, stock_df)
 
 # train arima on stock data only
-# train_arima(timeseries=df[['t','c']], time_col='t', run_model=False)
+train_arima(timeseries=df[['t','c']], time_col='t', run_model=False, window_size=15)
 
 # split data into train, validation, and testing
 train, valid, test = split_stock_data(df=df[['t','c']], time_col='t')

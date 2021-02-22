@@ -55,16 +55,19 @@ def train_arima(timeseries
     history = [x for x in train_data]
     model_predictions = []
     N_train_observations = len(train_data)
+    N_valid_observations = len(valid_data)
     N_test_observations = len(test_data)
 
     # for every 15 minutes, predict the 16th minute (next closing price)
     if window_size:
         #TODO add validatoin and test
-        print("Run ARIMA on Window Size")
+        print("Run ARIMA on Window Size", window_size)
 
         x_i = [train_data[i:i + window_size] for i in range(0, N_train_observations, window_size)]
         x_t = [train_time[i:i + window_size] for i in range(0, N_train_observations, window_size)]
-        # y_i = [train_data[i:i + window_size] for i in range(0, N_train_observations, window_size)]
+
+        v_i = [valid_data[i:i + window_size] for i in range(0, N_valid_observations, window_size)]
+        v_t = [valid_time[i:i + window_size] for i in range(0, N_valid_observations, window_size)]
 
         predictions = []
         targets = []
@@ -74,7 +77,7 @@ def train_arima(timeseries
         for idx in tqdm(range(len(x_i))):
 
             model_data = x_i[idx][:-1]
-            model = ARIMA(model_data, order=(0, 0, 0))
+            model = ARIMA(model_data, order=(0, 1, 0))
             model_fit = model.fit()
             output = model_fit.forecast()
             yhat = output[0]
@@ -86,12 +89,23 @@ def train_arima(timeseries
             loss = mean_squared_error([target], [yhat])
             losses.append(loss)
 
+        n = 'n=' + str(N_train_observations)
+
         aggregate_mse_error = mean_squared_error(targets, predictions)
         print('Aggregate MSE', aggregate_mse_error)
         fig, ax = plt.subplots()
-        ax.plot(pred_times, targets, color='red', label='Actual Price')
-        ax.plot(pred_times, predictions, color='blue', marker='o', linestyle='dashed', label='Predicted Price')
-        ax.set_title('Amazon Stock Price Prediction (Dev Data)\nWith STATA ARIMA Model')
+        ax.plot(pred_times, targets
+                , color='red'
+                , label='Actual Price')
+        ax.plot(pred_times, predictions
+                , color='blue'
+                , marker='o'
+                , markersize=3
+                , linestyle='dashed'
+                , linewidth=1
+                , label='Predicted Price'
+                )
+        ax.set_title('Amazon Stock Price Prediction (Dev Data)\nWith STATA ARIMA Model ' + n)
         plt.xlabel('Time')
         plt.ylabel('Stock Price')
         plt.legend()
@@ -108,7 +122,7 @@ def train_arima(timeseries
         plt.show()
 
     else:
-        print("Run ARIMA Entire Training Set - This will Take A While")
+        print("Run ARIMA on Entire Training Set - This will Take A While")
 
         for time_point in tqdm(range(N_train_observations)):
             model = ARIMA(history, order=(4,1,0))
