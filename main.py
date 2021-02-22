@@ -5,6 +5,7 @@ from utilities.sentiment_data import *
 from utilities.run_arima import train_arima
 from utilities.prep_stock_data import split_stock_data, scale_stock_data
 from model.lstm_approach_1 import train_model_1
+from model.LSTM import Model
 
 # run get pipelines for news and stock data
 news_df = get_news_dummies()
@@ -27,7 +28,8 @@ train_scaled, valid_scaled, test_scaled, scaler = scale_stock_data(train=train
                                                                    , test=test
                                                                    )
 # train lstm on scaled data
-# preds = train_model_1(train_scaled, run_model=False, is_scaled=True)
+model = Model(num_layers=2, input_dim=1, seq_length=14)
+preds = train_model_1(train_scaled, valid_scaled, model, run_model=True, is_scaled=True, sequence_length=14)
 
 ###
 
@@ -41,4 +43,4 @@ train_scaled, valid_scaled, test_scaled, scaler = scale_stock_data(train=train
                                                                    )
 #TODO: configure data loader and train model to handle sentiment features 'compound'
 # train on combined sentiment and stock data
-train_model_1(train_scaled, valid_scaled, run_model=True, is_scaled=True)
+# train_model_1(train_scaled, valid_scaled, run_model=True, is_scaled=True)
