@@ -86,6 +86,8 @@ def train_arima(timeseries
             loss = mean_squared_error([target], [yhat])
             losses.append(loss)
 
+        aggregate_mse_error = mean_squared_error(targets, predictions)
+        print('Aggregate MSE', aggregate_mse_error)
         fig, ax = plt.subplots()
         ax.plot(pred_times, targets, color='red', label='Actual Price')
         ax.plot(pred_times, predictions, color='blue', marker='o', linestyle='dashed', label='Predicted Price')
