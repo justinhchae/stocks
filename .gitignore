@@ -132,4 +132,4 @@ dmypy.json
 
 # image
 *.png
-/figures
+figures/
