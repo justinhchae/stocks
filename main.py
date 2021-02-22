@@ -3,6 +3,7 @@ from utilities.get_data import get_news_dummies, get_stock_dummies
 from utilities.clean_data import trading_days
 from utilities.sentiment_data import *
 from utilities.run_arima import train_arima
+from utilities.run_prophet import train_prophet
 from utilities.prep_stock_data import split_stock_data, scale_stock_data
 from model.lstm_approach_1 import train_model_1
 
@@ -16,6 +17,8 @@ df = trading_days(news_df, stock_df)
 # train arima on stock data only
 train_arima(timeseries=df[['t','c']], time_col='t', run_model=False, window_size=15)
 
+# train prophet on stock data only
+train_prophet(df[['t', 'c']], time_col='t', data_col='c')
 # split data into train, validation, and testing
 train, valid, test = split_stock_data(df=df[['t','c']], time_col='t')
 # train lstm on unscaled data
