@@ -135,3 +135,4 @@ dmypy.json
 figures/
 /figures
 *.png
+data/facebook_prophet_results.csv
