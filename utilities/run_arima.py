@@ -5,7 +5,7 @@ import seaborn as sns
 import pandas as pd
 from pandas.plotting import lag_plot
 from statsmodels.tsa.arima.model import ARIMA
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, mean_absolute_error
 from tqdm import tqdm
 import numpy as np
 
@@ -93,8 +93,9 @@ def train_arima(timeseries
 
             n = 'n=' + str(N_train_observations)
 
-            aggregate_mse_error = mean_squared_error(targets, predictions)
-            print('Aggregate MSE', aggregate_mse_error)
+            # aggregate_mse_error = mean_squared_error(targets, predictions)
+            mape = mean_absolute_error(targets, predictions) * 100
+            print('The MAPE error is', mape)
             fig, ax = plt.subplots()
             ax.plot(pred_times, targets
                     , color='red'
