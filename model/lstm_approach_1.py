@@ -45,49 +45,8 @@ class Data(Dataset):
     def __getsize__(self):
         return (self.__len__())
 
-class Model(nn.Module):
 
-    def __init__(self
-                 , input_dim
-                 , seq_length
-                 , hidden_dim=50
-                 , output_dim=1
-                 , num_layers=1
-                 , device=device
-                 ):
-
-        super(Model, self).__init__()
-
-        self.device = device
-        self.input_dim = input_dim
-        self.seq_length = seq_length
-        self.hidden_dim = hidden_dim
-        self.hidden = None
-        self.num_layers = num_layers
-
-        # Define the LSTM layer
-        self.lstm = nn.LSTM(input_size=self.input_dim,
-                            hidden_size=self.hidden_dim,
-                            num_layers=self.num_layers,
-                            batch_first=True)
-
-        # Define the output layer
-        self.linear = nn.Linear(self.hidden_dim * self.seq_length, output_dim)
-
-    def init_hidden(self, batch_size):
-        # This is what we'll initialise our hidden state as
-        self.hidden = (torch.zeros(self.num_layers, batch_size, self.hidden_dim, device=self.device),
-                       torch.zeros(self.num_layers, batch_size, self.hidden_dim, device=self.device))
-
-    def forward(self, x):
-        batch_size, seq_len, _ = x.size()
-        # Forward pass through LSTM layer
-        lstm_out, self.hidden = self.lstm(x, self.hidden)
-        predictions = self.linear(lstm_out.contiguous().view(batch_size, -1))
-        return predictions
-
-
-def train_model_1(train, valid, epochs=10, learning_rate=0.01, run_model=True, sequence_length=14, is_scaled=False):
+def train_model_1(train, valid, model, epochs=10, learning_rate=0.01, run_model=True, sequence_length=14, is_scaled=False):
     #TODO early stopping
     #TODO run validation and test iterations
     #TODO save pickled model/binarys
@@ -105,7 +64,7 @@ def train_model_1(train, valid, epochs=10, learning_rate=0.01, run_model=True, s
     valid_set = Data(valid, sequence_length)
     valid_load = DataLoader(valid_set, batch_size=batch_size)
 
-    model = Model(num_layers=2, input_dim=len(train.columns) - 1, seq_length=sequence_length)
+
     model = model.to(model.device)
 
     loss_function = nn.MSELoss()
