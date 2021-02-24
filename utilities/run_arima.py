@@ -19,6 +19,7 @@ warnings.simplefilter('ignore', ConvergenceWarning)
 
 
 def train_arima(timeseries
+                , validation_data
                 , time_col
                 , date_min=None
                 , date_max=None
@@ -46,19 +47,19 @@ def train_arima(timeseries
         fig.autofmt_xdate()
         plt.show()
 
-    train, valid, test = split_stock_data(df=df, time_col='t')
-    train_data = train['c'].values
-    train_time = train['t'].values
+    # train, valid, test = split_stock_data(df=df, time_col='t')
+    train_data = df['c'].values
+    train_time = df['t'].values
 
-    valid_data = valid['c'].values
-    valid_time = valid['c'].values
-    test_data = test['c'].values
+    valid_data = validation_data['c'].values
+    valid_time = validation_data['t'].values
+    # test_data = test['c'].values
 
     history = [x for x in train_data]
     model_predictions = []
     N_train_observations = len(train_data)
     N_valid_observations = len(valid_data)
-    N_test_observations = len(test_data)
+    # N_test_observations = len(test_data)
 
     if run_model:
 
@@ -135,15 +136,15 @@ def train_arima(timeseries
                 output = model_fit.forecast()
                 yhat = output[0]
                 model_predictions.append(yhat)
-                true_test_value = test_data[time_point]
+                true_test_value = valid_data[time_point]
                 history.append(true_test_value)
 
-            MSE_error = mean_squared_error(test_data[:len(model_predictions)], model_predictions)
+            MSE_error = mean_squared_error(valid_data[:len(model_predictions)], model_predictions)
             print('Testing Mean Squared Error is {}'.format(MSE_error))
 
             fig, ax = plt.subplots()
-            ax.plot(test['t'], test['c'], color='red', label='Actual Price')
-            ax.plot(test['t'][:len(model_predictions)], model_predictions, color='blue', marker='o', linestyle='dashed', label='Predicted Price')
+            ax.plot(valid_data['t'], valid_data['c'], color='red', label='Actual Price')
+            ax.plot(valid_data['t'][:len(model_predictions)], model_predictions, color='blue', marker='o', linestyle='dashed', label='Predicted Price')
             ax.set_title('Amazon Stock Price Prediction (Dev Data)\nWith STATA ARIMA Model')
             plt.xlabel('Time')
             plt.ylabel('Stock Price')
@@ -153,7 +154,7 @@ def train_arima(timeseries
 
             results_dict = {}
             results_dict['predictions'] = model_predictions
-            results_dict['targets'] = test_data[:len(model_predictions)]
+            results_dict['targets'] = valid_data[:len(model_predictions)]
             df = pd.DataFrame.from_dict(results_dict)
             df.to_csv('data/arima_results.csv')
 
