@@ -11,7 +11,7 @@ import numpy as np
 
 import warnings
 from statsmodels.tools.sm_exceptions import ConvergenceWarning
-warnings.simplefilter('ignore', ConvergenceWarning)
+
 
 
 # https://towardsdatascience.com/time-series-forecasting-predicting-stock-prices-using-an-arima-model-2e3b3080bd70
@@ -31,6 +31,8 @@ def train_arima(timeseries
         df = timeseries[timeseries[time_col] > date_min].copy()
     else:
         df = timeseries.copy()
+
+    warnings.simplefilter('ignore', ConvergenceWarning)
 
     if run_model:
 

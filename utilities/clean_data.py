@@ -35,8 +35,8 @@ class GothamBusinessCalendar(AbstractHolidayCalendar):
      Holiday('July 4th', month=7, day=4, observance=nearest_workday),
      Holiday('Christmas', month=12, day=25, observance=nearest_workday)
    ]
-
-Gotham_BD = CustomBusinessDay(calendar=GothamBusinessCalendar())
+# TODO: Remove holidays from predicted days
+# Gotham_BD = CustomBusinessDay(calendar=GothamBusinessCalendar())
 
 
 

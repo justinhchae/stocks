@@ -3,7 +3,7 @@ import pandas as pd
 from utilities.clean_data import cleaner
 from utilities.sentiment_data import score_sentiment
 
-pd.set_option('display.max_columns', None)
+
 
 def get_news_dummies(filepath='data/dummies/dummy_news.json'
                      , date_col='pub_time'
@@ -11,6 +11,7 @@ def get_news_dummies(filepath='data/dummies/dummy_news.json'
     """
     :return: pandas df from dict of dummy news data
     """
+    pd.set_option('display.max_columns', None)
 
     with open(filepath) as f:
         data = json.load(f)
@@ -38,6 +39,7 @@ def get_stock_dummies(filepath='data/dummies/price_minute.csv'
     """
     :return: pandas df from dict of dummy news data
     """
+    pd.set_option('display.max_columns', None)
     df = pd.read_csv(filepath, index_col=0)
     df[date_col] = pd.to_datetime(df[date_col])
 

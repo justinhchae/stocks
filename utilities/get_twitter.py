@@ -21,4 +21,4 @@ class GetTwitter():
 
 
 
-GetTwitter().test_func()
+# GetTwitter().test_func()
