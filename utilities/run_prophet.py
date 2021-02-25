@@ -9,7 +9,7 @@ import numpy as np
 from multiprocessing import Pool, cpu_count
 
 
-from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolute_percentage_error
 
 # https://stackoverflow.com/questions/2125702/how-to-suppress-console-output-in-python
 # https://medium.com/spikelab/forecasting-multiples-time-series-using-prophet-in-parallel-2515abd1a245
@@ -274,7 +274,7 @@ def assess_prophet_results(prophet_results):
     print()
 
     # compute the MAPE over the entire prediction set
-    error = mean_absolute_error(df['y'].values, df['yhat'].values) * 100
+    error = mean_absolute_percentage_error(df['y'].values, df['yhat'].values) * 100
     print('The MAPE for facebook prophet is', error)
 
     # plot the data
