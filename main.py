@@ -40,7 +40,7 @@ if __name__ == '__main__':
 
     if run_mode == 'arima':
         # train arima on stock data only
-        train_arima(timeseries=train_scaled
+        train_arima(timeseries=test_scaled
                     , validation_data=valid
                     , time_col='t'
                     , window_size=15
@@ -48,7 +48,7 @@ if __name__ == '__main__':
 
     elif run_mode == 'prophet':
         # train prophet on stock data only
-        prophet_data = setup_prophet(train_scaled
+        prophet_data = setup_prophet(test_scaled
                       , time_col='t'
                       , data_col='c'
                       )
