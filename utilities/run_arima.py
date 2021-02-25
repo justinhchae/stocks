@@ -5,7 +5,7 @@ import seaborn as sns
 import pandas as pd
 from pandas.plotting import lag_plot
 from statsmodels.tsa.arima.model import ARIMA
-from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolute_percentage_error
 from tqdm import tqdm
 import numpy as np
 
@@ -139,8 +139,8 @@ def train_arima(timeseries
                 true_test_value = valid_data[time_point]
                 history.append(true_test_value)
 
-            MSE_error = mean_squared_error(valid_data[:len(model_predictions)], model_predictions)
-            print('Testing Mean Squared Error is {}'.format(MSE_error))
+            error = mean_absolute_percentage_error(valid_data[:len(model_predictions)], model_predictions)
+            print('Testing Mean Squared Error is {}'.format(error))
 
             fig, ax = plt.subplots()
             ax.plot(valid_data['t'], valid_data['c'], color='red', label='Actual Price')

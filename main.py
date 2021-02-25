@@ -34,9 +34,9 @@ if __name__ == '__main__':
                                                                        )
     # START HERE uncomment the line you want to run
     # run_mode = 'arima'
-    run_mode = 'prophet'
+    # run_mode = 'prophet'
     # run_mode = 'lstm1'
-    # run_mode = 'lstm2'
+    run_mode = 'lstm2'
 
     if run_mode == 'arima':
         # train arima on stock data only
@@ -62,7 +62,7 @@ if __name__ == '__main__':
     elif run_mode == 'lstm1':
         # train lstm on stock data only
         model = Model(num_layers=1, input_dim=1, seq_length=14)
-        preds = train_model_1(train_scaled, valid_scaled, test_scaled, model, epochs=20, run_model=True, is_scaled=True, sequence_length=14)
+        preds = train_model_1(train_scaled, valid_scaled, test_scaled, model, epochs=2, run_model=True, is_scaled=True, sequence_length=14)
 
     elif run_mode == 'lstm2':
         # split on data having closing price 'c' and sentiment score 'compound'
