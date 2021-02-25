@@ -10,8 +10,6 @@ from model.LSTM import Model
 from tqdm import tqdm
 from multiprocessing import Pool, cpu_count
 
-# get count of max available CPUs, minus 2
-CPUs = cpu_count() - 2
 
 
 if __name__ == '__main__':
@@ -54,11 +52,17 @@ if __name__ == '__main__':
                       , time_col='t'
                       , data_col='c'
                       )
+
+        # get count of max available CPUs, minus 2
+        CPUs = cpu_count() - 2
+
         # pooling enabled.
         p = Pool(CPUs)
         prophet_results = list(tqdm(p.imap(run_prophet, prophet_data)))
         p.close()
         p.join()
+
+        # assess model results
         assess_prophet_results(prophet_results)
 
     elif run_mode == 'lstm1':
@@ -71,11 +75,15 @@ if __name__ == '__main__':
         print('Training Approach run_mode:', run_mode)
         # split on data having closing price 'c' and sentiment score 'compound'
         model = Model(num_layers=1, input_dim=2, seq_length=14)
+
+        # split data having both sentiment and stock price
         train, valid, test = split_stock_data(df=df, time_col='t')
         # train_model_1(train, valid, run_model=True, is_scaled=False)
 
+        # scale data
         train_scaled, valid_scaled, test_scaled, scaler = scale_stock_data(train=train
                                                                            , valid=valid
                                                                            , test=test
                                                                            )
+        # run model
         preds = train_model_1(train_scaled, valid_scaled, test_scaled, model, epochs=20, run_model=True, is_scaled=True, sequence_length=14)

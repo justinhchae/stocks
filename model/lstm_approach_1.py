@@ -12,13 +12,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-try:
-  torch.cuda.device_count()
-  torch.cuda.get_device_name(0)
-  device = torch.device('cuda:0')
-except:
-  device = torch.device("cpu")
-
 class Data(Dataset):
     def __init__(self, data, window, yhat='c', step_size=1):
         self.data = data
@@ -87,7 +80,7 @@ def train_model_1(train, valid, test, model, epochs=10, learning_rate=0.001, run
             model.zero_grad()
 
             for idx, (x, y) in enumerate(train_load):
-                x, y = x.to(device), y.to(device)
+                x, y = x.to(model.device), y.to(model.device)
 
                 model.init_hidden(x.size(0))
 
@@ -112,7 +105,7 @@ def train_model_1(train, valid, test, model, epochs=10, learning_rate=0.001, run
             with torch.no_grad():
                 model.train(False)
                 for idx, (x, y) in enumerate(valid_load):
-                    x, y = x.to(device), y.to(device)
+                    x, y = x.to(model.device), y.to(model.device)
 
                     model.init_hidden(x.size(0))
 
@@ -139,7 +132,7 @@ def train_model_1(train, valid, test, model, epochs=10, learning_rate=0.001, run
         with torch.no_grad():
             model.train(False)
             for idx, (x, y) in enumerate(test_load):
-                x, y = x.to(device), y.to(device)
+                x, y = x.to(model.device), y.to(model.device)
 
                 model.init_hidden(x.size(0))
 
@@ -150,11 +143,10 @@ def train_model_1(train, valid, test, model, epochs=10, learning_rate=0.001, run
             test_preds = np.concatenate(test_preds)
             test_targets = np.concatenate(test_targets)
             mape = np.mean(np.abs((test_targets - test_preds) / test_targets)) * 100
-            mape2 = mean_absolute_percentage_error(test_targets, test_preds) * 100
             optimizer.zero_grad()
 
         print(f'MAPE score: {mape}')
-        print(f'MAPE2 score: {mape2}')
+
 
         plt.figure()
         plt.plot(losses, label='train loss')

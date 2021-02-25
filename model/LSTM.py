@@ -1,12 +1,7 @@
 import torch.nn as nn
 import torch
 
-try:
-  torch.cuda.device_count()
-  torch.cuda.get_device_name(0)
-  device = torch.device('cuda:0')
-except:
-  device = torch.device("cpu")
+
 
 class Model(nn.Module):
 
@@ -16,10 +11,17 @@ class Model(nn.Module):
                  , hidden_dim=50
                  , output_dim=1
                  , num_layers=1
-                 , device=device
+                 # , device=device
                  ):
 
         super(Model, self).__init__()
+
+        try:
+            torch.cuda.device_count()
+            torch.cuda.get_device_name(0)
+            device = torch.device('cuda:0')
+        except:
+            device = torch.device("cpu")
 
         self.device = device
         self.input_dim = input_dim

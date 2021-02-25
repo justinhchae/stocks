@@ -6,7 +6,6 @@ import pandas as pd
 from tqdm import tqdm
 import math
 import numpy as np
-from multiprocessing import Pool, cpu_count
 
 
 from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolute_percentage_error
@@ -64,7 +63,9 @@ def split(dfm, chunk_size):
     indices = index_marks(dfm.shape[0], chunk_size)
     return np.split(dfm, indices)
 
-def setup_prophet(df, time_col, data_col
+def setup_prophet(df
+                  , time_col
+                  , data_col
                   , seasonal_unit='day'
                   , window_size=15
                   , split_tts=False):
@@ -145,15 +146,17 @@ def setup_prophet(df, time_col, data_col
 
     return prophet_data
 
-def run_prophet(chunked_data, window_size=15, n_prediction_units=1, prediction_frequency='1min'):
+def run_prophet(chunked_data, n_prediction_units=1, prediction_frequency='1min'):
     ds_col = 'ds'
     results = []
 
     for x, y in chunked_data:
+
         m = Prophet(yearly_seasonality=False
                                     ,weekly_seasonality=False
                                     ,daily_seasonality=False
                                     ,uncertainty_samples=False)
+
         with suppress_stdout_stderr():
             m.fit(x)
 
