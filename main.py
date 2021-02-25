@@ -10,6 +10,7 @@ from model.LSTM import Model
 from tqdm import tqdm
 from multiprocessing import Pool, cpu_count
 
+# get count of max available CPUs, minus 2
 CPUs = cpu_count() - 2
 
 
@@ -33,9 +34,9 @@ if __name__ == '__main__':
                                                                        )
     # START HERE uncomment the line you want to run
     # run_mode = 'arima'
-    # run_mode = 'prophet'
+    run_mode = 'prophet'
     # run_mode = 'lstm1'
-    run_mode = 'lstm2'
+    # run_mode = 'lstm2'
 
     if run_mode == 'arima':
         # train arima on stock data only
@@ -51,14 +52,12 @@ if __name__ == '__main__':
                       , time_col='t'
                       , data_col='c'
                       )
-        #FIXME pooling with prophet
-        # p = Pool(CPUs)
-        prophet_results = run_prophet(prophet_data)
-        # prophet_results = list(p.imap(run_prophet, prophet_data))
-        # p.close()
-        # p.join()
+        # pooling enabled.
+        p = Pool(CPUs)
+        prophet_results = list(tqdm(p.imap(run_prophet, prophet_data)))
+        p.close()
+        p.join()
         assess_prophet_results(prophet_results)
-
 
     elif run_mode == 'lstm1':
         # train lstm on stock data only

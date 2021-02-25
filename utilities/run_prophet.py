@@ -12,6 +12,7 @@ from multiprocessing import Pool, cpu_count
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 
 # https://stackoverflow.com/questions/2125702/how-to-suppress-console-output-in-python
+# https://medium.com/spikelab/forecasting-multiples-time-series-using-prophet-in-parallel-2515abd1a245
 
 import os
 
@@ -63,7 +64,9 @@ def split(dfm, chunk_size):
     indices = index_marks(dfm.shape[0], chunk_size)
     return np.split(dfm, indices)
 
-def setup_prophet(df, time_col, data_col, seasonal_unit='day'
+def setup_prophet(df, time_col, data_col
+                  , seasonal_unit='day'
+                  , window_size=15
                   , split_tts=False):
     """
     :params:
@@ -104,105 +107,163 @@ def setup_prophet(df, time_col, data_col, seasonal_unit='day'
     # convert col names per facebook api needs
     train = train.rename(columns=key_map)
 
-
     # group df by day, a week-day tuple
     df = train.groupby(seasonal_unit)
 
-    #TODO: Move data chunking to prep (HERE), run prophet model with pools
+    prophet_data = []
+    for group_name, group_frame in df:
+        chunk_data = []
 
-    return df
+        # in each seasonal_unit, chunk data into window_size chunks
+        chunks = split(group_frame, window_size)
 
-def run_prophet(df, run_model=True, window_size=15, n_prediction_units=1, prediction_frequency='1min'):
+        # initialize an index to return each chunk in sequence
+        idx = 0
+
+        while 1:
+            # return a data chunk of window_size on index idx
+            chunk = chunks[idx]
+
+            # set up index of next chunk in sequence
+            next_idx = idx + 1
+
+            # at then end of a seasonal_unit, break if index out of range
+            if next_idx > len(chunks) - 1:
+                break
+            else:
+                # otherwise, return the first value of next sequence as y target
+                target = chunks[next_idx].head(1)
+
+            # increment the chunk
+            idx += 1
+            x_i = chunk.reset_index(drop=True)
+            y_i = target.reset_index(drop=True)
+            # save targets y and forecast predictions yhat
+            chunk_data.append((x_i, y_i))
+
+        prophet_data.append(chunk_data)
+
+    return prophet_data
+
+def run_prophet(chunked_data, window_size=15, n_prediction_units=1, prediction_frequency='1min'):
     ds_col = 'ds'
+    results = []
 
-    if run_model:
+    for x, y in chunked_data:
+        m = Prophet(yearly_seasonality=False
+                                    ,weekly_seasonality=False
+                                    ,daily_seasonality=False
+                                    ,uncertainty_samples=False)
+        with suppress_stdout_stderr():
+            m.fit(x)
 
-        if window_size:
-            # estimated iterations
-            est_iters = len(df)
+        future = m.make_future_dataframe(periods=n_prediction_units
+                                         , freq=prediction_frequency
+                                         , include_history=False)
 
-            # create a progress bar for feedback during long computations
-            pbar = tqdm(total=est_iters)
-            # init progress bar with 0
-            pbar.update(0)
-            # loop through a grouped dataframe by seasonal_unit
+        yhat = m.predict(future)[[ds_col, 'yhat']]
 
-            # emtpy dataframes to hold model results
-            predictions = pd.DataFrame()
-            targets = pd.DataFrame()
+        result = pd.merge(y, yhat, left_on=ds_col, right_on=ds_col).drop(columns='day')
 
-            accu = 0
+        results.append(result)
 
-            for group_name, group_frame in df:
+    return results
 
-                # in each seasonal_unit, chunk data into window_size chunks
-                chunks = split(group_frame, window_size)
+#TODO: finish refactoring prophet to predict on default long sequence
 
-                # initialize an index to return each chunk in sequence
-                idx = 0
+#
+# if run_model:
+#
+#     if window_size:
+#         # estimated iterations
+#         est_iters = len(df)
+#
+#         # create a progress bar for feedback during long computations
+#         pbar = tqdm(total=est_iters)
+#         # init progress bar with 0
+#         pbar.update(0)
+#         # loop through a grouped dataframe by seasonal_unit
+#
+#         # emtpy dataframes to hold model results
+#         predictions = pd.DataFrame()
+#         targets = pd.DataFrame()
+#
+#         accu = 0
+#
+#         for group_name, group_frame in df:
+#
+#             # in each seasonal_unit, chunk data into window_size chunks
+#             chunks = split(group_frame, window_size)
+#
+#             # initialize an index to return each chunk in sequence
+#             idx = 0
+#
+#             # create a fractional increment based on chunks
+#             incre_update = 1 / len(chunks)
+#
+#             while 1:
+#                 # increment a progress bar
+#                 accu += incre_update
+#
+#                 rounder_check = est_iters - accu
+#
+#                 if rounder_check < .005:
+#                     pbar.close()
+#
+#                 pbar.update(incre_update)
+#
+#                 # instantiate a new model for each chunk
+#                 m = Prophet(yearly_seasonality=False
+#                             ,weekly_seasonality=False
+#                             ,daily_seasonality=False
+#                             ,uncertainty_samples=False)
+#
+#                 # return a data chunk of window_size on index idx
+#                 chunk = chunks[idx]
+#
+#                 # set up index of next chunk in sequence
+#                 next_idx = idx + 1
+#
+#                 # at then end of a seasonal_unit, break if index out of range
+#                 if next_idx > len(chunks) - 1:
+#                     break
+#                 else:
+#                     # otherwise, return the first value of next sequence as y target
+#                     target = chunks[next_idx].iloc[0]
+#
+#                 # suppress pystan outputs for each model fit
+#                 with suppress_stdout_stderr():
+#                     m.fit(chunk)
+#                 # extends the current sequence of time by n_prediction_units as future
+#                 future = m.make_future_dataframe(periods=n_prediction_units
+#                                                  , freq=prediction_frequency
+#                                                  , include_history=False)
+#                 # exclude history to avoid having to negative index
+#                 # the 'yhat' column is created by the prophet API
+#                 # return the last n results from future as yhat
+#                 # n_forcast_units = -1 * n_prediction_units
+#                 forecast = m.predict(future)[[ds_col, 'yhat']]#.iloc[n_forcast_units:]
+#
+#                 # increment the chunk
+#                 idx += 1
+#
+#                 # save targets y and forecast predictions yhat
+#                 targets = targets.append(target)
+#                 predictions = predictions.append(forecast)
+#
+#         # merge all results as a single dataframe
+#         results = pd.merge(targets, predictions, left_on=ds_col, right_on=ds_col)
+#
+#         # drop day marker, not needed further
+#         results.drop(columns=['day'], inplace=True)
+#
+#         return results
 
-                # create a fractional increment based on chunks
-                incre_update = 1 / len(chunks)
+def assess_prophet_results(prophet_results):
 
-                while 1:
-                    # increment a progress bar
-                    accu += incre_update
+    df = pd.concat([pd.concat(i) for i in prophet_results])
+    df = df.reset_index(drop=True)
 
-                    rounder_check = est_iters - accu
-
-                    if rounder_check < .005:
-                        pbar.close()
-
-                    pbar.update(incre_update)
-
-                    # instantiate a new model for each chunk
-                    m = Prophet(yearly_seasonality=False
-                                ,weekly_seasonality=False
-                                ,daily_seasonality=False
-                                ,uncertainty_samples=False)
-
-                    # return a data chunk of window_size on index idx
-                    chunk = chunks[idx]
-
-                    # set up index of next chunk in sequence
-                    next_idx = idx + 1
-
-                    # at then end of a seasonal_unit, break if index out of range
-                    if next_idx > len(chunks) - 1:
-                        break
-                    else:
-                        # otherwise, return the first value of next sequence as y target
-                        target = chunks[next_idx].iloc[0]
-
-                    # suppress pystan outputs for each model fit
-                    with suppress_stdout_stderr():
-                        m.fit(chunk)
-                    # extends the current sequence of time by n_prediction_units as future
-                    future = m.make_future_dataframe(periods=n_prediction_units
-                                                     , freq=prediction_frequency
-                                                     , include_history=False)
-                    # exclude history to avoid having to negative index
-                    # the 'yhat' column is created by the prophet API
-                    # return the last n results from future as yhat
-                    # n_forcast_units = -1 * n_prediction_units
-                    forecast = m.predict(future)[[ds_col, 'yhat']]#.iloc[n_forcast_units:]
-
-                    # increment the chunk
-                    idx += 1
-
-                    # save targets y and forecast predictions yhat
-                    targets = targets.append(target)
-                    predictions = predictions.append(forecast)
-
-            # merge all results as a single dataframe
-            results = pd.merge(targets, predictions, left_on=ds_col, right_on=ds_col)
-
-            # drop day marker, not needed further
-            results.drop(columns=['day'], inplace=True)
-
-            return results
-
-def assess_prophet_results(df):
     ds_col = 'ds'
     # length of dataset for graphing later
     n = 'n=' + str(len(df))
@@ -234,77 +295,79 @@ def assess_prophet_results(df):
     fig.autofmt_xdate()
     plt.show()
 
-    #     else:
-    #         if valid is not None:
-    #             n_prediction_units = len(valid)
-    #         # else, run training on a large range of data and predict the next
-    #         m = Prophet(changepoint_prior_scale=0.005, yearly_seasonality=False)
-    #         m.fit(train)  # df is a pandas.DataFrame with 'y' and 'ds' columns
-    #
-    #         # set future index period manually (hide for now)
-    #         future = m.make_future_dataframe(periods=n_prediction_units, freq=prediction_frequency)
-    #
-    #         # trading day parameters
-    #         trade_day_start = 9
-    #         trade_day_end = 16
-    #         weekend = 5
-    #
-    #         # apply forecast filter based on trade day parameters
-    #         # future = future[(future[ds_col].dt.hour >= trade_day_start) | (future[ds_col].dt.hour  <= trade_day_end)]
-    #         # future = future[(future[ds_col].dt.weekday < weekend)]
-    #
-    #         # set future dataframe forecast based on validation time index
-    #         future = valid[['t']].reset_index(drop=True)
-    #         future = future.rename(columns={'t':ds_col})
-    #
-    #         # return just the last n results which are the forecasts
-    #         n_forcast_units = -1 * n_prediction_units
-    #         forecast = m.predict(future)[[ds_col, 'yhat']].iloc[n_forcast_units:]
-    #
-    #         # return results in a single dataframe
-    #         results = pd.merge(valid, forecast, left_on=time_col, right_on=ds_col)
-    #
-    #         preds = results['yhat'].values
-    #         targets = results[data_col].values
-    #
-    #         # compute MAPE error for comparison to models
-    #         error = mean_absolute_error(targets, preds) * 100
-    #
-    #         print('The MAPE for facebook prophet is', error)
-    #
-    #         # plot data
-    #         fig, ax, = plt.subplots()
-    #         ax.plot(results[time_col], results[data_col], color='red', label='Actual Price')
-    #         ax.plot(results[time_col], results['yhat']
-    #                 , color='blue'
-    #                 , marker='o'
-    #                 , markersize=3
-    #                 , linestyle='dashed'
-    #                 , linewidth=1
-    #                 , label='Predicted Price'
-    #                 )
-    #         ax.set_title('Amazon Stock Price Prediction (Dev Data)\nWith Facebook Prophet ' + n)
-    #         plt.xlabel('Time')
-    #         plt.ylabel('Stock Price')
-    #         plt.legend()
-    #         fig.autofmt_xdate()
-    #         plt.show()
-    #
-    #         # plt.plot()
-    #         # fig1 = m.plot(forecast)
-    #         # plt.title('Amazon Stock Price Prediction (Dev Data)\nWith Facebook Prophet ' + n)
-    #         # plt.tight_layout()
-    #         # fig1.show()
-    #
-    #         #fixme subplots and title
-    #         # plt.plot()
-    #         # plt.title('Amazon Stock Price Components (Dev Data)\nWith Facebook Prophet')
-    #         # fig2 = m.plot_components(forecast)
-    #         # plt.tight_layout()
-    #         # fig2.show()
-    #         # print('done')
-    #
-    # else:
-    #     print("Set up Facebook Prophet, did not run model")
+#TODO: Finish refactoring default state for prediction
+
+#     else:
+#         if valid is not None:
+#             n_prediction_units = len(valid)
+#         # else, run training on a large range of data and predict the next
+#         m = Prophet(changepoint_prior_scale=0.005, yearly_seasonality=False)
+#         m.fit(train)  # df is a pandas.DataFrame with 'y' and 'ds' columns
+#
+#         # set future index period manually (hide for now)
+#         future = m.make_future_dataframe(periods=n_prediction_units, freq=prediction_frequency)
+#
+#         # trading day parameters
+#         trade_day_start = 9
+#         trade_day_end = 16
+#         weekend = 5
+#
+#         # apply forecast filter based on trade day parameters
+#         # future = future[(future[ds_col].dt.hour >= trade_day_start) | (future[ds_col].dt.hour  <= trade_day_end)]
+#         # future = future[(future[ds_col].dt.weekday < weekend)]
+#
+#         # set future dataframe forecast based on validation time index
+#         future = valid[['t']].reset_index(drop=True)
+#         future = future.rename(columns={'t':ds_col})
+#
+#         # return just the last n results which are the forecasts
+#         n_forcast_units = -1 * n_prediction_units
+#         forecast = m.predict(future)[[ds_col, 'yhat']].iloc[n_forcast_units:]
+#
+#         # return results in a single dataframe
+#         results = pd.merge(valid, forecast, left_on=time_col, right_on=ds_col)
+#
+#         preds = results['yhat'].values
+#         targets = results[data_col].values
+#
+#         # compute MAPE error for comparison to models
+#         error = mean_absolute_error(targets, preds) * 100
+#
+#         print('The MAPE for facebook prophet is', error)
+#
+#         # plot data
+#         fig, ax, = plt.subplots()
+#         ax.plot(results[time_col], results[data_col], color='red', label='Actual Price')
+#         ax.plot(results[time_col], results['yhat']
+#                 , color='blue'
+#                 , marker='o'
+#                 , markersize=3
+#                 , linestyle='dashed'
+#                 , linewidth=1
+#                 , label='Predicted Price'
+#                 )
+#         ax.set_title('Amazon Stock Price Prediction (Dev Data)\nWith Facebook Prophet ' + n)
+#         plt.xlabel('Time')
+#         plt.ylabel('Stock Price')
+#         plt.legend()
+#         fig.autofmt_xdate()
+#         plt.show()
+#
+#         # plt.plot()
+#         # fig1 = m.plot(forecast)
+#         # plt.title('Amazon Stock Price Prediction (Dev Data)\nWith Facebook Prophet ' + n)
+#         # plt.tight_layout()
+#         # fig1.show()
+#
+#         #fixme subplots and title
+#         # plt.plot()
+#         # plt.title('Amazon Stock Price Components (Dev Data)\nWith Facebook Prophet')
+#         # fig2 = m.plot_components(forecast)
+#         # plt.tight_layout()
+#         # fig2.show()
+#         # print('done')
+#
+# else:
+#     print("Set up Facebook Prophet, did not run model")
 
 
