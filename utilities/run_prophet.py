@@ -65,7 +65,7 @@ def split(dfm, chunk_size):
 
 #TODO add multi threading / pooling to speed up
 def train_prophet(df, time_col, data_col, run_model=False, window_size=15, seasonal_unit='day'
-                  , split_tts=True
+                  , split_tts=False
                   , n_prediction_units=1, prediction_frequency='1min'):
     """
     :params:
@@ -132,6 +132,8 @@ def train_prophet(df, time_col, data_col, run_model=False, window_size=15, seaso
             predictions = pd.DataFrame()
             targets = pd.DataFrame()
 
+            accu = 0
+
             for group_name, group_frame in df:
 
                 # in each seasonal_unit, chunk data into window_size chunks
@@ -145,6 +147,13 @@ def train_prophet(df, time_col, data_col, run_model=False, window_size=15, seaso
 
                 while 1:
                     # increment a progress bar
+                    accu += incre_update
+
+                    rounder_check = est_iters - accu
+
+                    if rounder_check < .001:
+                        incre_update = est_iters
+
                     pbar.update(incre_update)
 
                     # instantiate a new model for each chunk

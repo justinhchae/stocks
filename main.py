@@ -16,9 +16,6 @@ if __name__ == '__main__':
     # transform to minute-by-minute sentiment score and stock price
     df = trading_days(news_df, stock_df)
 
-    # train prophet on stock data only
-    train_prophet(df[['t', 'c']], time_col='t', data_col='c', run_model=False, window_size=15)
-
     # split data into train, validation, and testing
     train, valid, test = split_stock_data(df=df[['t','c']], time_col='t')
     # train lstm on unscaled data
@@ -31,13 +28,21 @@ if __name__ == '__main__':
                                                                        )
 
     # train arima on stock data only (scaled)
-    train_arima(timeseries=train_scaled
-                , validation_data=valid
-                , time_col='t'
-                , run_model=True
-                , window_size=15
-                )
+    # train_arima(timeseries=train_scaled
+    #             , validation_data=valid
+    #             , time_col='t'
+    #             , run_model=False
+    #             , window_size=15
+    #             )
 
+    # train prophet on stock data only
+    # train_prophet(train_scaled
+    #               , time_col='t'
+    #               , data_col='c'
+    #               , run_model=False
+    #               , window_size=15
+    #               )
+    # breakpoint()
     # train lstm on scaled data
     model = Model(num_layers=2, input_dim=1, seq_length=14)
     preds = train_model_1(train_scaled, valid_scaled, model, run_model=True, is_scaled=True, sequence_length=14)
