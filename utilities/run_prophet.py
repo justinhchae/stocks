@@ -63,10 +63,8 @@ def split(dfm, chunk_size):
     indices = index_marks(dfm.shape[0], chunk_size)
     return np.split(dfm, indices)
 
-#TODO add multi threading / pooling to speed up
-def train_prophet(df, time_col, data_col, run_model=False, window_size=15, seasonal_unit='day'
-                  , split_tts=False
-                  , n_prediction_units=1, prediction_frequency='1min'):
+def setup_prophet(df, time_col, data_col, seasonal_unit='day'
+                  , split_tts=False):
     """
     :params:
         df -> a dataframe
@@ -106,14 +104,18 @@ def train_prophet(df, time_col, data_col, run_model=False, window_size=15, seaso
     # convert col names per facebook api needs
     train = train.rename(columns=key_map)
 
-    # length of dataset for graphing later
-    n = 'n=' + str(len(train))
 
     # group df by day, a week-day tuple
     df = train.groupby(seasonal_unit)
 
+    #TODO: Move data chunking to prep (HERE), run prophet model with pools
+
+    return df
+
+def run_prophet(df, run_model=True, window_size=15, n_prediction_units=1, prediction_frequency='1min'):
+    ds_col = 'ds'
+
     if run_model:
-        print('Running Facebook Prophet')
 
         if window_size:
             # estimated iterations
@@ -121,11 +123,8 @@ def train_prophet(df, time_col, data_col, run_model=False, window_size=15, seaso
 
             # create a progress bar for feedback during long computations
             pbar = tqdm(total=est_iters)
-
             # init progress bar with 0
             pbar.update(0)
-
-            # FIXME: can we avoid nested loop or batch in parallel?
             # loop through a grouped dataframe by seasonal_unit
 
             # emtpy dataframes to hold model results
@@ -151,8 +150,8 @@ def train_prophet(df, time_col, data_col, run_model=False, window_size=15, seaso
 
                     rounder_check = est_iters - accu
 
-                    if rounder_check < .001:
-                        incre_update = est_iters
+                    if rounder_check < .005:
+                        pbar.close()
 
                     pbar.update(incre_update)
 
@@ -201,105 +200,111 @@ def train_prophet(df, time_col, data_col, run_model=False, window_size=15, seaso
             # drop day marker, not needed further
             results.drop(columns=['day'], inplace=True)
 
-            # export results to csv
-            results.to_csv('data/facebook_prophet_results.csv')
+            return results
 
-            # blank line for padding
-            print()
+def assess_prophet_results(df):
+    ds_col = 'ds'
+    # length of dataset for graphing later
+    n = 'n=' + str(len(df))
+    # export results to csv
+    # df.to_csv('data/facebook_prophet_results.csv')
 
-            # compute the MAPE over the entire prediction set
-            error = mean_absolute_error(results['y'].values, results['yhat'].values) * 100
-            print('The MAPE for facebook prophet is', error)
+    # blank line for padding
+    print()
 
-            # plot the data
-            fig, ax, = plt.subplots()
-            ax.plot(results[ds_col], results['y'], color='red', label='Actual Price')
-            ax.plot(results[ds_col], results['yhat']
-                    , color='blue'
-                    , marker='o'
-                    , markersize=3
-                    , linestyle='dashed'
-                    , linewidth=1
-                    , label='Predicted Price'
-                    )
-            ax.set_title('Amazon Stock Price Prediction (Dev Data)\nWith Facebook Prophet ' + n)
-            plt.xlabel('Time')
-            plt.ylabel('Stock Price')
-            plt.legend()
-            fig.autofmt_xdate()
-            plt.show()
+    # compute the MAPE over the entire prediction set
+    error = mean_absolute_error(df['y'].values, df['yhat'].values) * 100
+    print('The MAPE for facebook prophet is', error)
 
-        else:
-            if valid is not None:
-                n_prediction_units = len(valid)
-            # else, run training on a large range of data and predict the next
-            m = Prophet(changepoint_prior_scale=0.005, yearly_seasonality=False)
-            m.fit(train)  # df is a pandas.DataFrame with 'y' and 'ds' columns
+    # plot the data
+    fig, ax, = plt.subplots()
+    ax.plot(df[ds_col], df['y'], color='red', label='Actual Price')
+    ax.plot(df[ds_col], df['yhat']
+            , color='blue'
+            , marker='o'
+            , markersize=3
+            , linestyle='dashed'
+            , linewidth=1
+            , label='Predicted Price'
+            )
+    ax.set_title('Amazon Stock Price Prediction (Dev Data)\nWith Facebook Prophet ' + n)
+    plt.xlabel('Time')
+    plt.ylabel('Stock Price')
+    plt.legend()
+    fig.autofmt_xdate()
+    plt.show()
 
-            # set future index period manually (hide for now)
-            future = m.make_future_dataframe(periods=n_prediction_units, freq=prediction_frequency)
-
-            # trading day parameters
-            trade_day_start = 9
-            trade_day_end = 16
-            weekend = 5
-
-            # apply forecast filter based on trade day parameters
-            # future = future[(future[ds_col].dt.hour >= trade_day_start) | (future[ds_col].dt.hour  <= trade_day_end)]
-            # future = future[(future[ds_col].dt.weekday < weekend)]
-
-            # set future dataframe forecast based on validation time index
-            future = valid[['t']].reset_index(drop=True)
-            future = future.rename(columns={'t':ds_col})
-
-            # return just the last n results which are the forecasts
-            n_forcast_units = -1 * n_prediction_units
-            forecast = m.predict(future)[[ds_col, 'yhat']].iloc[n_forcast_units:]
-
-            # return results in a single dataframe
-            results = pd.merge(valid, forecast, left_on=time_col, right_on=ds_col)
-
-            preds = results['yhat'].values
-            targets = results[data_col].values
-
-            # compute MAPE error for comparison to models
-            error = mean_absolute_error(targets, preds) * 100
-
-            print('The MAPE for facebook prophet is', error)
-
-            # plot data
-            fig, ax, = plt.subplots()
-            ax.plot(results[time_col], results[data_col], color='red', label='Actual Price')
-            ax.plot(results[time_col], results['yhat']
-                    , color='blue'
-                    , marker='o'
-                    , markersize=3
-                    , linestyle='dashed'
-                    , linewidth=1
-                    , label='Predicted Price'
-                    )
-            ax.set_title('Amazon Stock Price Prediction (Dev Data)\nWith Facebook Prophet ' + n)
-            plt.xlabel('Time')
-            plt.ylabel('Stock Price')
-            plt.legend()
-            fig.autofmt_xdate()
-            plt.show()
-
-            # plt.plot()
-            # fig1 = m.plot(forecast)
-            # plt.title('Amazon Stock Price Prediction (Dev Data)\nWith Facebook Prophet ' + n)
-            # plt.tight_layout()
-            # fig1.show()
-
-            #fixme subplots and title
-            # plt.plot()
-            # plt.title('Amazon Stock Price Components (Dev Data)\nWith Facebook Prophet')
-            # fig2 = m.plot_components(forecast)
-            # plt.tight_layout()
-            # fig2.show()
-            # print('done')
-
-    else:
-        print("Set up Facebook Prophet, did not run model")
+    #     else:
+    #         if valid is not None:
+    #             n_prediction_units = len(valid)
+    #         # else, run training on a large range of data and predict the next
+    #         m = Prophet(changepoint_prior_scale=0.005, yearly_seasonality=False)
+    #         m.fit(train)  # df is a pandas.DataFrame with 'y' and 'ds' columns
+    #
+    #         # set future index period manually (hide for now)
+    #         future = m.make_future_dataframe(periods=n_prediction_units, freq=prediction_frequency)
+    #
+    #         # trading day parameters
+    #         trade_day_start = 9
+    #         trade_day_end = 16
+    #         weekend = 5
+    #
+    #         # apply forecast filter based on trade day parameters
+    #         # future = future[(future[ds_col].dt.hour >= trade_day_start) | (future[ds_col].dt.hour  <= trade_day_end)]
+    #         # future = future[(future[ds_col].dt.weekday < weekend)]
+    #
+    #         # set future dataframe forecast based on validation time index
+    #         future = valid[['t']].reset_index(drop=True)
+    #         future = future.rename(columns={'t':ds_col})
+    #
+    #         # return just the last n results which are the forecasts
+    #         n_forcast_units = -1 * n_prediction_units
+    #         forecast = m.predict(future)[[ds_col, 'yhat']].iloc[n_forcast_units:]
+    #
+    #         # return results in a single dataframe
+    #         results = pd.merge(valid, forecast, left_on=time_col, right_on=ds_col)
+    #
+    #         preds = results['yhat'].values
+    #         targets = results[data_col].values
+    #
+    #         # compute MAPE error for comparison to models
+    #         error = mean_absolute_error(targets, preds) * 100
+    #
+    #         print('The MAPE for facebook prophet is', error)
+    #
+    #         # plot data
+    #         fig, ax, = plt.subplots()
+    #         ax.plot(results[time_col], results[data_col], color='red', label='Actual Price')
+    #         ax.plot(results[time_col], results['yhat']
+    #                 , color='blue'
+    #                 , marker='o'
+    #                 , markersize=3
+    #                 , linestyle='dashed'
+    #                 , linewidth=1
+    #                 , label='Predicted Price'
+    #                 )
+    #         ax.set_title('Amazon Stock Price Prediction (Dev Data)\nWith Facebook Prophet ' + n)
+    #         plt.xlabel('Time')
+    #         plt.ylabel('Stock Price')
+    #         plt.legend()
+    #         fig.autofmt_xdate()
+    #         plt.show()
+    #
+    #         # plt.plot()
+    #         # fig1 = m.plot(forecast)
+    #         # plt.title('Amazon Stock Price Prediction (Dev Data)\nWith Facebook Prophet ' + n)
+    #         # plt.tight_layout()
+    #         # fig1.show()
+    #
+    #         #fixme subplots and title
+    #         # plt.plot()
+    #         # plt.title('Amazon Stock Price Components (Dev Data)\nWith Facebook Prophet')
+    #         # fig2 = m.plot_components(forecast)
+    #         # plt.tight_layout()
+    #         # fig2.show()
+    #         # print('done')
+    #
+    # else:
+    #     print("Set up Facebook Prophet, did not run model")
 
 

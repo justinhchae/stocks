@@ -23,7 +23,7 @@ def train_arima(timeseries
                 , time_col
                 , date_min=None
                 , date_max=None
-                , run_model=False
+                , run_model=True
                 , window_size=15
                 ):
     if date_min:
