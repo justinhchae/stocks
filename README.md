@@ -62,11 +62,20 @@ The development data is based on a sample of dummy data news articles for Amazon
 
 * Unlike ARIMA and Prophet, the LSTM Model is used to predict sequences after the training window.
 
-
-## Resources
+## Relevant Documentation
 
 * [PyTorch](https://pytorch.org/docs/stable/generated/torch.nn.LSTM.html)
 
 * [Facebook Prophet](https://facebook.github.io/prophet/)
 
 * [ARIMA](https://www.statsmodels.org/stable/index.html)
+
+* [VADER](https://pypi.org/project/vaderSentiment/)
+
+## Key Resources
+
+* [ARIMA Implementation](https://towardsdatascience.com/time-series-forecasting-predicting-stock-prices-using-an-arima-model-2e3b3080bd70)
+
+* [Facebook Prophet Implementation](https://medium.com/spikelab/forecasting-multiples-time-series-using-prophet-in-parallel-2515abd1a245), [Supressing Prophet Output](https://stackoverflow.com/questions/2125702/how-to-suppress-console-output-in-python), and [enabling multi-processing](https://medium.com/spikelab/forecasting-multiples-time-series-using-prophet-in-parallel-2515abd1a245)
+
+* [Chunking DataFrame](https://yaoyao.codes/pandas/2018/01/23/pandas-split-a-dataframe-into-chunks)
