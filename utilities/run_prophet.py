@@ -274,8 +274,9 @@ def assess_prophet_results(prophet_results):
     print()
 
     # compute the MAPE over the entire prediction set
-    error = mean_absolute_percentage_error(df['y'].values, df['yhat'].values) * 100
-    print('The MAPE for facebook prophet is', error)
+    # error = mean_absolute_percentage_error(df['y'].values, df['yhat'].values) * 100
+    mape = mean_absolute_percentage_error(df['y'].values, df['yhat'].values) * 100
+    print('The MAPE for facebook prophet is', mape)
 
     # plot the data
     fig, ax, = plt.subplots()

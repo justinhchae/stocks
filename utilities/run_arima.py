@@ -97,7 +97,8 @@ def train_arima(timeseries
             n = 'n=' + str(N_train_observations)
 
             # aggregate_mse_error = mean_squared_error(targets, predictions)
-            mape = mean_absolute_error(targets, predictions) * 100
+            mape = mean_absolute_percentage_error(targets, predictions) * 100
+
             print('The MAPE error is', mape)
             fig, ax = plt.subplots()
             ax.plot(pred_times, targets

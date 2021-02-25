@@ -150,7 +150,7 @@ def train_model_1(train, valid, test, model, epochs=10, learning_rate=0.001, run
             test_preds = np.concatenate(test_preds)
             test_targets = np.concatenate(test_targets)
             mape = np.mean(np.abs((test_targets - test_preds) / test_targets)) * 100
-            mape2 = mean_absolute_percentage_error(test_targets, test_preds)
+            mape2 = mean_absolute_percentage_error(test_targets, test_preds) * 100
             optimizer.zero_grad()
 
         print(f'MAPE score: {mape}')

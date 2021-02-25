@@ -33,9 +33,9 @@ if __name__ == '__main__':
                                                                        , test=test
                                                                        )
     # START HERE uncomment the line you want to run
-    run_mode = 'arima'
+    # run_mode = 'arima'
     # run_mode = 'prophet'
-    # run_mode = 'lstm1'
+    run_mode = 'lstm1'
     # run_mode = 'lstm2'
 
     if run_mode == 'arima':
