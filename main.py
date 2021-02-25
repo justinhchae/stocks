@@ -65,7 +65,7 @@ if __name__ == '__main__':
         print('Training Approach run_mode:', run_mode)
         # train lstm on stock data only
         model = Model(num_layers=1, input_dim=1, seq_length=14)
-        preds = train_model_1(train_scaled, valid_scaled, test_scaled, model, epochs=2, run_model=True, is_scaled=True, sequence_length=14)
+        preds = train_model_1(train_scaled, valid_scaled, test_scaled, model, epochs=20, run_model=True, is_scaled=True, sequence_length=14)
 
     elif run_mode == 'lstm2':
         print('Training Approach run_mode:', run_mode)
