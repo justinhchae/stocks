@@ -10,7 +10,7 @@ Based on the paper ["Stock Price Prediction Using News Sentiment Analysis"](http
 
 ## Brief
 
-1. Overview: Predict a stock price given its prior prices and sentiment from news articles about that stock. 
+1. Overview: Predict a stock price given its prior prices and sentiment from news articles about that stock.
 
 2. Run forecasting experiements with ARIMA: train on a sequence of stock prices and predict the next in sequence.
 
@@ -24,19 +24,19 @@ Based on the paper ["Stock Price Prediction Using News Sentiment Analysis"](http
 
 The development data is based on a sample of dummy data news articles for Amazon (price history and news articles).
 
-* We use VADER compound score as a single value for sentiment score of a given news article. 
+* We use VADER compound score as a single value for sentiment score of a given news article.
 
 * We use closing price of a stock in a minute of a trading day.
 
 * We create a dataframe of time 't', sentiment score 'compound', and price 'c'. The data is resampled on a two-day rolling average to produce a pair of scores for each minute of the trading day.
 
-* News timesstamps that originate in UTC are converted to US/Eastern. 
+* News timesstamps that originate in UTC are converted to US/Eastern.
 
-* Stock timestamps are assumed to be US/Eastern. 
+* Stock timestamps are assumed to be US/Eastern.
 
 ## ARIMA Methodology
 
-* Parse data into window sizes of 15 and use the prior window to predict the start of the next window. 
+* Parse data into window sizes of 15 and use the prior window to predict the start of the next window.
 
 * Example: train on data for from index 0 to index 14 and predict the value at the 15th index position.
 
@@ -46,7 +46,7 @@ The development data is based on a sample of dummy data news articles for Amazon
 
 ## Facebook Prophet Methodology
 
-* Parse data for each trading day into time-index sizes of 15, starting at 9 am and end at 4 pm.
+* Parse data for each trading day into time-index sizes of 15, starting at 9 am and ending at 4 pm.
 
 * Example: train on data for from 09:00 to 09:14 and predict the value at 09:15.
 
