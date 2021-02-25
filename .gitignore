@@ -139,3 +139,4 @@ data/facebook_prophet_results.csv
 *.json
 data/real/news.json
 *.zip
+data/class_data
