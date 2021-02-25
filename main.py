@@ -30,7 +30,7 @@ if __name__ == '__main__':
                                                                        , valid=valid
                                                                        , test=test
                                                                        )
-    # START HERE uncomment the line you want to run
+    # START HERE uncomment the line you want to run; hide the rest
     # run_mode = 'arima'
     # run_mode = 'prophet'
     run_mode = 'lstm1'
