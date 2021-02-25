@@ -45,8 +45,8 @@ if __name__ == '__main__':
     #               )
     # breakpoint()
     # train lstm on scaled data
-    model = Model(num_layers=2, input_dim=1, seq_length=14)
-    preds = train_model_1(train_scaled, valid_scaled, model, run_model=True, is_scaled=True, sequence_length=14)
+    model = Model(num_layers=1, input_dim=2, seq_length=14)
+    # preds = train_model_1(train_scaled, valid_scaled, test_scaled, model, epochs=20, run_model=True, is_scaled=True, sequence_length=14)
 
     ###
 
@@ -60,4 +60,4 @@ if __name__ == '__main__':
                                                                        )
     #TODO: configure data loader and train model to handle sentiment features 'compound'
     # train on combined sentiment and stock data
-    # train_model_1(train_scaled, valid_scaled, run_model=True, is_scaled=True)
+    preds = train_model_1(train_scaled, valid_scaled, test_scaled, model, epochs=20, run_model=True, is_scaled=True, sequence_length=14)

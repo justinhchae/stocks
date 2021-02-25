@@ -58,7 +58,7 @@ def train_model_1(train, valid, test, model, epochs=10, learning_rate=0.001, run
     targets = []
 
 
-    batch_size = 20
+    batch_size = 16
     train_set = Data(train, sequence_length)
     train_load = DataLoader(train_set, batch_size=batch_size)
     valid_set = Data(valid, sequence_length)
@@ -167,13 +167,16 @@ def train_model_1(train, valid, test, model, epochs=10, learning_rate=0.001, run
 
 
         plt.figure()
-        plt.plot(test_targets, label='targets')
-        plt.plot(test_preds, label='predictions')
+        # plt.plot(test.iloc[14:, 0], test_targets, label='targets')
+        xrange = range(len(test_preds))
+        plt.plot(test.iloc[14:, 0], test.iloc[14:, -1], label='targets', marker='x')
+        plt.plot(test.iloc[14:, 0], test_preds, label='predictions', marker='x')
         title = str('LSTM Test Graph\n' + scale_type)
         plt.xlabel('Timestep')
         plt.ylabel('Scaled Price')
         plt.title(title)
         plt.legend()
+        plt.gcf().autofmt_xdate()
         plt.savefig('figures/lstm_approach_1_test_scaled.png')
         plt.show()
 
