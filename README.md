@@ -38,9 +38,9 @@ The development data is based on a sample of dummy data news articles for Amazon
 
 * Parse data into window sizes of 15 and use the prior window to predict the start of the next window.
 
-* Example: train on data for from index 0 to index 14 and predict the value at the 15th index position.
+* Example: train on data from index 0 to index 14 and predict the value at the 15th index position.
 
-* Data is sequenced at index 0 (equal to 9 am on the first trading day in dataset) and continues until the end.
+* Data is sequenced at index 0 (equal to 9 am on the first trading day in dataset) and continues until the last in sequence.
 
 * The model in each prediction window is a new model, only predicting the next sequence.
 
