@@ -1,12 +1,12 @@
 # stock_sa
 
-This project is about Sentiement Analysis for Stock Prediction by @justinhchae @knowledgewithin for COMP SCI 496, Advanced Deep Learning. 
+This project is about Sentiement Analysis for Stock Prediction by @justinhchae @knowledgewithin for COMP SCI 496, [Advanced Deep Learning](https://www.mccormick.northwestern.edu/artificial-intelligence/curriculum/descriptions/msai-449.html) .
 
-MSAI Northwestern, 2021.
+[MSAI Northwestern](https://www.mccormick.northwestern.edu/artificial-intelligence/), Class of 2021.
 
 ## Source
 
-Based on the paper "Stock Price Prediction Using News Sentiment Analysis" by Saloni Mohan, Sahitya Mullapudi, Sudheer Sammeta, Parag Vijayvergia and David C. Anastasiu.
+Based on the paper ["Stock Price Prediction Using News Sentiment Analysis"](https://ieeexplore.ieee.org/document/8848203) by Saloni Mohan, Sahitya Mullapudi, Sudheer Sammeta, Parag Vijayvergia and David C. Anastasiu.
 
 ## Brief
 
@@ -40,17 +40,17 @@ The development data is based on a sample of dummy data news articles for Amazon
 
 * Example: train on data for from index 0 to index 14 and predict the value at the 15th index position.
 
-* Data is sequenced at index 0 (equal to 9 am on the first trading day in dataset) and continues until the end. 
+* Data is sequenced at index 0 (equal to 9 am on the first trading day in dataset) and continues until the end.
 
 * The model in each prediction window is a new model, only predicting the next sequence.
 
 ## Facebook Prophet Methodology
 
-* Parse data for each trading day into time-index sizes of 15, starting at 9 am and end at 4 pm 
+* Parse data for each trading day into time-index sizes of 15, starting at 9 am and end at 4 pm.
 
 * Example: train on data for from 09:00 to 09:14 and predict the value at 09:15.
 
-* Unlike ARIMA, Prophet is time-aware so train and predict occur within the context of time as an index. 
+* Unlike ARIMA, Prophet is time-aware so train and predict occur within the context of time as an index.
 
 * The model in each prediction window is a new model, only predicting the next sequence.
 
@@ -58,6 +58,15 @@ The development data is based on a sample of dummy data news articles for Amazon
 
 * Parse data for each trading day into windows of size 15 and increment step size by 1
 
-* Example: train on data for from index 0 to 14 and predict the value at index 15, then increment window size from [1:15] and predict index at 16, and so on. 
+* Example: train on data for from index 0 to 14 and predict the value at index 15, then increment window size from [1:15] and predict index at 16, and so on.
 
-* Unlike ARIMA and Prophet, the LSTM Model is used to predict sequences after the training window. 
+* Unlike ARIMA and Prophet, the LSTM Model is used to predict sequences after the training window.
+
+
+## Resources
+
+* [PyTorch](https://pytorch.org/docs/stable/generated/torch.nn.LSTM.html)
+
+* [Facebook Prophet](https://facebook.github.io/prophet/)
+
+* [ARIMA](https://www.statsmodels.org/stable/index.html)
