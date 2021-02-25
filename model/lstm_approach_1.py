@@ -46,7 +46,7 @@ class Data(Dataset):
         return (self.__len__())
 
 
-def train_model_1(train, valid, model, epochs=10, learning_rate=0.01, run_model=True, sequence_length=14, is_scaled=False):
+def train_model_1(train, valid, test, model, epochs=10, learning_rate=0.001, run_model=True, sequence_length=14, is_scaled=False):
     #TODO early stopping
     #TODO run validation and test iterations
     #TODO save pickled model/binarys
@@ -63,6 +63,8 @@ def train_model_1(train, valid, model, epochs=10, learning_rate=0.01, run_model=
     train_load = DataLoader(train_set, batch_size=batch_size)
     valid_set = Data(valid, sequence_length)
     valid_load = DataLoader(valid_set, batch_size=batch_size)
+    test_set = Data(test, sequence_length)
+    test_load = DataLoader(test_set, batch_size=batch_size)
 
 
     model = model.to(model.device)
@@ -76,7 +78,7 @@ def train_model_1(train, valid, model, epochs=10, learning_rate=0.01, run_model=
         scale_type = 'not scaled'
 
     if run_model:
-        for epoch in range(3):
+        for epoch in range(epochs):
             model.train(True)
             epoch_preds = []
             epoch_targets = []
@@ -97,7 +99,7 @@ def train_model_1(train, valid, model, epochs=10, learning_rate=0.01, run_model=
                 y_pred = y_pred.to(model.device)
                 loss = loss_function(y_pred, y)
 
-                losses.append(loss.item())
+                # losses.append(loss.item())
                 loss.backward()
                 optimizer.step()
 
@@ -105,6 +107,7 @@ def train_model_1(train, valid, model, epochs=10, learning_rate=0.01, run_model=
 
             print('Epoch: {}.............'.format(epoch), end=' ')
             print("Loss: {:.4f}".format(loss.item()))
+            losses.append(loss.item())
 
             with torch.no_grad():
                 model.train(False)
@@ -121,41 +124,68 @@ def train_model_1(train, valid, model, epochs=10, learning_rate=0.01, run_model=
                     y_pred = y_pred.to(model.device)
                     loss_v = loss_function(y_pred, y)
 
-                    losses_valid.append(loss_v.item())
+                    # losses_valid.append(loss_v.item())
 
-                    optimizer.zero_grad()
+                    # optimizer.zero_grad()
+                losses_valid.append(loss_v.item())
 
 
 
             preds.append(epoch_preds)
             targets.append(epoch_targets)
 
+        test_preds = []
+        test_targets = []
+        with torch.no_grad():
+            model.train(False)
+            for idx, (x, y) in enumerate(test_load):
+                x, y = x.to(device), y.to(device)
+
+                model.init_hidden(x.size(0))
+
+                y_pred = model(x)
+
+                test_preds.append(y_pred.detach().numpy())
+                test_targets.append(y.detach().numpy())
+            test_preds = np.concatenate(test_preds)
+            test_targets = np.concatenate(test_targets)
+            mape = np.mean(np.abs((test_targets - test_preds) / test_targets)) * 100
+            optimizer.zero_grad()
+
+        print(f'MAPE score: {mape}')
+
         plt.figure()
         plt.plot(losses, label='train loss')
+        plt.plot(losses_valid, label='valid loss')
         title = str('LSTM Loss Graph\n' + scale_type)
+        plt.xlabel('Epoch')
+        plt.ylabel('Loss')
         plt.title(title)
         plt.legend()
-        plt.savefig('figures/lstm_approach_1_loss_actual.png')
+        plt.savefig('figures/lstm_approach_1_loss_scaled.png')
         plt.show()
 
+
+        plt.figure()
+        plt.plot(test_targets, label='targets')
+        plt.plot(test_preds, label='predictions')
+        title = str('LSTM Test Graph\n' + scale_type)
+        plt.xlabel('Timestep')
+        plt.ylabel('Scaled Price')
+        plt.title(title)
+        plt.legend()
+        plt.savefig('figures/lstm_approach_1_test_scaled.png')
+        plt.show()
+
+        # targets0 = np.concatenate(targets[-1])
+        # preds0 = np.concatenate(preds[-1])
         # plt.figure()
-        # plt.plot(epoch_targets, label='targets')
-        # plt.plot(epoch_preds, label='predictions')
-        # title = str('LSTM Predictions Graph\n' + scale_type)
+        # plt.plot(targets0, label='targets')
+        # plt.plot(preds0, label='predictions')
+        # title = str('LSTM Final Epoch Graph\n' + scale_type)
         # plt.title(title)
         # plt.legend()
-        # # plt.savefig('figures/lstm_approach_1_predictions_actual.png')
+        # plt.savefig('figures/lstm_approach_1_training_scaled.png')
         # plt.show()
-
-        targets0 = np.concatenate(targets[-1])
-        preds0 = np.concatenate(preds[-1])
-        plt.figure()
-        plt.plot(targets0, label='targets')
-        plt.plot(preds0, label='predictions')
-        title = str('LSTM Predictions Graph\n' + scale_type)
-        plt.title(title)
-        plt.legend()
-        # plt.savefig('figures/lstm_approach_1_predictions_actual.png')
-        plt.show()
     else:
         print('not running model')
