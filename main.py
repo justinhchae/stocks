@@ -33,12 +33,13 @@ if __name__ == '__main__':
                                                                        , test=test
                                                                        )
     # START HERE uncomment the line you want to run
-    # run_mode = 'arima'
+    run_mode = 'arima'
     # run_mode = 'prophet'
     # run_mode = 'lstm1'
-    run_mode = 'lstm2'
+    # run_mode = 'lstm2'
 
     if run_mode == 'arima':
+        print('Training Approach run_mode:', run_mode)
         # train arima on stock data only
         train_arima(timeseries=test_scaled
                     , validation_data=valid
@@ -47,6 +48,7 @@ if __name__ == '__main__':
                     )
 
     elif run_mode == 'prophet':
+        print('Training Approach run_mode:', run_mode)
         # train prophet on stock data only
         prophet_data = setup_prophet(test_scaled
                       , time_col='t'
@@ -60,11 +62,13 @@ if __name__ == '__main__':
         assess_prophet_results(prophet_results)
 
     elif run_mode == 'lstm1':
+        print('Training Approach run_mode:', run_mode)
         # train lstm on stock data only
         model = Model(num_layers=1, input_dim=1, seq_length=14)
         preds = train_model_1(train_scaled, valid_scaled, test_scaled, model, epochs=2, run_model=True, is_scaled=True, sequence_length=14)
 
     elif run_mode == 'lstm2':
+        print('Training Approach run_mode:', run_mode)
         # split on data having closing price 'c' and sentiment score 'compound'
         model = Model(num_layers=1, input_dim=2, seq_length=14)
         train, valid, test = split_stock_data(df=df, time_col='t')

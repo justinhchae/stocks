@@ -34,7 +34,7 @@ def split_stock_data(df, time_col, pct_train=.7, pct_valid=.15, pct_test=.15):
     valid = df.iloc[n_train:n_train+n_valid, :].copy()
     test = df.iloc[n_train+n_valid:, :].copy()
 
-    print('Split stock data int train, validation, and test.')
+    # print('Split stock data int train, validation, and test.')
 
     return train, valid, test
 
@@ -50,7 +50,7 @@ def scale_stock_data(train, valid, test, col=None):
     valid[col] = scaler.transform(valid[col])
     test[col] = scaler.transform(test[col])
 
-    print('Scaled stock data. Fit_transform on train, transformed validation, and test.')
+    # print('Scaled stock data. Fit_transform on train, transformed validation, and test.')
 
     return train, valid, test, scaler
 

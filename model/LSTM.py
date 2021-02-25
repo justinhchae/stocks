@@ -2,11 +2,10 @@ import torch.nn as nn
 import torch
 
 try:
-  # print('Number of GPUs:',torch.cuda.device_count())
-  # print('GPU Card:', torch.cuda.get_device_name(0))
+  torch.cuda.device_count()
+  torch.cuda.get_device_name(0)
   device = torch.device('cuda:0')
 except:
-  # print("No GPU this session, learning with CPU.")
   device = torch.device("cpu")
 
 class Model(nn.Module):
