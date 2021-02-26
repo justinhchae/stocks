@@ -22,8 +22,6 @@ if __name__ == '__main__':
 
     # split data into train, validation, and testing
     train, valid, test = split_stock_data(df=df[['t','c']], time_col='t')
-    # train lstm on unscaled data
-    # train_model_1(train, run_model=False, is_scaled=False)
 
     # scale stock data
     train_scaled, valid_scaled, test_scaled, scaler = scale_stock_data(train=train
@@ -31,9 +29,9 @@ if __name__ == '__main__':
                                                                        , test=test
                                                                        )
     # START HERE uncomment the line you want to run; hide the rest
-    # run_mode = 'arima'
+    run_mode = 'arima'
     # run_mode = 'prophet'
-    run_mode = 'lstm1'
+    # run_mode = 'lstm1'
     # run_mode = 'lstm2'
 
     is_cuda = torch.cuda.is_available()

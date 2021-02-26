@@ -10,6 +10,8 @@ def cleaner(df, col):
     :param col: a string (name of col to clean)
     :return: a dataframe cleaned with text hero pipeline
     """
+    # ignore future warning re: texthero default call to regex
+    warnings.filterwarnings("ignore")
     pipeline = [
          pp.fillna
         , pp.remove_digits
