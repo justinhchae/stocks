@@ -2,8 +2,10 @@
 from utilities.get_data import get_news_dummies, get_stock_dummies
 from utilities.clean_data import trading_days
 from utilities.sentiment_data import score_sentiment
-from utilities.run_arima import setup_arima, run_arima, assess_arima
-from utilities.run_prophet import setup_prophet, run_prophet, assess_prophet_results
+from utilities.run_arima import run_arima
+from utilities.run_prophet import run_prophet
+from utilities.data_chunker import chunk_data
+from utilities.evaluate_model import assess_model
 from utilities.prep_stock_data import split_stock_data, scale_stock_data
 from model.lstm_approach_1 import train_model_1
 from model.LSTM import Model
@@ -31,9 +33,9 @@ if __name__ == '__main__':
                                                                        )
     # START HERE uncomment the line you want to run; hide the rest
     # run_mode = 'arima'
-    # run_mode = 'prophet'
+    run_mode = 'prophet'
     # run_mode = 'lstm1'
-    run_mode = 'lstm2'
+    # run_mode = 'lstm2'
 
     # get count of max available CPUs, minus 2
     CPUs = cpu_count() - 2
@@ -44,36 +46,36 @@ if __name__ == '__main__':
               , 'time_col': 't'
               , 'price_col': 'c'
               , 'run_model': True
-              , 'window_size': 15}
+              , 'window_size': 15
+              , 'seasonal_unit':'day'
+              , 'prediction_unit':'1min'
+              , 'n_prediction_units':1}
 
     if run_mode == 'arima':
         print('Training Approach run_mode:', run_mode)
         # train arima on stock data only
-        arima_data = setup_arima(**params)
+        chunked_data = chunk_data(**params)
         p = Pool(CPUs)
-        arima_results = list(tqdm(p.imap(run_arima, arima_data)))
+        results = list(tqdm(p.imap(run_arima, chunked_data)))
         p.close()
         p.join()
 
         # assess model results
-        assess_arima(arima_results)
+        assess_model(results, model_type=run_mode, stock_name='Amazon')
 
     elif run_mode == 'prophet':
         print('Training Approach run_mode:', run_mode)
         # train prophet on stock data only
-        prophet_data = setup_prophet(test_scaled
-                      , time_col='t'
-                      , data_col='c'
-                      )
+        chunked_data = chunk_data(**params)
 
         # pooling enabled.
         p = Pool(CPUs)
-        prophet_results = list(tqdm(p.imap(run_prophet, prophet_data)))
+        results = list(tqdm(p.imap(run_prophet, chunked_data)))
         p.close()
         p.join()
 
         # assess model results
-        assess_prophet_results(prophet_results)
+        assess_model(results, model_type=run_mode, stock_name='Amazon')
 
     elif run_mode == 'lstm1':
         print('Training Approach run_mode:', run_mode)
