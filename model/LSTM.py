@@ -7,15 +7,15 @@ class Model(nn.Module):
     def __init__(self
                  , input_dim
                  , seq_length
+                 , device
                  , hidden_dim=50
                  , output_dim=1
                  , num_layers=1
-                 # , device=device
                  ):
 
         super(Model, self).__init__()
 
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.device = device
         self.input_dim = input_dim

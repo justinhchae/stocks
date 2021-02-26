@@ -37,14 +37,13 @@ class Data(Dataset):
     def __getsize__(self):
         return (self.__len__())
 
-def train_model(train, model, epochs=20, learning_rate=0.001, sequence_length=14):
+def train_model(train, model, sequence_length, epochs=20, learning_rate=0.001, batch_size=16):
     # new train function, replace train_model1 with this
     # https://pytorch.org/docs/stable/notes/multiprocessing.html
 
     losses_valid = []
     preds = []
     targets = []
-    batch_size = 16
 
     train_set = Data(train, sequence_length)
     train_loader = DataLoader(train_set, batch_size=batch_size)
@@ -93,7 +92,7 @@ def train_epoch(epoch, model, data_loader, loss_function, optimizer):
     losses.append(loss.item())
     return losses
 
-def test_model(model, dataset, sequence_length=14, batch_size=16):
+def test_model(model, dataset, sequence_length, batch_size=16):
     test_set = Data(dataset, sequence_length)
     test_load = DataLoader(test_set, batch_size=batch_size)
     model.eval()
@@ -118,8 +117,8 @@ def test_model(model, dataset, sequence_length=14, batch_size=16):
     print(f'MAPE score: {mape}')
 
     plt.figure()
-    plt.plot(dataset.iloc[14:, 0], dataset.iloc[14:, -1], label='targets', marker='x')
-    plt.plot(dataset.iloc[14:, 0], test_preds, label='predictions', marker='x')
+    plt.plot(dataset.iloc[sequence_length:, 0], dataset.iloc[sequence_length:, -1], label='targets', marker='x')
+    plt.plot(dataset.iloc[sequence_length:, 0], test_preds, label='predictions', marker='x')
     title = str('LSTM Test Graph\n')
     plt.xlabel('Timestep')
     plt.ylabel('Scaled Price')
@@ -252,8 +251,8 @@ def train_model_1(train, valid, test, model, epochs=10, learning_rate=0.001, run
         plt.figure()
         # plt.plot(test.iloc[14:, 0], test_targets, label='targets')
         xrange = range(len(test_preds))
-        plt.plot(test.iloc[14:, 0], test.iloc[14:, -1], label='targets', marker='x')
-        plt.plot(test.iloc[14:, 0], test_preds, label='predictions', marker='x')
+        plt.plot(test.iloc[sequence_length:, 0], test.iloc[sequence_length:, -1], label='targets', marker='x')
+        plt.plot(test.iloc[sequence_length:, 0], test_preds, label='predictions', marker='x')
         title = str('LSTM Test Graph\n' + scale_type)
         plt.xlabel('Timestep')
         plt.ylabel('Scaled Price')
