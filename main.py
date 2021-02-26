@@ -2,14 +2,13 @@
 from utilities.get_data import get_news_dummies, get_stock_dummies
 from utilities.clean_data import trading_days
 from utilities.sentiment_data import score_sentiment
-from utilities.run_arima import train_arima
+from utilities.run_arima import setup_arima, run_arima, assess_arima
 from utilities.run_prophet import setup_prophet, run_prophet, assess_prophet_results
 from utilities.prep_stock_data import split_stock_data, scale_stock_data
 from model.lstm_approach_1 import train_model_1
 from model.LSTM import Model
 from tqdm import tqdm
 from multiprocessing import Pool, cpu_count
-
 
 
 if __name__ == '__main__':
@@ -33,17 +32,31 @@ if __name__ == '__main__':
     # START HERE uncomment the line you want to run; hide the rest
     # run_mode = 'arima'
     # run_mode = 'prophet'
-    run_mode = 'lstm1'
-    # run_mode = 'lstm2'
+    # run_mode = 'lstm1'
+    run_mode = 'lstm2'
+
+    # get count of max available CPUs, minus 2
+    CPUs = cpu_count() - 2
+
+    params = { 'train_data': train_scaled
+              , 'valid_data': valid_scaled
+              , 'test_data' : test_scaled
+              , 'time_col': 't'
+              , 'price_col': 'c'
+              , 'run_model': True
+              , 'window_size': 15}
 
     if run_mode == 'arima':
         print('Training Approach run_mode:', run_mode)
         # train arima on stock data only
-        train_arima(timeseries=test_scaled
-                    , validation_data=valid
-                    , time_col='t'
-                    , window_size=15
-                    )
+        arima_data = setup_arima(**params)
+        p = Pool(CPUs)
+        arima_results = list(tqdm(p.imap(run_arima, arima_data)))
+        p.close()
+        p.join()
+
+        # assess model results
+        assess_arima(arima_results)
 
     elif run_mode == 'prophet':
         print('Training Approach run_mode:', run_mode)
@@ -52,9 +65,6 @@ if __name__ == '__main__':
                       , time_col='t'
                       , data_col='c'
                       )
-
-        # get count of max available CPUs, minus 2
-        CPUs = cpu_count() - 2
 
         # pooling enabled.
         p = Pool(CPUs)

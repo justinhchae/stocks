@@ -18,31 +18,24 @@ from statsmodels.tools.sm_exceptions import ConvergenceWarning
 
 
 
-def train_arima(timeseries
-                , validation_data
+def setup_arima(train_data
+                , valid_data
+                , test_data
+                , price_col
                 , time_col
-                , date_min=None
-                , date_max=None
                 , run_model=True
                 , window_size=15
                 ):
-    if date_min:
-        date_min = pd.to_datetime(date_min)
-        df = timeseries[timeseries[time_col] > date_min].copy()
-    else:
-        df = timeseries.copy()
-
-    warnings.simplefilter('ignore', ConvergenceWarning)
 
     if run_model:
 
         plt.figure()
-        lag_plot(df['c'])
+        lag_plot(train_data[price_col])
         plt.title('Amazon Stock (Dev Data) - Autocorrelation Plot')
         plt.show()
 
         fig, ax = plt.subplots()
-        ax.plot(df["t"], df["c"])
+        ax.plot(train_data[time_col], train_data[price_col])
         plt.xlabel('Time')
         plt.ylabel('Stock Price')
         ax.set_title('Amazon Stock (Dev Data) - Minute-by-Minute Closing Prices')
@@ -50,119 +43,111 @@ def train_arima(timeseries
         plt.show()
 
     # train, valid, test = split_stock_data(df=df, time_col='t')
-    train_data = df['c'].values
-    train_time = df['t'].values
+    x_i = train_data[price_col].values
+    x_t = train_data[time_col].values
 
-    valid_data = validation_data['c'].values
-    valid_time = validation_data['t'].values
-    # test_data = test['c'].values
+    v_i = valid_data[price_col].values
+    v_t = valid_data[time_col].values
 
-    history = [x for x in train_data]
-    model_predictions = []
-    N_train_observations = len(train_data)
-    N_valid_observations = len(valid_data)
-    # N_test_observations = len(test_data)
+    t_i = test_data[price_col].values
+    t_t = test_data[time_col].values
 
-    if run_model:
+    N = len(x_i)
 
-        # for every 15 minutes, predict the 16th minute (next closing price)
-        if window_size:
-            #TODO add validatoin and test
-            print("Run ARIMA on Window Size", window_size)
+    x_i = [x_i[i:i + window_size] for i in range(0, N, window_size)]
+    x_t = [x_t[i:i + window_size] for i in range(0, N, window_size)]
 
-            x_i = [train_data[i:i + window_size] for i in range(0, N_train_observations, window_size)]
-            x_t = [train_time[i:i + window_size] for i in range(0, N_train_observations, window_size)]
+    arima_data = list(zip(x_i, x_t))
 
-            v_i = [valid_data[i:i + window_size] for i in range(0, N_valid_observations, window_size)]
-            v_t = [valid_time[i:i + window_size] for i in range(0, N_valid_observations, window_size)]
+    return arima_data
 
-            predictions = []
-            targets = []
-            pred_times = []
-            losses = []
+def run_arima(data):
+    warnings.simplefilter('ignore', ConvergenceWarning)
 
-            for idx in tqdm(range(len(x_i))):
+    x_i = data[0]
+    x_t = data[1]
 
-                model_data = x_i[idx][:-1]
-                model = ARIMA(model_data, order=(0, 1, 0))
-                model_fit = model.fit()
-                output = model_fit.forecast()
-                yhat = output[0]
-                predictions.append(yhat)
-                target = x_i[idx][-1]
-                targets.append(target)
-                pred_time = x_t[idx][-1]
-                pred_times.append(pred_time)
-                loss = mean_squared_error([target], [yhat])
-                losses.append(loss)
+    # for every t-m:t-1 minutes, predict the t-th minute (next closing price)
+    model_data = x_i[:-1]
+    model = ARIMA(model_data, order=(0, 1, 0))
 
-            n = 'n=' + str(N_train_observations)
+    model_fit = model.fit()
+    output = model_fit.forecast()
+    yhat = output[0]
+    target = x_i[-1]
+    pred_time = x_t[-1]
 
-            # aggregate_mse_error = mean_squared_error(targets, predictions)
-            mape = mean_absolute_percentage_error(targets, predictions) * 100
+    results = {'yhat': yhat,
+               'y' : target,
+               't' : pred_time}
 
-            print('The MAPE error is', mape)
-            fig, ax = plt.subplots()
-            ax.plot(pred_times, targets
-                    , color='red'
-                    , label='Actual Price')
-            ax.plot(pred_times, predictions
-                    , color='blue'
-                    , marker='o'
-                    , markersize=3
-                    , linestyle='dashed'
-                    , linewidth=1
-                    , label='Predicted Price'
-                    )
-            ax.set_title('Amazon Stock Price Prediction (Dev Data)\nWith STATA ARIMA Model ' + n)
-            plt.xlabel('Time')
-            plt.ylabel('Stock Price')
-            plt.legend()
-            fig.autofmt_xdate()
-            plt.show()
+    return results
 
-            fig, ax = plt.subplots()
-            ax.plot(pred_times, losses, color='orange', label='MSE Loss')
-            ax.set_title('Amazon Stock Price Prediction Losses (Dev Data)\nWith STATA ARIMA Model')
-            plt.xlabel('Time')
-            plt.ylabel('Loss')
-            plt.legend()
-            fig.autofmt_xdate()
-            plt.show()
+def assess_arima(data, time_col='t', pred_col='yhat', tgt_col='y'):
 
-        else:
-            print("Run ARIMA on Entire Training Set - This will Take A While")
+    df = pd.DataFrame(data)
+    df = df.sort_values(time_col).reset_index()
+    N = 'n=' + str(len(df))
 
-            for time_point in tqdm(range(N_train_observations)):
-                model = ARIMA(history, order=(4,1,0))
-                model_fit = model.fit()
-                output = model_fit.forecast()
-                yhat = output[0]
-                model_predictions.append(yhat)
-                true_test_value = valid_data[time_point]
-                history.append(true_test_value)
+    y_true = df[tgt_col].values
+    y_pred = df[pred_col].values
+    error = mean_absolute_percentage_error(y_true, y_pred) * 100
+    print('The MAPE error is', error)
 
-            error = mean_absolute_percentage_error(valid_data[:len(model_predictions)], model_predictions)
-            print('Testing Mean Squared Error is {}'.format(error))
+    fig, ax = plt.subplots()
+    ax.plot(df[time_col], df[pred_col]
+            , color='red'
+            , label='Actual Price')
+    ax.plot(df[time_col], df[tgt_col]
+            , color='blue'
+            , marker='o'
+            , markersize=3
+            , linestyle='dashed'
+            , linewidth=1
+            , label='Predicted Price'
+            )
+    ax.set_title('Amazon Stock Price Prediction (Dev Data)\nWith STATA ARIMA Model ' + N)
+    plt.xlabel('Time')
+    plt.ylabel('Stock Price')
+    plt.legend()
+    fig.autofmt_xdate()
+    plt.show()
 
-            fig, ax = plt.subplots()
-            ax.plot(valid_data['t'], valid_data['c'], color='red', label='Actual Price')
-            ax.plot(valid_data['t'][:len(model_predictions)], model_predictions, color='blue', marker='o', linestyle='dashed', label='Predicted Price')
-            ax.set_title('Amazon Stock Price Prediction (Dev Data)\nWith STATA ARIMA Model')
-            plt.xlabel('Time')
-            plt.ylabel('Stock Price')
-            plt.legend()
-            fig.autofmt_xdate()
-            plt.show()
 
-            results_dict = {}
-            results_dict['predictions'] = model_predictions
-            results_dict['targets'] = valid_data[:len(model_predictions)]
-            df = pd.DataFrame.from_dict(results_dict)
-            df.to_csv('data/arima_results.csv')
-
-    else:
-        print('Ran ARIMA module, did not train')
+#TODO: Clean this UP!!!
+#     else:
+#         print("Run ARIMA on Entire Training Set - This will Take A While")
+#
+#         for time_point in tqdm(range(N_train_observations)):
+#             model = ARIMA(history, order=(4,1,0))
+#             model_fit = model.fit()
+#             output = model_fit.forecast()
+#             yhat = output[0]
+#             model_predictions.append(yhat)
+#             true_test_value = valid_data[time_point]
+#             history.append(true_test_value)
+#
+#         error = mean_absolute_percentage_error(valid_data[:len(model_predictions)], model_predictions)
+#         print('Testing Mean Squared Error is {}'.format(error))
+#
+#         fig, ax = plt.subplots()
+#         ax.plot(valid_data['t'], valid_data['c'], color='red', label='Actual Price')
+#         ax.plot(valid_data['t'][:len(model_predictions)], model_predictions, color='blue', marker='o', linestyle='dashed', label='Predicted Price')
+#         ax.set_title('Amazon Stock Price Prediction (Dev Data)\nWith STATA ARIMA Model')
+#         plt.xlabel('Time')
+#         plt.ylabel('Stock Price')
+#         plt.legend()
+#         fig.autofmt_xdate()
+#         plt.show()
+#
+#         results_dict = {}
+#         results_dict['predictions'] = model_predictions
+#         results_dict['targets'] = valid_data[:len(model_predictions)]
+#         # df = pd.DataFrame.from_dict(results_dict)
+#         # df.to_csv('data/arima_results.csv')
+#
+# else:
+#     print('Ran ARIMA module, did not train')
 
 
 
