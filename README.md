@@ -34,9 +34,17 @@ The development data is based on a sample of dummy data news articles for Amazon
 
 * Stock timestamps are assumed to be US/Eastern.
 
+## Data Chunker
+
+* Concept: Combine sentiment scores and prices per minute into a single dataframe, then parse it into chunks. 
+
+* Each chunk of data is a 15-minute block of data that starts at 9 am each trading day and ends at 1600
+
+* See [utilities/data_chunker.py](https://github.com/justinhchae/stocks/blob/main/utilities/data_chunker.py)
+
 ## ARIMA Methodology
 
-* Parse data into window sizes of 15 and use the prior window to predict the start of the next window.
+* Train model on a period, forecast the period that immediately follows
 
 * Example: train on data from index 0 to index 14 and predict the value at the 15th index position.
 
@@ -46,7 +54,7 @@ The development data is based on a sample of dummy data news articles for Amazon
 
 ## Facebook Prophet Methodology
 
-* Parse data for each trading day into time-index sizes of 15, starting at 9 am and ending at 4 pm.
+* Train model on a period, forecast the period that immediately follows
 
 * Example: train on data for from 09:00 to 09:14 and predict the value at 09:15.
 
