@@ -5,11 +5,12 @@ from utilities.run_prophet import run_prophet
 from utilities.data_chunker import chunk_data
 from utilities.evaluate_model import assess_model
 from utilities.prep_stock_data import split_stock_data, scale_stock_data
-from model.lstm_approach_1 import train_model_1
+from model.lstm_approach_1 import train_model_1, train_model, test_model
 from model.LSTM import Model
 from tqdm import tqdm
-from multiprocessing import Pool, cpu_count
 
+from multiprocessing import Pool, cpu_count
+import torch.multiprocessing as mp
 
 if __name__ == '__main__':
     # run get pipelines for news and stock data
@@ -50,10 +51,10 @@ if __name__ == '__main__':
               , 'n_prediction_units':1}
 
     if run_mode == 'arima':
-        print(f'Training Approach run_mode:{run_mode}')
+        print(f'Training Approach run_mode: {run_mode}')
         # train arima on stock data only
         chunked_data = chunk_data(**params)
-
+        print(f'Pooling {CPUs}x CPUs with Multiprocessor')
         # pooling enabled
         p = Pool(CPUs)
         results = list(tqdm(p.imap(run_arima, chunked_data)))
@@ -64,10 +65,10 @@ if __name__ == '__main__':
         assess_model(results, model_type=run_mode, stock_name='Amazon')
 
     elif run_mode == 'prophet':
-        print(f'Training Approach run_mode:{run_mode}')
+        print(f'Training Approach run_mode: {run_mode}')
         # train prophet on stock data only
         chunked_data = chunk_data(**params)
-
+        print(f'Pooling {CPUs}x CPUs with Multiprocessor')
         # pooling enabled
         p = Pool(CPUs)
         results = list(tqdm(p.imap(run_prophet, chunked_data)))
@@ -78,10 +79,28 @@ if __name__ == '__main__':
         assess_model(results, model_type=run_mode, stock_name='Amazon')
 
     elif run_mode == 'lstm1':
-        print(f'Training Approach run_mode:{run_mode}')
+        print(f'Training Approach run_mode: {run_mode}')
+        mp.set_start_method('spawn')
         # train lstm on stock data only
         model = Model(num_layers=1, input_dim=1, seq_length=14)
-        preds = train_model_1(train_scaled, valid_scaled, test_scaled, model, epochs=20, run_model=True, is_scaled=True, sequence_length=14)
+        model.share_memory()
+        # preds = train_model_1(train_scaled, valid_scaled, test_scaled, model, epochs=20, run_model=True, is_scaled=True, sequence_length=14)
+        processes = []
+        print(f'Pooling {CPUs}x CPUs with Multiprocessor')
+
+        for rank in tqdm(range(CPUs)):
+            # pool data for train_scaled to function train_model
+            #TODO pin memory for GPU instance
+            p = mp.Process(target=train_model, args=(train_scaled, model))
+            p.start()
+            processes.append(p)
+
+        for p in tqdm(processes):
+            p.join()
+
+        test_model(model, test_scaled)
+
+        # train_model(train=train_scaled, model=model)
 
     elif run_mode == 'lstm2':
         print('Training Approach run_mode:', run_mode)

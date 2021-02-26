@@ -11,6 +11,7 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
 
 class Data(Dataset):
     def __init__(self, data, window, yhat='c', step_size=1):
@@ -23,8 +24,6 @@ class Data(Dataset):
         self.size = self.__getsize__()
 
     def __getitem__(self, index):
-        # TODO: only pass data columns, not time
-        #FIXME: check slicing and target - prediction loss
         x = self.data.iloc[index: index + self.window, 1:]
         y = self.data.iloc[index + self.window, self.yhat:self.yhat+1]
         return torch.tensor(x.to_numpy(), dtype=torch.float32), torch.tensor(y, dtype=torch.float32)
@@ -38,6 +37,98 @@ class Data(Dataset):
     def __getsize__(self):
         return (self.__len__())
 
+def train_model(train, model, epochs=20, learning_rate=0.001, sequence_length=14):
+    # new train function, replace train_model1 with this
+    # https://pytorch.org/docs/stable/notes/multiprocessing.html
+
+    losses_valid = []
+    preds = []
+    targets = []
+    batch_size = 16
+
+    train_set = Data(train, sequence_length)
+    train_loader = DataLoader(train_set, batch_size=batch_size)
+
+    loss_function = nn.MSELoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+
+    losses = []
+    for epoch in range(epochs):
+        # call train epoch here
+        epoch_loss = train_epoch(epoch, model, train_loader, loss_function, optimizer)
+        losses.append(epoch_loss)
+
+def train_epoch(epoch, model, data_loader, loss_function, optimizer):
+    model.train(True)
+
+    #TODO use PID to track threads
+    pid = os.getpid()
+    losses = []
+    epoch_preds = []
+    epoch_targets = []
+    epoch_preds_valid = []
+    epoch_targets_valid = []
+
+    model.zero_grad()
+
+    for idx, (x, y) in enumerate(data_loader):
+        x, y = x.to(model.device), y.to(model.device)
+
+        model.init_hidden(x.size(0))
+
+        y_pred = model(x)
+
+        epoch_preds.append(y_pred.detach().numpy())
+        epoch_targets.append(y.detach().numpy())
+
+        y_pred = y_pred.to(model.device)
+        loss = loss_function(y_pred, y)
+        loss.backward()
+
+        optimizer.step()
+        optimizer.zero_grad()
+
+    # print('Epoch: {}.............'.format(epoch), end=' ')
+    # print("Loss: {:.4f}".format(loss.item()))
+    losses.append(loss.item())
+    return losses
+
+def test_model(model, dataset, sequence_length=14, batch_size=16):
+    test_set = Data(dataset, sequence_length)
+    test_load = DataLoader(test_set, batch_size=batch_size)
+    model.eval()
+
+    test_preds = []
+    test_targets = []
+
+    with torch.no_grad():
+        for idx, (x, y) in enumerate(test_load):
+            x, y = x.to(model.device), y.to(model.device)
+
+            model.init_hidden(x.size(0))
+
+            y_pred = model(x)
+
+            test_preds.append(y_pred.detach().numpy())
+            test_targets.append(y.detach().numpy())
+        test_preds = np.concatenate(test_preds)
+        test_targets = np.concatenate(test_targets)
+        mape = np.mean(np.abs((test_targets - test_preds) / test_targets)) * 100
+
+    print(f'MAPE score: {mape}')
+
+    plt.figure()
+    plt.plot(dataset.iloc[14:, 0], dataset.iloc[14:, -1], label='targets', marker='x')
+    plt.plot(dataset.iloc[14:, 0], test_preds, label='predictions', marker='x')
+    title = str('LSTM Test Graph\n')
+    plt.xlabel('Timestep')
+    plt.ylabel('Scaled Price')
+    plt.title(title)
+    plt.legend()
+    plt.gcf().autofmt_xdate()
+    # plt.savefig('figures/lstm_approach_1_test_scaled.png')
+    plt.show()
+
 
 def train_model_1(train, valid, test, model, epochs=10, learning_rate=0.001, run_model=True, sequence_length=14, is_scaled=False):
     #TODO early stopping
@@ -50,7 +141,6 @@ def train_model_1(train, valid, test, model, epochs=10, learning_rate=0.001, run
     preds = []
     targets = []
 
-
     batch_size = 16
     train_set = Data(train, sequence_length)
     train_load = DataLoader(train_set, batch_size=batch_size)
@@ -58,7 +148,6 @@ def train_model_1(train, valid, test, model, epochs=10, learning_rate=0.001, run
     valid_load = DataLoader(valid_set, batch_size=batch_size)
     test_set = Data(test, sequence_length)
     test_load = DataLoader(test_set, batch_size=batch_size)
-
 
     model = model.to(model.device)
 
