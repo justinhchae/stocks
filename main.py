@@ -32,8 +32,8 @@ if __name__ == '__main__':
                                                                        )
     # START HERE uncomment the line you want to run; hide the rest
     # run_mode = 'arima'
-    run_mode = 'prophet'
-    # run_mode = 'lstm1'
+    # run_mode = 'prophet'
+    run_mode = 'lstm1'
     # run_mode = 'lstm2'
 
     is_cuda = torch.cuda.is_available()
@@ -52,6 +52,7 @@ if __name__ == '__main__':
               , 'seasonal_unit':'day'
               , 'prediction_unit':'1min'
               , 'epochs' : 5
+              , 'n_layers' : 1
               , 'learning_rate': 0.001
               , 'batch_size': 16
               , 'n_prediction_units': 1
@@ -104,8 +105,10 @@ if __name__ == '__main__':
             params.update({'num_workers': 1
                            ,'pin_memory':True})
 
+        params.update({'n_features':1})
+
         # train lstm on stock data only
-        model = Model(num_layers=1, input_dim=1, seq_length=params['window_size'], device=params['device'])
+        model = Model(num_layers=params['n_layers'], input_dim=params['n_features'], seq_length=params['window_size'], device=params['device'])
 
         # preds = train_model_1(train_scaled, valid_scaled, test_scaled, model, epochs=20, run_model=True, is_scaled=True, sequence_length=14)
 
@@ -136,8 +139,10 @@ if __name__ == '__main__':
     elif run_mode == 'lstm2':
         #TODO switch lstm2 to pooling paradigm in lstm1, deprecate train_model_1
         print('Training Approach run_mode:', run_mode)
-        # split on data having closing price 'c' and sentiment score 'compound'
-        model = Model(num_layers=1, input_dim=2, seq_length=params['window_size'], device=params['device'])
+
+        params.update({'n_features': 2})
+
+        model = Model(num_layers=params['n_layers'], input_dim=params['n_features'], seq_length=params['window_size'], device=params['device'])
 
         # split data having both sentiment and stock price
         train, valid, test = split_stock_data(df=df, time_col='t')
