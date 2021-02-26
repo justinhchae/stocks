@@ -87,3 +87,5 @@ The development data is based on a sample of dummy data news articles for Amazon
 * [Facebook Prophet Implementation](https://medium.com/spikelab/forecasting-multiples-time-series-using-prophet-in-parallel-2515abd1a245), [Supressing Prophet Output](https://stackoverflow.com/questions/2125702/how-to-suppress-console-output-in-python), and [enabling multi-processing](https://medium.com/spikelab/forecasting-multiples-time-series-using-prophet-in-parallel-2515abd1a245)
 
 * [Chunking DataFrame](https://yaoyao.codes/pandas/2018/01/23/pandas-split-a-dataframe-into-chunks)
+
+* [Enable multiprocessing with LSTM](https://pytorch.org/docs/stable/notes/multiprocessing.html)
