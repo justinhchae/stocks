@@ -50,6 +50,8 @@ if __name__ == '__main__':
               , 'prediction_unit':'1min'
               , 'n_prediction_units':1}
 
+    enable_mp = False
+
     if run_mode == 'arima':
         print(f'Training Approach run_mode: {run_mode}')
         # train arima on stock data only
@@ -80,27 +82,34 @@ if __name__ == '__main__':
 
     elif run_mode == 'lstm1':
         print(f'Training Approach run_mode: {run_mode}')
-        mp.set_start_method('spawn')
+
         # train lstm on stock data only
         model = Model(num_layers=1, input_dim=1, seq_length=14)
-        model.share_memory()
+
         # preds = train_model_1(train_scaled, valid_scaled, test_scaled, model, epochs=20, run_model=True, is_scaled=True, sequence_length=14)
-        processes = []
-        print(f'Pooling {CPUs}x CPUs with Multiprocessor')
 
-        for rank in tqdm(range(CPUs)):
-            # pool data for train_scaled to function train_model
-            #TODO pin memory for GPU instance
-            p = mp.Process(target=train_model, args=(train_scaled, model))
-            p.start()
-            processes.append(p)
+        if enable_mp:
+            mp.set_start_method('spawn')
+            model.share_memory()
 
-        for p in tqdm(processes):
-            p.join()
+            processes = []
+            print(f'Pooling {CPUs}x CPUs with Multiprocessor')
+
+            for rank in tqdm(range(CPUs)):
+                # pool data for train_scaled to function train_model
+                #TODO pin memory for GPU instance
+                p = mp.Process(target=train_model, args=(train_scaled, model))
+                p.start()
+                processes.append(p)
+
+            for p in tqdm(processes):
+                p.join()
+        else:
+            print('Training Without Pooling')
+            tqdm(train_model(train=train_scaled, model=model))
 
         test_model(model, test_scaled)
 
-        # train_model(train=train_scaled, model=model)
 
     elif run_mode == 'lstm2':
         print('Training Approach run_mode:', run_mode)
