@@ -50,7 +50,7 @@ if __name__ == '__main__':
               , 'prediction_unit':'1min'
               , 'n_prediction_units':1}
 
-    enable_mp = False
+    enable_mp = True
 
     if run_mode == 'arima':
         print(f'Training Approach run_mode: {run_mode}')
@@ -89,13 +89,15 @@ if __name__ == '__main__':
         # preds = train_model_1(train_scaled, valid_scaled, test_scaled, model, epochs=20, run_model=True, is_scaled=True, sequence_length=14)
 
         if enable_mp:
+
+            cores = 7
             mp.set_start_method('spawn')
             model.share_memory()
 
             processes = []
-            print(f'Pooling {CPUs}x CPUs with Multiprocessor')
+            print(f'Pooling {cores}x Cores with Multiprocessor')
 
-            for rank in tqdm(range(CPUs)):
+            for rank in tqdm(range(cores)):
                 # pool data for train_scaled to function train_model
                 #TODO pin memory for GPU instance
                 p = mp.Process(target=train_model, args=(train_scaled, model))
@@ -106,7 +108,7 @@ if __name__ == '__main__':
                 p.join()
         else:
             print('Training Without Pooling')
-            tqdm(train_model(train=train_scaled, model=model))
+            train_model(train=train_scaled, model=model)
 
         test_model(model, test_scaled)
 
