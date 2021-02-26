@@ -5,12 +5,18 @@ from utilities.sentiment_data import score_sentiment
 
 
 
-def get_news_dummies(filepath='data/dummies/dummy_news.json'
+def get_news_dummies(filepath
                      , date_col='pub_time'
                      , date_conversion='US/Eastern'):
     """
     :return: pandas df from dict of dummy news data
     """
+
+    if filepath == 'Amazon':
+        filepath = 'data/dummies/dummy_news.json'
+    else:
+        filepath = 'data/dummies/dummy_news.json'
+
     pd.set_option('display.max_columns', None)
 
     with open(filepath) as f:
@@ -31,7 +37,7 @@ def get_news_dummies(filepath='data/dummies/dummy_news.json'
 
     return df
 
-def get_stock_dummies(filepath='data/dummies/price_minute.csv'
+def get_stock_dummies(filepath
                       , date_col='t'
                       , data_col='c'
                       , window_minutes=2880
@@ -39,6 +45,11 @@ def get_stock_dummies(filepath='data/dummies/price_minute.csv'
     """
     :return: pandas df from dict of dummy news data
     """
+    if filepath == 'Amazon':
+        filepath = 'data/dummies/price_minute.csv'
+    else:
+        filepath = 'data/dummies/price_minute.csv'
+
     pd.set_option('display.max_columns', None)
     df = pd.read_csv(filepath, index_col=0)
     df[date_col] = pd.to_datetime(df[date_col])
