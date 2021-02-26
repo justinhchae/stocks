@@ -1,7 +1,5 @@
-### this section represents a pipeline to return news data as a df of sentiment scores
 from utilities.get_data import get_news_dummies, get_stock_dummies
 from utilities.clean_data import trading_days
-from utilities.sentiment_data import score_sentiment
 from utilities.run_arima import run_arima
 from utilities.run_prophet import run_prophet
 from utilities.data_chunker import chunk_data
@@ -33,8 +31,8 @@ if __name__ == '__main__':
                                                                        )
     # START HERE uncomment the line you want to run; hide the rest
     # run_mode = 'arima'
-    run_mode = 'prophet'
-    # run_mode = 'lstm1'
+    # run_mode = 'prophet'
+    run_mode = 'lstm1'
     # run_mode = 'lstm2'
 
     # get count of max available CPUs, minus 2
@@ -52,9 +50,11 @@ if __name__ == '__main__':
               , 'n_prediction_units':1}
 
     if run_mode == 'arima':
-        print('Training Approach run_mode:', run_mode)
+        print(f'Training Approach run_mode:{run_mode}')
         # train arima on stock data only
         chunked_data = chunk_data(**params)
+
+        # pooling enabled
         p = Pool(CPUs)
         results = list(tqdm(p.imap(run_arima, chunked_data)))
         p.close()
@@ -64,11 +64,11 @@ if __name__ == '__main__':
         assess_model(results, model_type=run_mode, stock_name='Amazon')
 
     elif run_mode == 'prophet':
-        print('Training Approach run_mode:', run_mode)
+        print(f'Training Approach run_mode:{run_mode}')
         # train prophet on stock data only
         chunked_data = chunk_data(**params)
 
-        # pooling enabled.
+        # pooling enabled
         p = Pool(CPUs)
         results = list(tqdm(p.imap(run_prophet, chunked_data)))
         p.close()
@@ -78,7 +78,7 @@ if __name__ == '__main__':
         assess_model(results, model_type=run_mode, stock_name='Amazon')
 
     elif run_mode == 'lstm1':
-        print('Training Approach run_mode:', run_mode)
+        print(f'Training Approach run_mode:{run_mode}')
         # train lstm on stock data only
         model = Model(num_layers=1, input_dim=1, seq_length=14)
         preds = train_model_1(train_scaled, valid_scaled, test_scaled, model, epochs=20, run_model=True, is_scaled=True, sequence_length=14)

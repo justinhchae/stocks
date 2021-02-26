@@ -2,7 +2,6 @@ import torch.nn as nn
 import torch
 
 
-
 class Model(nn.Module):
 
     def __init__(self
@@ -16,12 +15,7 @@ class Model(nn.Module):
 
         super(Model, self).__init__()
 
-        try:
-            torch.cuda.device_count()
-            torch.cuda.get_device_name(0)
-            device = torch.device('cuda:0')
-        except:
-            device = torch.device("cpu")
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.device = device
         self.input_dim = input_dim
