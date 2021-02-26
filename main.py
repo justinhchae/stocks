@@ -13,7 +13,7 @@ from multiprocessing import Pool, cpu_count
 import torch.multiprocessing as mp
 
 if __name__ == '__main__':
-    
+
     stock = 'Amazon'
     # run get pipelines for news and stock data
     news_df = get_news_dummies(stock)
@@ -33,8 +33,8 @@ if __name__ == '__main__':
     # START HERE uncomment the line you want to run; hide the rest
     # run_mode = 'arima'
     # run_mode = 'prophet'
-    # run_mode = 'lstm1'
-    run_mode = 'lstm2'
+    run_mode = 'lstm1'
+    # run_mode = 'lstm2'
 
     is_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if is_cuda else "cpu")
@@ -109,7 +109,10 @@ if __name__ == '__main__':
         params.update({'n_features':1})
 
         # train lstm on stock data only
-        model = Model(num_layers=params['n_layers'], input_dim=params['n_features'], seq_length=params['window_size'], device=params['device'])
+        model = Model(num_layers=params['n_layers']
+                      , input_dim=params['n_features']
+                      , seq_length=params['window_size']
+                      , device=params['device'])
 
         # preds = train_model_1(train_scaled, valid_scaled, test_scaled, model, epochs=20, run_model=True, is_scaled=True, sequence_length=14)
 
@@ -124,7 +127,13 @@ if __name__ == '__main__':
             for rank in tqdm(range(params['max_cpu'])):
                 # pool data for train_scaled to function train_model
                 #TODO pin memory for GPU instance
-                p = mp.Process(target=train_model, args=(train_scaled, model, params['window_size'], params['epochs'], params['learning_rate']))
+                p = mp.Process(target=train_model
+                               , args=(train_scaled
+                                       , model
+                                       , params['window_size']
+                                       , params['epochs']
+                                       , params['learning_rate'])
+                               )
                 p.start()
                 processes.append(p)
 
