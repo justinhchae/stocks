@@ -92,7 +92,7 @@ def train_epoch(epoch, model, data_loader, loss_function, optimizer):
     losses.append(loss.item())
     return losses
 
-def test_model(model, dataset, sequence_length, batch_size=16):
+def test_model(model, dataset, sequence_length, stock_name, batch_size=16):
     test_set = Data(dataset, sequence_length)
     test_load = DataLoader(test_set, batch_size=batch_size)
     model.eval()
@@ -119,7 +119,7 @@ def test_model(model, dataset, sequence_length, batch_size=16):
     plt.figure()
     plt.plot(dataset.iloc[sequence_length:, 0], dataset.iloc[sequence_length:, -1], label='targets', marker='x')
     plt.plot(dataset.iloc[sequence_length:, 0], test_preds, label='predictions', marker='x')
-    title = str('LSTM Test Graph\n')
+    title = str('LSTM Test Graph for\n{}'.format(stock_name))
     plt.xlabel('Timestep')
     plt.ylabel('Scaled Price')
     plt.title(title)

@@ -32,8 +32,8 @@ if __name__ == '__main__':
                                                                        )
     # START HERE uncomment the line you want to run; hide the rest
     # run_mode = 'arima'
-    # run_mode = 'prophet'
-    run_mode = 'lstm1'
+    run_mode = 'prophet'
+    # run_mode = 'lstm1'
     # run_mode = 'lstm2'
 
     is_cuda = torch.cuda.is_available()
@@ -41,7 +41,8 @@ if __name__ == '__main__':
     enable_mp = True
 
     # configure parameters for forecasting here
-    params = { 'train_data': train_scaled
+    params = { 'stock_name': 'Amazon'
+              , 'train_data': train_scaled
               , 'valid_data': valid_scaled
               , 'test_data' : test_scaled
               , 'time_col': 't'
@@ -50,7 +51,7 @@ if __name__ == '__main__':
               , 'window_size': 15
               , 'seasonal_unit':'day'
               , 'prediction_unit':'1min'
-              , 'epochs' : 2
+              , 'epochs' : 5
               , 'learning_rate': 0.001
               , 'batch_size': 16
               , 'n_prediction_units': 1
@@ -60,7 +61,7 @@ if __name__ == '__main__':
     #TODO: Conduct performance testing on optimal CPU count, currently pooling half of reported cpu_count
 
     if run_mode == 'arima':
-        print(f'Forecasting Approach run_mode: {run_mode}')
+        print('Forecasting for {} with Approach run_mode: {}'.format(params['stock_name'], run_mode))
         # train arima on stock data only
         chunked_data = chunk_data(**params)
 
@@ -76,10 +77,10 @@ if __name__ == '__main__':
             results = [run_arima(i) for i in tqdm(chunked_data)]
 
         # assess model results
-        assess_model(results, model_type=run_mode, stock_name='Amazon')
+        assess_model(results, model_type=run_mode, stock_name=params['stock_name'])
 
     elif run_mode == 'prophet':
-        print(f'Forecasting Approach run_mode: {run_mode}')
+        print('Forecasting for {} with Approach run_mode: {}'.format(params['stock_name'], run_mode))
         # train prophet on stock data only
         chunked_data = chunk_data(**params)
 
@@ -94,10 +95,10 @@ if __name__ == '__main__':
             print('Forecasting Without Pooling')
             results = [run_prophet(i) for i in tqdm(chunked_data)]
         # assess model results
-        assess_model(results, model_type=run_mode, stock_name='Amazon')
+        assess_model(results, model_type=run_mode, stock_name=params['stock_name'])
 
     elif run_mode == 'lstm1':
-        print(f'Forecasting Approach run_mode: {run_mode}')
+        print('Forecasting for {} with Approach run_mode: {}'.format(params['stock_name'], run_mode))
 
         if is_cuda:
             params.update({'num_workers': 1
@@ -129,7 +130,7 @@ if __name__ == '__main__':
             print('Forecasting Without Pooling')
             train_model(train=train_scaled, model=model, sequence_length=params['window_size'], batch_size=params['batch_size'])
 
-        test_model(model=model, dataset=test_scaled, sequence_length=params['window_size'], batch_size=params['batch_size'])
+        test_model(model=model, dataset=test_scaled, sequence_length=params['window_size'], batch_size=params['batch_size'], stock_name=params['stock_name'])
 
 
     elif run_mode == 'lstm2':
