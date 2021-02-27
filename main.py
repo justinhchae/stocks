@@ -41,7 +41,7 @@ if __name__ == '__main__':
 
     is_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if is_cuda else "cpu")
-    enable_mp = False
+    enable_mp = True
 
     # configure parameters for forecasting here
     params = { 'stock_name': stock
@@ -72,20 +72,20 @@ if __name__ == '__main__':
         chunked_data = chunk_data(**params)
 
         # the model_ object is a temporary object to be updated during mp with partial()
-        model_ = run_arima if run_mode == 'arima' else run_prophet if run_mode == 'prophet' else None
+        model = run_arima if run_mode == 'arima' else run_prophet if run_mode == 'prophet' else None
 
         if enable_mp:
             print('Pooling {}x CPUs with Multiprocessor'.format(params['max_cpu']))
             # pooling enabled
             p = Pool(params['max_cpu'])
             # pass function params with partial method, then call the partial during mp
-            model = partial(model_, n_prediction_units=params['n_prediction_units'])
-            results = list(tqdm(p.imap(model, chunked_data)))
+            model_ = partial(model, n_prediction_units=params['n_prediction_units'])
+            results = list(tqdm(p.imap(model_, chunked_data)))
             p.close()
             p.join()
         else:
             print('Forecasting Without Pooling')
-            results = [run_arima(i, n_prediction_units=params['n_prediction_units']) for i in tqdm(chunked_data)]
+            results = [model(i, n_prediction_units=params['n_prediction_units']) for i in tqdm(chunked_data)]
 
         # assess model results with MAPE and visualize predict V target
         assess_model(results, model_type=run_mode, stock_name=params['stock_name'])
