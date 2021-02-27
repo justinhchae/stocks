@@ -193,7 +193,12 @@ if __name__ == '__main__':
                 # pool data for train_scaled to function train_model
                 #TODO pin memory for GPU instance
                 p = mp.Process(target=train_model
-                               , args=(train_scaled, model, params['window_size'], params['epochs'], params['learning_rate']))
+                               , args=(train_scaled
+                                       , model
+                                       , params['window_size']
+                                       , params['epochs']
+                                       , params['learning_rate'])
+                               )
                 p.start()
                 processes.append(p)
 

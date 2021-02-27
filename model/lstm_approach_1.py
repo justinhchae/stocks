@@ -41,33 +41,18 @@ def train_model(train, model, sequence_length, epochs=20, learning_rate=0.001, b
     # new train function, replace train_model1 with this
     # https://pytorch.org/docs/stable/notes/multiprocessing.html
 
-    losses_valid = []
-    preds = []
-    targets = []
-
     train_set = Data(train, sequence_length)
     train_loader = DataLoader(train_set, batch_size=batch_size)
 
     loss_function = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
-    losses = []
     for epoch in range(epochs):
-        # call train epoch here
-        epoch_loss = train_epoch(epoch, model, train_loader, loss_function, optimizer)
-        losses.append(epoch_loss)
+        #TODO: capture loss within multi-threaded operations
+        train_epoch(epoch, model, train_loader, loss_function, optimizer)
 
 def train_epoch(epoch, model, data_loader, loss_function, optimizer):
     model.train(True)
-
-    #TODO use PID to track threads
-    pid = os.getpid()
-    losses = []
-    epoch_preds = []
-    epoch_targets = []
-    epoch_preds_valid = []
-    epoch_targets_valid = []
-
     model.zero_grad()
 
     for idx, (x, y) in enumerate(data_loader):
@@ -77,9 +62,6 @@ def train_epoch(epoch, model, data_loader, loss_function, optimizer):
 
         y_pred = model(x)
 
-        epoch_preds.append(y_pred.detach().numpy())
-        epoch_targets.append(y.detach().numpy())
-
         y_pred = y_pred.to(model.device)
         loss = loss_function(y_pred, y)
         loss.backward()
@@ -87,10 +69,6 @@ def train_epoch(epoch, model, data_loader, loss_function, optimizer):
         optimizer.step()
         optimizer.zero_grad()
 
-    # print('Epoch: {}.............'.format(epoch), end=' ')
-    # print("Loss: {:.4f}".format(loss.item()))
-    losses.append(loss.item())
-    return losses
 
 def test_model(model, dataset, sequence_length, stock_name, batch_size=16):
     test_set = Data(dataset, sequence_length)
