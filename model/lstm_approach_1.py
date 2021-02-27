@@ -37,11 +37,11 @@ class Data(Dataset):
     def __getsize__(self):
         return (self.__len__())
 
-def train_model(train, model, sequence_length, pin_memory, epochs=20, learning_rate=0.001, batch_size=16):
+def train_model(train_data, model, sequence_length, pin_memory, epochs=20, learning_rate=0.001, batch_size=16, **kwargs):
     # new train function, replace train_model1 with this
     # https://pytorch.org/docs/stable/notes/multiprocessing.html
 
-    train_set = Data(train, sequence_length)
+    train_set = Data(train_data, sequence_length)
     train_loader = DataLoader(train_set, batch_size=batch_size, pin_memory=pin_memory)
 
     loss_function = nn.MSELoss()
@@ -70,8 +70,8 @@ def train_epoch(epoch, model, data_loader, loss_function, optimizer):
         optimizer.zero_grad()
 
 
-def test_model(model, dataset, sequence_length, pin_memory, stock_name, batch_size=16):
-    test_set = Data(dataset, sequence_length)
+def test_model(model, test_data, sequence_length, pin_memory, stock_name, batch_size=16, **kwargs):
+    test_set = Data(test_data, sequence_length)
     test_load = DataLoader(test_set, batch_size=batch_size, pin_memory=pin_memory)
     model.eval()
 
@@ -95,8 +95,8 @@ def test_model(model, dataset, sequence_length, pin_memory, stock_name, batch_si
     print(f'MAPE score: {mape}')
 
     plt.figure()
-    plt.plot(dataset.iloc[sequence_length:, 0], dataset.iloc[sequence_length:, -1], label='targets', marker='x')
-    plt.plot(dataset.iloc[sequence_length:, 0], test_preds, label='predictions', marker='x')
+    plt.plot(test_data.iloc[sequence_length:, 0], test_data.iloc[sequence_length:, -1], label='targets', marker='x')
+    plt.plot(test_data.iloc[sequence_length:, 0], test_preds, label='predictions', marker='x')
     title = str('LSTM Test Graph for\n{}'.format(stock_name))
     plt.xlabel('Timestep')
     plt.ylabel('Scaled Price')

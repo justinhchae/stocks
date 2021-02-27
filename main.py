@@ -31,10 +31,10 @@ if __name__ == '__main__':
                                                                        , test=test
                                                                        )
     # START HERE uncomment the line you want to run; hide the rest
-    run_mode = 'arima'
+    # run_mode = 'arima'
     # run_mode = 'prophet'
     # run_mode = 'lstm1'
-    # run_mode = 'lstm2'
+    run_mode = 'lstm2'
 
     is_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if is_cuda else "cpu")
@@ -84,41 +84,52 @@ if __name__ == '__main__':
         # assess model results with MAPE and visualize predict V target
         assess_model(results, model_type=run_mode, stock_name=params['stock_name'])
 
-    elif run_mode == 'lstm1':
+    elif run_mode == 'lstm1' or run_mode =='lstm2':
         print('Forecasting for {} with Approach run_mode: {}'.format(params['stock_name'], run_mode))
 
         if is_cuda:
             params.update({'num_workers': 1
                            ,'pin_memory':True})
 
-        params.update({'n_features':1})
+        n_features = 1 if run_mode == 'lstm1' else 2 if run_mode == 'lstm2' else None
+
+        if run_mode == 'lstm2':
+            # split data having both sentiment and stock price
+            train, valid, test = split_stock_data(df=df, time_col='t')
+            # scale data
+            train_scaled, valid_scaled, test_scaled, scaler = scale_stock_data(train=train
+                                                                               , valid=valid
+                                                                               , test=test)
+
+            params.update({'train_data': train_scaled
+                          , 'valid_data': valid_scaled
+                          , 'test_data': test_scaled
+                          , 'scaler': scaler
+                           })
+
+        params.update({'n_features':n_features})
+
+        params.update({'input_dim':params['n_features']
+                      , 'seq_length':params['window_size']
+                      , 'sequence_length':params['window_size']
+                       })
 
         # train lstm on stock data only
-        model = Model(num_layers=params['n_layers']
-                      , input_dim=params['n_features']
-                      , seq_length=params['window_size']
-                      , device=params['device'])
+        model = Model(**params)
 
-        # preds = train_model_1(train_scaled, valid_scaled, test_scaled, model, epochs=20, run_model=True, is_scaled=True, sequence_length=14)
+        params.update({'model': model})
 
         if enable_mp:
 
             mp.set_start_method('spawn')
-            model.share_memory()
+            params['model'].share_memory()
 
             processes = []
             print('Pooling {}x CPUs with Multiprocessor'.format(params['max_cpu']))
 
             for rank in tqdm(range(params['max_cpu'])):
                 # pool data for train_scaled to function train_model
-                p = mp.Process(target=train_model
-                               , args=(train_scaled
-                                       , model
-                                       , params['window_size']
-                                       , params['pin_memory']
-                                       , params['epochs']
-                                       , params['learning_rate'])
-                               )
+                p = mp.Process(target=train_model, kwargs=params)
                 p.start()
                 processes.append(p)
 
@@ -126,89 +137,9 @@ if __name__ == '__main__':
                 p.join()
         else:
             print('Forecasting Without Pooling')
+            train_model(**params)
 
-            train_model(train=train_scaled
-                        , model=model
-                        , epochs=params['epochs']
-                        , sequence_length=params['window_size']
-                        , batch_size=params['batch_size']
-                        , pin_memory=params['pin_memory']
-                        )
+        params.update({'model': model})
 
-        # assess model results with MAPE and visualize predict V target
-        test_model(model=model
-                   , dataset=test_scaled
-                   , sequence_length=params['window_size']
-                   , batch_size=params['batch_size']
-                   , stock_name=params['stock_name']
-                   , pin_memory=params['pin_memory']
-                   )
-
-
-    elif run_mode == 'lstm2':
-        #TODO make a single lstm option with configurable data and params (combine lstm1 and lstm2)
-        print('Forecasting for {} with Approach run_mode: {}'.format(params['stock_name'], run_mode))
-
-        if is_cuda:
-            params.update({'num_workers': 1
-                           ,'pin_memory':True})
-
-        params.update({'n_features': 2})
-
-        model = Model(num_layers=params['n_layers']
-                      , input_dim=params['n_features']
-                      , seq_length=params['window_size']
-                      , device=params['device']
-                      )
-
-        # split data having both sentiment and stock price
-        train, valid, test = split_stock_data(df=df, time_col='t')
-
-        # scale data
-        train_scaled, valid_scaled, test_scaled, scaler = scale_stock_data(train=train
-                                                                           , valid=valid
-                                                                           , test=test
-                                                                           )
-        if enable_mp:
-
-            mp.set_start_method('spawn')
-            model.share_memory()
-
-            processes = []
-            print('Pooling {}x CPUs with Multiprocessor'.format(params['max_cpu']))
-
-            for rank in tqdm(range(params['max_cpu'])):
-                # pool data for train_scaled to function train_model
-                #TODO pin memory for GPU instance
-                p = mp.Process(target=train_model
-                               , args=(train_scaled
-                                       , model
-                                       , params['window_size']
-                                       , params['pin_memory']
-                                       , params['epochs']
-                                       , params['learning_rate'])
-                               )
-                p.start()
-                processes.append(p)
-
-            for p in tqdm(processes):
-                p.join()
-        else:
-
-            print('Forecasting Without Pooling')
-
-            train_model(train=train_scaled
-                        , model=model
-                        , epochs=params['epochs']
-                        , sequence_length=params['window_size']
-                        , batch_size=params['batch_size']
-                        , pin_memory=params['pin_memory']
-                        )
-
-        test_model(model=model
-                   , dataset=test_scaled
-                   , sequence_length=params['window_size']
-                   , batch_size=params['batch_size']
-                   , stock_name=params['stock_name']
-                   , pin_memory=params['pin_memory']
-                   )
+        # assess model results with MAPE and visualize predict Vs target
+        test_model(**params)

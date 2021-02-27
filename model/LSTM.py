@@ -11,6 +11,7 @@ class Model(nn.Module):
                  , hidden_dim=50
                  , output_dim=1
                  , num_layers=1
+                 , **kwargs
                  ):
 
         super(Model, self).__init__()
