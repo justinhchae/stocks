@@ -76,6 +76,7 @@ if __name__ == '__main__':
             print('Pooling {}x CPUs with Multiprocessor'.format(params['max_cpu']))
             # pooling enabled
             p = Pool(params['max_cpu'])
+            #TODO freeze func signature with partial() method
             results = list(tqdm(p.imap(model, chunked_data)))
             p.close()
             p.join()
