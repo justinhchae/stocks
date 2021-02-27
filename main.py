@@ -5,11 +5,11 @@ from utilities.run_prophet import run_prophet
 from utilities.data_chunker import chunk_data
 from utilities.evaluate_model import assess_model
 from utilities.prep_stock_data import split_stock_data, scale_stock_data
-from model.lstm_approach_1 import train_model_1, train_model, test_model
+from model.lstm_approach_1 import train_model, test_model
 from model.LSTM import Model
 from tqdm import tqdm
 import torch
-from multiprocessing import Pool, cpu_count
+# from multiprocessing import Pool, cpu_count
 import torch.multiprocessing as mp
 from functools import partial
 
@@ -35,13 +35,14 @@ if __name__ == '__main__':
                                                                        )
     # START HERE uncomment the line you want to run; hide the rest
     # run_mode = 'arima'
-    run_mode = 'prophet'
-    # run_mode = 'lstm1'
+    # run_mode = 'prophet'
+    run_mode = 'lstm1'
     # run_mode = 'lstm2'
 
     is_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if is_cuda else "cpu")
     enable_mp = True
+    mp.set_start_method('spawn')
 
     # configure parameters for forecasting here
     params = { 'stock_name': stock
@@ -60,7 +61,7 @@ if __name__ == '__main__':
               , 'batch_size': 16
               , 'n_prediction_units': 15
               , 'device': device
-              , 'max_cpu': cpu_count() // 2
+              , 'max_processes': mp.cpu_count() // 2
               , 'pin_memory': False
                }
 
@@ -75,9 +76,9 @@ if __name__ == '__main__':
         model = run_arima if run_mode == 'arima' else run_prophet if run_mode == 'prophet' else None
 
         if enable_mp:
-            print('Pooling {}x CPUs with Multiprocessor'.format(params['max_cpu']))
+            print('Pooling {}x Processes with Multiprocessor'.format(params['max_processes']))
             # pooling enabled
-            p = Pool(params['max_cpu'])
+            p = mp.Pool(params['max_processes'])
             # pass function params with partial method, then call the partial during mp
             model_ = partial(model, n_prediction_units=params['n_prediction_units'])
             results = list(tqdm(p.imap(model_, chunked_data)))
@@ -126,14 +127,12 @@ if __name__ == '__main__':
         params.update({'model': model})
 
         if enable_mp:
-
-            mp.set_start_method('spawn')
             params['model'].share_memory()
 
             processes = []
-            print('Pooling {}x CPUs with Multiprocessor'.format(params['max_cpu']))
+            print('Pooling {}x Processes with Multiprocessor'.format(params['max_processes']))
 
-            for rank in tqdm(range(params['max_cpu'])):
+            for rank in tqdm(range(params['max_processes'])):
                 # pool data for train_scaled to function train_model
                 p = mp.Process(target=train_model, kwargs=params)
                 p.start()
