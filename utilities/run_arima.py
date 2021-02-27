@@ -27,15 +27,25 @@ def setup_arima(train_data
     plt.show()
 
 def run_arima(chunked_data, price_col='y', n_prediction_units=1):
+    # supress trivial warnings from ARIMA
     warnings.simplefilter('ignore', ConvergenceWarning)
 
+    # initialize a list to hold results (a list of dataframes)
     results = []
 
-    for x_i, y_i in chunked_data:
+    # numerate through a list of chunked tuples, each having a pair of dataframes
+    for idx, (x_i, y_i) in enumerate(chunked_data):
+        # create ARIMA model based on x_i values
         m = ARIMA(x_i[price_col].values, order=(0, 1, 0))
+        # fit the model
         m_fit = m.fit()
+        # forecast for n_prediction_units
         yhat = m_fit.forecast(steps=n_prediction_units)
-        y_i['yhat'] = yhat
+
+        # return a dataframe of targets and predictions of len targets
+        y_i['yhat'] = yhat[:len(y_i)]
+
+        # save results to a list and then return the list
         results.append(y_i)
 
     return results

@@ -11,6 +11,7 @@ from tqdm import tqdm
 import torch
 from multiprocessing import Pool, cpu_count
 import torch.multiprocessing as mp
+from functools import partial
 
 if __name__ == '__main__':
     #TODO start configuring a wrapper to forecast multiple stocks
@@ -34,13 +35,13 @@ if __name__ == '__main__':
                                                                        )
     # START HERE uncomment the line you want to run; hide the rest
     # run_mode = 'arima'
-    # run_mode = 'prophet'
+    run_mode = 'prophet'
     # run_mode = 'lstm1'
-    run_mode = 'lstm2'
+    # run_mode = 'lstm2'
 
     is_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if is_cuda else "cpu")
-    enable_mp = True
+    enable_mp = False
 
     # configure parameters for forecasting here
     params = { 'stock_name': stock
@@ -57,7 +58,7 @@ if __name__ == '__main__':
               , 'n_layers': 1
               , 'learning_rate': 0.001
               , 'batch_size': 16
-              , 'n_prediction_units': 1
+              , 'n_prediction_units': 15
               , 'device': device
               , 'max_cpu': cpu_count() // 2
               , 'pin_memory': False
@@ -70,19 +71,21 @@ if __name__ == '__main__':
         # train arima on stock data only
         chunked_data = chunk_data(**params)
 
-        model = run_arima if run_mode == 'arima' else run_prophet if run_mode == 'prophet' else None
+        # the model_ object is a temporary object to be updated during mp with partial()
+        model_ = run_arima if run_mode == 'arima' else run_prophet if run_mode == 'prophet' else None
 
         if enable_mp:
             print('Pooling {}x CPUs with Multiprocessor'.format(params['max_cpu']))
             # pooling enabled
             p = Pool(params['max_cpu'])
-            #TODO freeze func signature with partial() method
+            # pass function params with partial method, then call the partial during mp
+            model = partial(model_, n_prediction_units=params['n_prediction_units'])
             results = list(tqdm(p.imap(model, chunked_data)))
             p.close()
             p.join()
         else:
             print('Forecasting Without Pooling')
-            results = [run_arima(i) for i in tqdm(chunked_data)]
+            results = [run_arima(i, n_prediction_units=params['n_prediction_units']) for i in tqdm(chunked_data)]
 
         # assess model results with MAPE and visualize predict V target
         assess_model(results, model_type=run_mode, stock_name=params['stock_name'])

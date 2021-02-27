@@ -20,13 +20,11 @@ def split(dfm, chunk_size):
     return np.split(dfm, indices)
 
 def chunk_data(train_data
-                , valid_data
-                , test_data
                 , price_col
                 , time_col
+                , n_prediction_units
                 , window_size=15
                 , seasonal_unit='day'
-                , prediction_unit='1min'
                 , **kwargs
                 ):
     """
@@ -77,8 +75,8 @@ def chunk_data(train_data
             if next_idx > len(chunks) - 1:
                 break
             else:
-                # otherwise, return the first value of next sequence as y target
-                target = chunks[next_idx].head(1)
+                # otherwise, return the first n_prediction_units of next sequence as y target
+                target = chunks[next_idx].head(n_prediction_units)
 
             # increment the chunk
             idx += 1
