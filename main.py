@@ -13,9 +13,11 @@ from multiprocessing import Pool, cpu_count
 import torch.multiprocessing as mp
 
 if __name__ == '__main__':
-
+    #TODO start configuring a wrapper to forecast multiple stocks
     stock = 'Amazon'
     # run get pipelines for news and stock data
+    #TODO: add a toggle to switch between dummy data (demo) and real data (experiement)
+    #TODO: configure data getters for real stock data
     news_df = get_news_dummies(stock)
     stock_df = get_stock_dummies(stock)
 
