@@ -31,8 +31,8 @@ if __name__ == '__main__':
                                                                        , test=test
                                                                        )
     # START HERE uncomment the line you want to run; hide the rest
-    # run_mode = 'arima'
-    run_mode = 'prophet'
+    run_mode = 'arima'
+    # run_mode = 'prophet'
     # run_mode = 'lstm1'
     # run_mode = 'lstm2'
 
@@ -63,40 +63,23 @@ if __name__ == '__main__':
 
     #TODO: Conduct performance testing on optimal CPU count, currently pooling half of reported cpu_count
 
-    if run_mode == 'arima':
+    if run_mode == 'arima' or run_mode == 'prophet':
         print('Forecasting for {} with Approach run_mode: {}'.format(params['stock_name'], run_mode))
         # train arima on stock data only
         chunked_data = chunk_data(**params)
+
+        model = run_arima if run_mode == 'arima' else run_prophet if run_mode == 'prophet' else None
 
         if enable_mp:
             print('Pooling {}x CPUs with Multiprocessor'.format(params['max_cpu']))
             # pooling enabled
             p = Pool(params['max_cpu'])
-            results = list(tqdm(p.imap(run_arima, chunked_data)))
+            results = list(tqdm(p.imap(model, chunked_data)))
             p.close()
             p.join()
         else:
             print('Forecasting Without Pooling')
             results = [run_arima(i) for i in tqdm(chunked_data)]
-
-        # assess model results with MAPE and visualize predict V target
-        assess_model(results, model_type=run_mode, stock_name=params['stock_name'])
-
-    elif run_mode == 'prophet':
-        print('Forecasting for {} with Approach run_mode: {}'.format(params['stock_name'], run_mode))
-        # train prophet on stock data only
-        chunked_data = chunk_data(**params)
-
-        if enable_mp:
-            print('Pooling {}x CPUs with Multiprocessor'.format(params['max_cpu']))
-            # pooling enabled
-            p = Pool(params['max_cpu'])
-            results = list(tqdm(p.imap(run_prophet, chunked_data)))
-            p.close()
-            p.join()
-        else:
-            print('Forecasting Without Pooling')
-            results = [run_prophet(i) for i in tqdm(chunked_data)]
 
         # assess model results with MAPE and visualize predict V target
         assess_model(results, model_type=run_mode, stock_name=params['stock_name'])
