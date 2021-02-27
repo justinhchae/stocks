@@ -108,6 +108,7 @@ def test_model(model, test_data, sequence_length, pin_memory, stock_name, batch_
 
 
 def train_model_1(train, valid, test, model, epochs=10, learning_rate=0.001, run_model=True, sequence_length=14, is_scaled=False):
+    #TODO Deprecate train_model_1 for train_model() above
     #TODO early stopping
     #TODO run validation and test iterations
     #TODO save pickled model/binarys
