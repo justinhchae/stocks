@@ -33,8 +33,8 @@ if __name__ == '__main__':
     # START HERE uncomment the line you want to run; hide the rest
     # run_mode = 'arima'
     # run_mode = 'prophet'
-    run_mode = 'lstm1'
-    # run_mode = 'lstm2'
+    # run_mode = 'lstm1'
+    run_mode = 'lstm2'
 
     is_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if is_cuda else "cpu")
@@ -44,20 +44,22 @@ if __name__ == '__main__':
     params = { 'stock_name': stock
               , 'train_data': train_scaled
               , 'valid_data': valid_scaled
-              , 'test_data' : test_scaled
+              , 'test_data': test_scaled
               , 'time_col': 't'
               , 'price_col': 'c'
               , 'run_model': True
               , 'window_size': 15
-              , 'seasonal_unit':'day'
-              , 'prediction_unit':'1min'
-              , 'epochs' : 5
-              , 'n_layers' : 1
+              , 'seasonal_unit': 'day'
+              , 'prediction_unit': '1min'
+              , 'epochs': 5
+              , 'n_layers': 1
               , 'learning_rate': 0.001
               , 'batch_size': 16
               , 'n_prediction_units': 1
               , 'device': device
-              , 'max_cpu' : cpu_count() // 2}
+              , 'max_cpu': cpu_count() // 2
+              , 'pin_memory': False
+               }
 
     #TODO: Conduct performance testing on optimal CPU count, currently pooling half of reported cpu_count
 
@@ -126,11 +128,11 @@ if __name__ == '__main__':
 
             for rank in tqdm(range(params['max_cpu'])):
                 # pool data for train_scaled to function train_model
-                #TODO pin memory for GPU instance
                 p = mp.Process(target=train_model
                                , args=(train_scaled
                                        , model
                                        , params['window_size']
+                                       , params['pin_memory']
                                        , params['epochs']
                                        , params['learning_rate'])
                                )
@@ -141,11 +143,13 @@ if __name__ == '__main__':
                 p.join()
         else:
             print('Forecasting Without Pooling')
+
             train_model(train=train_scaled
                         , model=model
                         , epochs=params['epochs']
                         , sequence_length=params['window_size']
                         , batch_size=params['batch_size']
+                        , pin_memory=params['pin_memory']
                         )
 
         # assess model results with MAPE and visualize predict V target
@@ -154,6 +158,7 @@ if __name__ == '__main__':
                    , sequence_length=params['window_size']
                    , batch_size=params['batch_size']
                    , stock_name=params['stock_name']
+                   , pin_memory=params['pin_memory']
                    )
 
 
@@ -196,6 +201,7 @@ if __name__ == '__main__':
                                , args=(train_scaled
                                        , model
                                        , params['window_size']
+                                       , params['pin_memory']
                                        , params['epochs']
                                        , params['learning_rate'])
                                )
@@ -212,11 +218,14 @@ if __name__ == '__main__':
                         , model=model
                         , epochs=params['epochs']
                         , sequence_length=params['window_size']
-                        , batch_size=params['batch_size'])
+                        , batch_size=params['batch_size']
+                        , pin_memory=params['pin_memory']
+                        )
 
         test_model(model=model
                    , dataset=test_scaled
                    , sequence_length=params['window_size']
                    , batch_size=params['batch_size']
                    , stock_name=params['stock_name']
+                   , pin_memory=params['pin_memory']
                    )

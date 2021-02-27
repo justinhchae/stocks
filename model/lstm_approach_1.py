@@ -37,12 +37,12 @@ class Data(Dataset):
     def __getsize__(self):
         return (self.__len__())
 
-def train_model(train, model, sequence_length, epochs=20, learning_rate=0.001, batch_size=16):
+def train_model(train, model, sequence_length, pin_memory, epochs=20, learning_rate=0.001, batch_size=16):
     # new train function, replace train_model1 with this
     # https://pytorch.org/docs/stable/notes/multiprocessing.html
 
     train_set = Data(train, sequence_length)
-    train_loader = DataLoader(train_set, batch_size=batch_size)
+    train_loader = DataLoader(train_set, batch_size=batch_size, pin_memory=pin_memory)
 
     loss_function = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -70,9 +70,9 @@ def train_epoch(epoch, model, data_loader, loss_function, optimizer):
         optimizer.zero_grad()
 
 
-def test_model(model, dataset, sequence_length, stock_name, batch_size=16):
+def test_model(model, dataset, sequence_length, pin_memory, stock_name, batch_size=16):
     test_set = Data(dataset, sequence_length)
-    test_load = DataLoader(test_set, batch_size=batch_size)
+    test_load = DataLoader(test_set, batch_size=batch_size, pin_memory=pin_memory)
     model.eval()
 
     test_preds = []
