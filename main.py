@@ -32,9 +32,9 @@ if __name__ == '__main__':
                                                                        )
     # START HERE uncomment the line you want to run; hide the rest
     # run_mode = 'arima'
-    # run_mode = 'prophet'
+    run_mode = 'prophet'
     # run_mode = 'lstm1'
-    run_mode = 'lstm2'
+    # run_mode = 'lstm2'
 
     is_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if is_cuda else "cpu")

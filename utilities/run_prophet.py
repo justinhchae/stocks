@@ -38,6 +38,7 @@ class suppress_stdout_stderr(object):
             os.close(fd)
 
 def run_prophet(chunked_data, n_prediction_units=1, prediction_frequency='1min'):
+    # install gotcha: https://github.com/facebook/prophet/issues/775#issuecomment-449139135
     ds_col = 'ds'
     results = []
 

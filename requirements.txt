@@ -12,3 +12,6 @@ vaderSentiment
 statsmodels
 pystan
 fbprophet
+# in case of stanmodel error
+# try install fbprophet --no-cache-dir
+# or try: pip3 install fbprophet --no-cache-dir --no-binary :all:
