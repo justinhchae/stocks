@@ -34,9 +34,9 @@ if __name__ == '__main__':
                                                                        , test=test
                                                                        )
     # START HERE uncomment the line you want to run; hide the rest
-    # run_mode = 'arima'
+    run_mode = 'arima'
     # run_mode = 'prophet'
-    run_mode = 'lstm1'
+    # run_mode = 'lstm1'
     # run_mode = 'lstm2'
 
     is_cuda = torch.cuda.is_available()
@@ -92,6 +92,7 @@ if __name__ == '__main__':
         assess_model(results, model_type=run_mode, stock_name=params['stock_name'])
 
     elif run_mode == 'lstm1' or run_mode =='lstm2':
+
         print('Forecasting for {} with Approach run_mode: {}'.format(params['stock_name'], run_mode))
 
         if is_cuda:
@@ -126,6 +127,8 @@ if __name__ == '__main__':
 
         params.update({'model': model})
 
+        # force no multiprocessing due to performance issues
+        enable_mp = False
         if enable_mp:
             params['model'].share_memory()
 
@@ -142,6 +145,7 @@ if __name__ == '__main__':
                 p.join()
         else:
             print('Forecasting Without Pooling')
+            # todo, continue building network without multiprocessing
             train_model(**params)
 
         params.update({'model': model})
