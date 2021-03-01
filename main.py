@@ -5,7 +5,7 @@ from utilities.run_prophet import run_prophet
 from utilities.data_chunker import chunk_data
 from utilities.evaluate_model import assess_model
 from utilities.prep_stock_data import split_stock_data, scale_stock_data
-from model.lstm_approach_1 import train_model, test_model
+from model.lstm_approach_1 import train_model, test_model, plot_losses
 from model.LSTM import Model
 from tqdm import tqdm
 import torch
@@ -35,8 +35,8 @@ if __name__ == '__main__':
                                                                        )
     # START HERE uncomment the line you want to run; hide the rest
     # run_mode = 'arima'
-    run_mode = 'prophet'
-    # run_mode = 'lstm1'
+    # run_mode = 'prophet'
+    run_mode = 'lstm1'
     # run_mode = 'lstm2'
 
     is_cuda = torch.cuda.is_available()
@@ -54,7 +54,7 @@ if __name__ == '__main__':
               , 'window_size': 15
               , 'seasonal_unit': 'day'
               , 'prediction_unit': '1min'
-              , 'epochs': 5
+              , 'epochs': 6
               , 'n_layers': 1
               , 'learning_rate': 0.001
               , 'batch_size': 16
@@ -63,11 +63,12 @@ if __name__ == '__main__':
               , 'max_processes': mp.cpu_count() // 2
               , 'pin_memory': False
               , 'enable_mp': True
+              , 'run_mode':run_mode
                }
 
     #TODO: Conduct performance testing on optimal CPU count, currently pooling half of reported cpu_count
 
-    if run_mode == 'arima' or run_mode == 'prophet':
+    if params['run_mode'] == 'arima' or params['run_mode'] == 'prophet':
         print('Forecasting for {} with Approach run_mode: {}'.format(params['stock_name'], run_mode))
         # train arima on stock data only
         chunked_data = chunk_data(**params)
@@ -91,7 +92,7 @@ if __name__ == '__main__':
         # assess model results with MAPE and visualize predict V target
         assess_model(results, model_type=run_mode, stock_name=params['stock_name'])
 
-    elif run_mode == 'lstm1' or run_mode =='lstm2':
+    elif params['run_mode'] == 'lstm1' or params['run_mode'] =='lstm2':
 
         print('Forecasting for {} with Approach run_mode: {}'.format(params['stock_name'], run_mode))
 
@@ -101,6 +102,7 @@ if __name__ == '__main__':
 
         n_features = 1 if run_mode == 'lstm1' else 2 if run_mode == 'lstm2' else None
 
+        # if run mode == lstm2, then refactor data to have both sentiment and price
         if run_mode == 'lstm2':
             # split data having both sentiment and stock price
             train, valid, test = split_stock_data(df=df, time_col='t')
@@ -122,7 +124,6 @@ if __name__ == '__main__':
                       , 'sequence_length':params['window_size']
                        })
 
-        # train lstm on stock data only
         model = Model(**params)
 
         params.update({'model': model})
@@ -146,10 +147,6 @@ if __name__ == '__main__':
                 p.join()
         else:
             print('Forecasting Without Pooling')
-            # todo, continue building network without multiprocessing
+            # run train, validation, and test
             train_model(**params)
 
-        params.update({'model': model})
-
-        # assess model results with MAPE and visualize predict Vs target
-        test_model(**params)
