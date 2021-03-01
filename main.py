@@ -38,9 +38,9 @@ if __name__ == '__main__':
     mp.set_start_method('spawn')
 
     # START HERE uncomment the line you want to run; hide the rest
-    # baseline models
+    # uncomment next line to run just the baseline models
     # run_modes = ['arima', 'prophet']
-    # lstm models
+    # uncomment next line to run just the featured models
     run_modes = ['lstm1', 'lstm2']
 
     for run_mode in run_modes:

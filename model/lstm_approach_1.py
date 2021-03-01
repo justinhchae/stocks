@@ -160,6 +160,7 @@ def plot_losses(train_loss, valid_loss, stock_name, model_type):
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.legend()
+    plt.tight_layout()
     plt.show()
 
 def test_model(model, data_loader, stock_name, model_type, loss_function, test_data, sequence_length):
@@ -239,11 +240,12 @@ def test_model(model, data_loader, stock_name, model_type, loss_function, test_d
             , label='Predicted Price'
             )
 
-    ax.set_title(f'{stock_name} Stock Price Prediction\nWith {model_type}, Test MAPE: {error}, Mean Test Loss:{average_loss}')
+    ax.set_title('{} Stock Price Prediction\nWith {}, Test MAPE: {:.4f}, Mean Test Loss:{:.4f}'.format(stock_name, model_type, error, average_loss))
     plt.xlabel('Time')
     plt.ylabel('Stock Price')
     plt.legend()
     fig.autofmt_xdate()
+    plt.tight_layout()
     plt.show()
 
 
