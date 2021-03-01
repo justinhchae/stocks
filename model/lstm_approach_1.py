@@ -88,7 +88,7 @@ def train_model(train_data, model, sequence_length, pin_memory, epochs=20, learn
     plot_losses(train_loss=train_losses, valid_loss=valid_losses, stock_name=kwargs['stock_name'], model_type=kwargs['run_mode'])
 
     # test model
-    test_model(model, test_loader, stock_name=kwargs['stock_name'], model_type=kwargs['run_mode'], loss_function=loss_function, test_data=kwargs['test_data'], sequence_length=kwargs['window_size'])
+    test_model(model, test_loader, stock_name=kwargs['stock_name'], model_type=kwargs['run_mode'], loss_function=loss_function, test_data=kwargs['test_data'])
 
 def valid_epoch(model, data_loader, loss_function):
     # initiate empty list to hold loss values
@@ -163,7 +163,7 @@ def plot_losses(train_loss, valid_loss, stock_name, model_type):
     plt.tight_layout()
     plt.show()
 
-def test_model(model, data_loader, stock_name, model_type, loss_function, test_data, sequence_length):
+def test_model(model, data_loader, stock_name, model_type, loss_function, test_data):
 
     # initialize empty lists to capture data
     losses = []
