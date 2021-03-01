@@ -33,120 +33,120 @@ if __name__ == '__main__':
                                                                        , valid=valid
                                                                        , test=test
                                                                        )
-    # START HERE uncomment the line you want to run; hide the rest
-    # run_mode = 'arima'
-    # run_mode = 'prophet'
-    run_mode = 'lstm1'
-    # run_mode = 'lstm2'
-
     is_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if is_cuda else "cpu")
     mp.set_start_method('spawn')
 
-    # configure parameters for forecasting here
-    params = { 'stock_name': stock
-              , 'train_data': train_scaled
-              , 'valid_data': valid_scaled
-              , 'test_data': test_scaled
-              , 'time_col': 't'
-              , 'price_col': 'c'
-              , 'run_model': True
-              , 'window_size': 15
-              , 'seasonal_unit': 'day'
-              , 'prediction_unit': '1min'
-              , 'epochs': 6
-              , 'n_layers': 1
-              , 'learning_rate': 0.001
-              , 'batch_size': 16
-              , 'n_prediction_units': 15
-              , 'device': device
-              , 'max_processes': mp.cpu_count() // 2
-              , 'pin_memory': False
-              , 'enable_mp': True
-              , 'run_mode':run_mode
-               }
+    # START HERE uncomment the line you want to run; hide the rest
+    # baseline models
+    # run_modes = ['arima', 'prophet']
+    # lstm models
+    run_modes = ['lstm1', 'lstm2']
 
-    #TODO: Conduct performance testing on optimal CPU count, currently pooling half of reported cpu_count
+    for run_mode in run_modes:
 
-    if params['run_mode'] == 'arima' or params['run_mode'] == 'prophet':
-        print('Forecasting for {} with Approach run_mode: {}'.format(params['stock_name'], run_mode))
-        # train arima on stock data only
-        chunked_data = chunk_data(**params)
+        # configure parameters for forecasting here
+        params = { 'stock_name': stock
+                  , 'train_data': train_scaled
+                  , 'valid_data': valid_scaled
+                  , 'test_data': test_scaled
+                  , 'time_col': 't'
+                  , 'price_col': 'c'
+                  , 'run_model': True
+                  , 'window_size': 15
+                  , 'seasonal_unit': 'day'
+                  , 'prediction_unit': '1min'
+                  , 'epochs': 6
+                  , 'n_layers': 1
+                  , 'learning_rate': 0.001
+                  , 'batch_size': 16
+                  , 'n_prediction_units': 15
+                  , 'device': device
+                  , 'max_processes': mp.cpu_count() // 2
+                  , 'pin_memory': False
+                  , 'enable_mp': True
+                  , 'run_mode':run_mode
+                   }
 
-        # the model_ object is a temporary object to be updated during mp with partial()
-        model = run_arima if run_mode == 'arima' else run_prophet if run_mode == 'prophet' else None
+        if params['run_mode'] == 'arima' or params['run_mode'] == 'prophet':
+            print('Forecasting for {} with Approach run_mode: {}'.format(params['stock_name'], run_mode))
+            # train arima on stock data only
+            chunked_data = chunk_data(**params)
 
-        if params['enable_mp']:
-            print('Pooling {}x Processes with Multiprocessor'.format(params['max_processes']))
-            # pooling enabled
-            p = mp.Pool(params['max_processes'])
-            # pass function params with partial method, then call the partial during mp
-            model_ = partial(model, n_prediction_units=params['n_prediction_units'])
-            results = list(tqdm(p.imap(model_, chunked_data)))
-            p.close()
-            p.join()
-        else:
-            print('Forecasting Without Pooling')
-            results = [model(i, n_prediction_units=params['n_prediction_units']) for i in tqdm(chunked_data)]
+            # the model_ object is a temporary object to be updated during mp with partial()
+            model = run_arima if run_mode == 'arima' else run_prophet if run_mode == 'prophet' else None
 
-        # assess model results with MAPE and visualize predict V target
-        assess_model(results, model_type=run_mode, stock_name=params['stock_name'])
+            if params['enable_mp']:
+                print('Pooling {}x Processes with Multiprocessor'.format(params['max_processes']))
+                # pooling enabled
+                p = mp.Pool(params['max_processes'])
+                # pass function params with partial method, then call the partial during mp
+                model_ = partial(model, n_prediction_units=params['n_prediction_units'])
+                results = list(tqdm(p.imap(model_, chunked_data)))
+                p.close()
+                p.join()
+            else:
+                print('Forecasting Without Pooling')
+                results = [model(i, n_prediction_units=params['n_prediction_units']) for i in tqdm(chunked_data)]
 
-    elif params['run_mode'] == 'lstm1' or params['run_mode'] =='lstm2':
+            # assess model results with MAPE and visualize predict V target
+            assess_model(results, model_type=run_mode, stock_name=params['stock_name'])
 
-        print('Forecasting for {} with Approach run_mode: {}'.format(params['stock_name'], run_mode))
+        elif params['run_mode'] == 'lstm1' or params['run_mode'] =='lstm2':
 
-        if is_cuda:
-            params.update({'num_workers': 1
-                           ,'pin_memory':True})
+            print('Forecasting for {} with Approach run_mode: {}'.format(params['stock_name'], run_mode))
 
-        n_features = 1 if run_mode == 'lstm1' else 2 if run_mode == 'lstm2' else None
+            if is_cuda:
+                params.update({'num_workers': 1
+                               ,'pin_memory':True})
 
-        # if run mode == lstm2, then refactor data to have both sentiment and price
-        if run_mode == 'lstm2':
-            # split data having both sentiment and stock price
-            train, valid, test = split_stock_data(df=df, time_col='t')
-            # scale data
-            train_scaled, valid_scaled, test_scaled, scaler = scale_stock_data(train=train
-                                                                               , valid=valid
-                                                                               , test=test)
+            n_features = 1 if run_mode == 'lstm1' else 2 if run_mode == 'lstm2' else None
 
-            params.update({'train_data': train_scaled
-                          , 'valid_data': valid_scaled
-                          , 'test_data': test_scaled
-                          , 'scaler': scaler
+            # if run mode == lstm2, then refactor data to have both sentiment and price
+            if run_mode == 'lstm2':
+                # split data having both sentiment and stock price
+                train, valid, test = split_stock_data(df=df, time_col='t')
+                # scale data
+                train_scaled, valid_scaled, test_scaled, scaler = scale_stock_data(train=train
+                                                                                   , valid=valid
+                                                                                   , test=test)
+
+                params.update({'train_data': train_scaled
+                              , 'valid_data': valid_scaled
+                              , 'test_data': test_scaled
+                              , 'scaler': scaler
+                               })
+
+            params.update({'n_features':n_features})
+
+            params.update({'input_dim':params['n_features']
+                          , 'seq_length':params['window_size']
+                          , 'sequence_length':params['window_size']
                            })
 
-        params.update({'n_features':n_features})
+            model = Model(**params)
 
-        params.update({'input_dim':params['n_features']
-                      , 'seq_length':params['window_size']
-                      , 'sequence_length':params['window_size']
-                       })
+            params.update({'model': model})
 
-        model = Model(**params)
+            # force no multiprocessing due to performance issues
+            params.update({'enable_mp': False})
 
-        params.update({'model': model})
+            if params['enable_mp']:
+                params['model'].share_memory()
 
-        # force no multiprocessing due to performance issues
-        params.update({'enable_mp': False})
+                processes = []
+                print('Pooling {}x Processes with Multiprocessor'.format(params['max_processes']))
 
-        if params['enable_mp']:
-            params['model'].share_memory()
+                for rank in tqdm(range(params['max_processes'])):
+                    # pool data for train_scaled to function train_model
+                    p = mp.Process(target=train_model, kwargs=params)
+                    p.start()
+                    processes.append(p)
 
-            processes = []
-            print('Pooling {}x Processes with Multiprocessor'.format(params['max_processes']))
-
-            for rank in tqdm(range(params['max_processes'])):
-                # pool data for train_scaled to function train_model
-                p = mp.Process(target=train_model, kwargs=params)
-                p.start()
-                processes.append(p)
-
-            for p in tqdm(processes):
-                p.join()
-        else:
-            print('Forecasting Without Pooling')
-            # run train, validation, and test
-            train_model(**params)
+                for p in tqdm(processes):
+                    p.join()
+            else:
+                print('Forecasting Without Pooling')
+                # run train, validation, and test
+                train_model(**params)
 
