@@ -34,14 +34,13 @@ if __name__ == '__main__':
                                                                        , test=test
                                                                        )
     # START HERE uncomment the line you want to run; hide the rest
-    run_mode = 'arima'
-    # run_mode = 'prophet'
+    # run_mode = 'arima'
+    run_mode = 'prophet'
     # run_mode = 'lstm1'
     # run_mode = 'lstm2'
 
     is_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if is_cuda else "cpu")
-    enable_mp = True
     mp.set_start_method('spawn')
 
     # configure parameters for forecasting here
@@ -63,6 +62,7 @@ if __name__ == '__main__':
               , 'device': device
               , 'max_processes': mp.cpu_count() // 2
               , 'pin_memory': False
+              , 'enable_mp': True
                }
 
     #TODO: Conduct performance testing on optimal CPU count, currently pooling half of reported cpu_count
@@ -75,7 +75,7 @@ if __name__ == '__main__':
         # the model_ object is a temporary object to be updated during mp with partial()
         model = run_arima if run_mode == 'arima' else run_prophet if run_mode == 'prophet' else None
 
-        if enable_mp:
+        if params['enable_mp']:
             print('Pooling {}x Processes with Multiprocessor'.format(params['max_processes']))
             # pooling enabled
             p = mp.Pool(params['max_processes'])
@@ -128,8 +128,9 @@ if __name__ == '__main__':
         params.update({'model': model})
 
         # force no multiprocessing due to performance issues
-        enable_mp = False
-        if enable_mp:
+        params.update({'enable_mp': False})
+
+        if params['enable_mp']:
             params['model'].share_memory()
 
             processes = []
