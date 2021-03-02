@@ -1,5 +1,7 @@
 import json
 import pandas as pd
+import glob
+
 from utilities.clean_data import cleaner
 from utilities.sentiment_data import score_sentiment
 
@@ -38,7 +40,7 @@ def get_news_dummies(filepath
     return df
 
 def get_stock_dummies(filepath
-                      , date_col='t'
+                      , time_col='t'
                       , data_col='c'
                       , window_minutes=2880
                       ):
@@ -52,14 +54,14 @@ def get_stock_dummies(filepath
 
     pd.set_option('display.max_columns', None)
     df = pd.read_csv(filepath, index_col=0)
-    df[date_col] = pd.to_datetime(df[date_col])
+    df[time_col] = pd.to_datetime(df[time_col])
 
     # hard coded to min date from news data
     date_min = pd.to_datetime('2020-10-06')
-    df = df[df[date_col] > date_min].copy()
-    df = df[[date_col, data_col]]
+    df = df[df[time_col] > date_min].copy()
+    df = df[[time_col, data_col]]
 
-    df = df.set_index(date_col)
+    df = df.set_index(time_col)
 
     df = df.resample('1min').fillna('nearest')
     df['c'] = df['c'].rolling(window_minutes).mean()
@@ -69,30 +71,45 @@ def get_stock_dummies(filepath
     # df = df.resample('1D').last().dropna().reset_index()
     # start data on a monday
     date_min = pd.to_datetime('2020-10-11')
-    df = df[df[date_col] > date_min].copy()
+    df = df[df[time_col] > date_min].copy()
     df.reset_index(inplace=True, drop=True)
 
     return df
 
 
-def get_news_real(filepath='data/class_data/news.json'
-                  , date_col='pub_time'
-                  , date_conversion='US/Eastern'
-                  , time_col='t'):
+def get_stock_tickers(filepath='data/class_data/news.json'):
     """
-    :return: pandas df from dict of real news data
+    :return: a list of stock tickers to analyze
     """
-
-    # enable view all cols
-    pd.set_option('display.max_columns', None)
 
     # read/open json data
     with open(filepath) as f:
         # news data returned as dict, keyed by stock ticker
         data = json.load(f)
 
+    return list(data.keys())
 
-    df = pd.DataFrame(data['FB'])
+
+def get_news_real(ticker
+                , filepath='data/class_data/news.json'
+                , date_col='pub_time'
+                , date_conversion='US/Eastern'
+                , time_col='t'):
+    """
+    :return: pandas df from dict of real news data for a single stock
+    """
+
+    # enable view all cols
+    pd.set_option('display.max_columns', None)
+
+    # read/open json data
+    #TODO: target file reader to only open the ticker's data
+    with open(filepath) as f:
+        # news data returned as dict, keyed by stock ticker
+        data = json.load(f)
+
+    # select just the stock ticker to run through pipeline
+    df = pd.DataFrame(data[ticker])
 
     df[date_col] = pd.to_datetime(df[date_col])
 
@@ -119,14 +136,37 @@ def get_news_real(filepath='data/class_data/news.json'
     return df
 
 
-def get_stock_real():
+def get_stock_real(ticker
+                 , time_col='t'
+                 , data_col='c'):
     """
     :return: pandas df from dict of real news data
+    help from: https://stackoverflow.com/questions/20906474/import-multiple-csv-files-into-pandas-and-concatenate-into-one-dataframe
     """
 
     # enable view all cols
     pd.set_option('display.max_columns', None)
 
     print('get stock data here')
-    return
+    path = r'data/class_data/historical_price'
+    target_files = glob.glob(path + f"/{ticker}*.csv")
+
+    li = []
+
+    for filename in target_files:
+        # looping in case there are multiple data points
+        # expecting just one though (refactor later)
+        df = pd.read_csv(filename, index_col=None, header=0)
+        li.append(df)
+
+    df = pd.concat(li, axis=0, ignore_index=True)
+
+    bad_column = 'Unnamed: 0'
+    if  bad_column in df.columns:
+        df = df.drop(columns=[bad_column])
+
+    # return sorted time_col and data_col
+    df = df.set_index(time_col)[[data_col]].reset_index()
+
+    return df
 
