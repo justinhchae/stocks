@@ -9,6 +9,8 @@ def score_sentiment(df
                     , date_col
                     , score_type='compound'
                     , window_minutes=2880
+                    , is_resample=True
+                    , date_min='2020-10-11'
                     ):
     """
     :param df: a pandas dataframe
@@ -28,8 +30,10 @@ def score_sentiment(df
 
     df = df[[date_col, score_type]]
     df = df.set_index(date_col)
-    df = df.resample('1min').fillna('nearest')
-    df[score_type] = df[score_type].rolling(window_minutes).mean()
+
+    if is_resample:
+        df = df.resample('1min').fillna('nearest')
+        df[score_type] = df[score_type].rolling(window_minutes).mean()
 
     df.reset_index(inplace=True)
 
@@ -37,10 +41,11 @@ def score_sentiment(df
     # df = df[[date_col, score_type]].groupby(
     #     [pd.Grouper(key=date_col, freq='D')]).agg('mean').dropna().reset_index()
 
-    # start data on a monday
-    date_min = pd.to_datetime('2020-10-11')
-    df = df[df[date_col] > date_min].copy()
-    df.reset_index(inplace=True, drop=True)
+    # start data on a monday on dummy data
+    if date_min is not None:
+        date_min = pd.to_datetime('2020-10-11')
+        df = df[df[date_col] > date_min].copy()
+        df.reset_index(inplace=True, drop=True)
 
     df.rename(columns={date_col:'t'}, inplace=True)
 
