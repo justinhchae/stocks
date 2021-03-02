@@ -44,7 +44,7 @@ The development data is based on a sample of dummy data news articles for Amazon
 
 ## ARIMA Methodology
 
-* Train model on a period, forecast the period that immediately follows
+* Train model on a period, forecast the period that immediately follows; consume chunked data
 
 * Example: train on data from index 0 to index 14 and predict the value at the 15th index position.
 
@@ -54,7 +54,7 @@ The development data is based on a sample of dummy data news articles for Amazon
 
 ## Facebook Prophet Methodology
 
-* Train model on a period, forecast the period that immediately follows
+* Train model on a period, forecast the period that immediately follows; consume chunked data
 
 * Example: train on data for from 09:00 to 09:14 and predict the value at 09:15.
 
@@ -64,7 +64,7 @@ The development data is based on a sample of dummy data news articles for Amazon
 
 ## LSTM PyTorch Methodology
 
-* Parse data for each trading day into windows of size 15 and increment step size by 1
+* Parse data for each trading day into windows of size 15 and increment step size by 1; ; consume batched data from PyTorch DataLoader objects
 
 * Example: train on data for from index 0 to 14 and predict the value at index 15, then increment window size from [1:15] and predict index at 16, and so on.
 
