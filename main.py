@@ -19,8 +19,8 @@ if __name__ == '__main__':
     # run get pipelines for news and stock data
 
     # switch comment based on data mode
-    experiment_mode = 'class_data'
-    # experiment_mode = 'demo'
+    # experiment_mode = 'class_data'
+    experiment_mode = 'demo'
 
     if experiment_mode == 'demo':
         news_df = get_news_dummies(stock)
