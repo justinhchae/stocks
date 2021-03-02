@@ -1,4 +1,4 @@
-from utilities.get_data import get_news_dummies, get_stock_dummies, get_news_real, get_stock_real
+from utilities.get_data import get_news_dummies, get_stock_dummies, get_news_real, get_stock_real, get_stock_tickers
 from utilities.clean_data import trading_days
 from utilities.run_arima import run_arima
 from utilities.run_prophet import run_prophet
@@ -19,18 +19,20 @@ if __name__ == '__main__':
     # run get pipelines for news and stock data
 
     # switch comment based on data mode
-    # experiment_mode = 'class_data'
-    experiment_mode = 'demo'
+    experiment_mode = 'class_data'
+    # experiment_mode = 'demo'
 
     if experiment_mode == 'demo':
         news_df = get_news_dummies(stock)
         stock_df = get_stock_dummies(stock)
     elif experiment_mode == 'class_data':
         #TODO cycle through stock tickers, update params in iters
-        news_df = get_news_real()
-        #TODO: configure get stock real
-        stock_df = get_stock_real()
-        print(stock_df.head())
+        tickers = get_stock_tickers()
+        # later, cycle through tickers, for now, work with first ticker in index
+        news_df = get_news_real(ticker=tickers[0])
+        stock_df = get_stock_real(ticker=tickers[0])
+        #TODO: design how to combine data for experiement
+        print(stock_df)
         breakpoint()
 
     # transform to minute-by-minute sentiment score and stock price
