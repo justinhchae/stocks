@@ -1,4 +1,4 @@
-from utilities.get_data import get_news_dummies, get_stock_dummies
+from utilities.get_data import get_news_dummies, get_stock_dummies, get_news_real, get_stock_real
 from utilities.clean_data import trading_days
 from utilities.run_arima import run_arima
 from utilities.run_prophet import run_prophet
@@ -17,10 +17,21 @@ if __name__ == '__main__':
     #TODO start configuring a wrapper to forecast multiple stocks
     stock = 'Amazon'
     # run get pipelines for news and stock data
-    #TODO: add a toggle to switch between dummy data (demo) and real data (experiement)
-    #TODO: configure data getters for real stock data
-    news_df = get_news_dummies(stock)
-    stock_df = get_stock_dummies(stock)
+
+    # switch comment based on data mode
+    # experiment_mode = 'class_data'
+    experiment_mode = 'demo'
+
+    if experiment_mode == 'demo':
+        news_df = get_news_dummies(stock)
+        stock_df = get_stock_dummies(stock)
+    elif experiment_mode == 'class_data':
+        #TODO cycle through stock tickers, update params in iters
+        news_df = get_news_real()
+        #TODO: configure get stock real
+        stock_df = get_stock_real()
+        print(stock_df.head())
+        breakpoint()
 
     # transform to minute-by-minute sentiment score and stock price
     df = trading_days(news_df, stock_df)
@@ -37,7 +48,7 @@ if __name__ == '__main__':
     device = torch.device("cuda" if is_cuda else "cpu")
     mp.set_start_method('spawn')
 
-    # START HERE uncomment the line you want to run; hide the rest
+    # uncomment the line you want to run; hide the rest
     # uncomment next line to run just the baseline models
     # run_modes = ['arima', 'prophet']
     # uncomment next line to run just the featured models

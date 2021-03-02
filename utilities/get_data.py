@@ -75,3 +75,58 @@ def get_stock_dummies(filepath
     return df
 
 
+def get_news_real(filepath='data/class_data/news.json'
+                  , date_col='pub_time'
+                  , date_conversion='US/Eastern'
+                  , time_col='t'):
+    """
+    :return: pandas df from dict of real news data
+    """
+
+    # enable view all cols
+    pd.set_option('display.max_columns', None)
+
+    # read/open json data
+    with open(filepath) as f:
+        # news data returned as dict, keyed by stock ticker
+        data = json.load(f)
+
+
+    df = pd.DataFrame(data['FB'])
+
+    df[date_col] = pd.to_datetime(df[date_col])
+
+    if date_conversion:
+        date_est =  date_col + '_est'
+        df[date_est] = (df[date_col].dt.tz_convert(date_conversion))
+        df[date_est] = df[date_est].dt.tz_localize(tz=None)
+        df.drop(columns=date_col, inplace=True)
+
+    # run text cleaner on article narrative
+    df = cleaner(df, 'text')
+
+    # score article narrative and return only time and scores
+    df = score_sentiment(df, 'text', 'pub_time_est', is_resample=False, date_min=None)
+
+    # this returns a dataframe of time as provided by data
+    df = df.sort_values(by=[time_col]).reset_index(drop=True)
+
+    # resample data to average sentiment score per day (per paper specifications)
+
+    df = df.groupby(
+        [pd.Grouper(key=time_col, freq='D')]).agg('mean').dropna().reset_index()
+
+    return df
+
+
+def get_stock_real():
+    """
+    :return: pandas df from dict of real news data
+    """
+
+    # enable view all cols
+    pd.set_option('display.max_columns', None)
+
+    print('get stock data here')
+    return
+
