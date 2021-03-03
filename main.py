@@ -37,8 +37,7 @@ if __name__ == '__main__':
     trouble = []
 
     try:
-        # tickers_historical = get_stock_tickers()
-        tickers_historical = ['AVGO']
+        tickers_historical = get_stock_tickers()
     except:
         pass
 
