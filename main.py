@@ -14,19 +14,32 @@ import torch.multiprocessing as mp
 from functools import partial
 
 if __name__ == '__main__':
-    #TODO start configuring a wrapper to forecast multiple stocks
-    stock = 'Amazon'
-    # run get pipelines for news and stock data
+    # initialize empty list to hold stock refs
+    tickers = []
 
-    # switch comment based on data mode
+    # configure gpu if available
+    is_cuda = torch.cuda.is_available()
+    device = torch.device("cuda" if is_cuda else "cpu")
+    mp.set_start_method('spawn')
+
+    ## make two options to run the program, one for experiment mode and one run modes
+
+    # uncomment one of two types of exp modes
     # experiment_mode = 'class_data'
     experiment_mode = 'demo'
 
+    # uncomment one of two types of run modes
+    run_modes = ['arima', 'prophet']
+    # run_modes = ['lstm1', 'lstm2']
+
     if experiment_mode == 'demo':
-        news_df = get_news_dummies(stock)
-        stock_df = get_stock_dummies(stock)
+        tickers = ['Amazon']
+        news_df = get_news_dummies(tickers[0])
+        stock_df = get_stock_dummies(tickers[0])
+        # transform to minute-by-minute sentiment score and stock price
+        df = trading_days(news_df, stock_df)
+
     elif experiment_mode == 'class_data':
-        #TODO cycle through stock tickers, update params in iters
         tickers = get_stock_tickers()
         # later, cycle through tickers, for now, work with first ticker in index
         news_df = get_news_real(ticker=tickers[0])
@@ -34,9 +47,6 @@ if __name__ == '__main__':
         #TODO: design how to combine data for experiement
         print(stock_df)
         breakpoint()
-
-    # transform to minute-by-minute sentiment score and stock price
-    df = trading_days(news_df, stock_df)
 
     # split data into train, validation, and testing
     train, valid, test = split_stock_data(df=df[['t','c']], time_col='t')
@@ -46,20 +56,11 @@ if __name__ == '__main__':
                                                                        , valid=valid
                                                                        , test=test
                                                                        )
-    is_cuda = torch.cuda.is_available()
-    device = torch.device("cuda" if is_cuda else "cpu")
-    mp.set_start_method('spawn')
-
-    # uncomment the line you want to run; hide the rest
-    # uncomment next line to run just the baseline models
-    # run_modes = ['arima', 'prophet']
-    # uncomment next line to run just the featured models
-    run_modes = ['lstm1', 'lstm2']
 
     for run_mode in run_modes:
 
         # configure parameters for forecasting here
-        params = { 'stock_name': stock
+        params = { 'stock_name': tickers[0]
                   , 'train_data': train_scaled
                   , 'valid_data': valid_scaled
                   , 'test_data': test_scaled
