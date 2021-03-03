@@ -29,44 +29,84 @@ def chunk_data(train_data
                 ):
     """
     A helper function to chunk data into time windows
+    seasonal_unit == day if working with sub daily dataset
+    seasonal_unit == week if working with daily data within a weekly
+    additional season units TODO
     """
     # these column names are required by the facebook api
     ds_col = 'ds'
     y_col = 'y'
     key_map = {time_col: ds_col, price_col: y_col}
 
-    # extract the week number and day number for each timestamp for sorting
-    train_data['week'] = train_data[time_col].dt.isocalendar().week
-    train_data['day'] = train_data[time_col].dt.isocalendar().day
+    # full chunking intended for sub daily data such as minutes
+    if seasonal_unit=='day':
+        # extract the week number and day number for each timestamp for sorting
+        train_data['week'] = train_data[time_col].dt.isocalendar().week
+        train_data[seasonal_unit] = train_data[time_col].dt.isocalendar().day
 
-    # produce a unique tuple (per year) of a week and day number
-    train_data['day'] = list(zip(train_data['week'], train_data['day']))
-    train_data.drop(columns=['week'], inplace=True)
+        # produce a unique tuple (per year) of a week and day number
+        train_data[seasonal_unit] = list(zip(train_data['week'], train_data[seasonal_unit]))
+        train_data.drop(columns=['week'], inplace=True)
 
-    # initialize valid test data
-    valid = None
-    # split data
-    train = train_data
+        # initialize valid test data
+        valid = None
+        # split data
+        train = train_data
 
-    # convert col names per facebook api needs
-    train = train.rename(columns=key_map)
+        # convert col names per facebook api needs
+        train = train.rename(columns=key_map)
 
-    # group df by day, a week-day tuple
-    df = train.groupby(seasonal_unit)
+        # group df by seasonal unit as a tuple
+        df = train.groupby(seasonal_unit)
 
-    model_data = []
-    for group_name, group_frame in df:
-        chunk_data = []
+        model_data = []
 
-        # in each seasonal_unit, chunk data into window_size chunks
-        chunks = split(group_frame, window_size)
+        for group_name, group_frame in df:
+            chunk_data = []
 
-        # initialize an index to return each chunk in sequence
-        idx = 0
+            # in each seasonal_unit, chunk data into window_size chunks
+            chunks = split(group_frame, window_size)
 
-        while 1:
-            # return a data chunk of window_size on index idx
-            chunk = chunks[idx]
+            # initialize an index to return each chunk in sequence
+            idx = 0
+
+            while 1:
+                # return a data chunk of window_size on index idx
+                chunk = chunks[idx]
+
+                # set up index of next chunk in sequence
+                next_idx = idx + 1
+
+                # at then end of a seasonal_unit, break if index out of range
+                if next_idx > len(chunks) - 1:
+                    break
+                else:
+                    # otherwise, return the first n_prediction_units of next sequence as y target
+                    target = chunks[next_idx].head(n_prediction_units)
+
+                # increment the chunk
+                idx += 1
+                x_i = chunk.reset_index(drop=True)
+                y_i = target.reset_index(drop=True)
+                # save targets y and forecast predictions yhat
+                chunk_data.append((x_i, y_i))
+
+            model_data.append(chunk_data)
+
+        return model_data
+
+    # chunking daily data within the context of weeks
+    if seasonal_unit == 'week':
+
+        train_data = train_data.rename(columns=key_map)
+        # chunk data into n sized sequences
+        chunks = split(train_data, window_size)
+
+        # initialize empty list
+        chunked_data = []
+
+        # enumerate through each chunk
+        for idx, chunk in enumerate(chunks):
 
             # set up index of next chunk in sequence
             next_idx = idx + 1
@@ -78,13 +118,12 @@ def chunk_data(train_data
                 # otherwise, return the first n_prediction_units of next sequence as y target
                 target = chunks[next_idx].head(n_prediction_units)
 
-            # increment the chunk
-            idx += 1
+            # set up tuples as train target pairs
             x_i = chunk.reset_index(drop=True)
             y_i = target.reset_index(drop=True)
+
             # save targets y and forecast predictions yhat
-            chunk_data.append((x_i, y_i))
+            chunked_data.append((x_i, y_i))
 
-        model_data.append(chunk_data)
+        return chunked_data
 
-    return model_data

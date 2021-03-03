@@ -37,12 +37,38 @@ class suppress_stdout_stderr(object):
         for fd in self.null_fds + self.save_fds:
             os.close(fd)
 
-def run_prophet(chunked_data, n_prediction_units=1, prediction_frequency='1min'):
+def run_prophet(chunked_data, seasonal_unit, prediction_frequency, n_prediction_units=1):
     # install gotcha: https://github.com/facebook/prophet/issues/775#issuecomment-449139135
     ds_col = 'ds'
     results = []
 
-    for x, y in chunked_data:
+    # if forecasting sub-daily
+    if seasonal_unit == 'day':
+        # enumerate through chunked data pairs
+        for x, y in chunked_data:
+            # new model for each go around
+            m = Prophet(uncertainty_samples=False)
+
+            with suppress_stdout_stderr():
+                m.fit(x)
+
+            # set an index of times to predict for
+            future = m.make_future_dataframe(periods=n_prediction_units
+                                             , freq=prediction_frequency
+                                             , include_history=False)
+            # make predictions
+            yhat = m.predict(future)[[ds_col, 'yhat']]
+            # unify targets and predictions
+            result = pd.merge(y, yhat, left_on=ds_col, right_on=ds_col).drop(columns=seasonal_unit)
+            # capture results in a list
+            results.append(result)
+        # return a list of results
+        return results
+
+    elif seasonal_unit == 'week':
+
+        x = chunked_data[0]
+        y = chunked_data[1]
 
         m = Prophet(uncertainty_samples=False)
 
@@ -53,12 +79,13 @@ def run_prophet(chunked_data, n_prediction_units=1, prediction_frequency='1min')
                                          , freq=prediction_frequency
                                          , include_history=False)
 
-        yhat = m.predict(future)[[ds_col, 'yhat']]
+        # this is a hack, just return the next n values, whatever they are
+        # TODO: address prediction date and frequency if not predicting on the expected date
+        yhat = m.predict(future)[['yhat']]
+        y['yhat'] = yhat
 
-        result = pd.merge(y, yhat, left_on=ds_col, right_on=ds_col).drop(columns='day')
+        return y
 
-        results.append(result)
 
-    return results
 
 

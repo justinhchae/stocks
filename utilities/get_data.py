@@ -1,6 +1,8 @@
 import json
 import pandas as pd
 import glob
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 from utilities.clean_data import cleaner
 from utilities.sentiment_data import score_sentiment
@@ -128,11 +130,6 @@ def get_news_real(ticker
     # this returns a dataframe of time as provided by data
     df = df.sort_values(by=[time_col]).reset_index(drop=True)
 
-    # resample data to average sentiment score per day (per paper specifications)
-
-    df = df.groupby(
-        [pd.Grouper(key=time_col, freq='D')]).agg('mean').dropna().reset_index()
-
     return df
 
 
@@ -146,8 +143,6 @@ def get_stock_real(ticker
 
     # enable view all cols
     pd.set_option('display.max_columns', None)
-
-    print('get stock data here')
     path = r'data/class_data/historical_price'
     target_files = glob.glob(path + f"/{ticker}*.csv")
 
@@ -165,8 +160,10 @@ def get_stock_real(ticker
     if  bad_column in df.columns:
         df = df.drop(columns=[bad_column])
 
+    df[time_col] = pd.to_datetime(df[time_col])
+
     # return sorted time_col and data_col
-    df = df.set_index(time_col)[[data_col]].reset_index()
+    df = df.sort_values(by=[time_col]).reset_index(drop=True)[[time_col, data_col]]
 
     return df
 

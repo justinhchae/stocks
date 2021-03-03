@@ -8,7 +8,7 @@ class Model(nn.Module):
                  , input_dim
                  , seq_length
                  , device
-                 , hidden_dim=50
+                 , hidden_dim=16
                  , output_dim=1
                  , num_layers=1
                  , **kwargs

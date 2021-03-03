@@ -88,7 +88,16 @@ def train_model(train_data, model, sequence_length, pin_memory, epochs=20, learn
     plot_losses(train_loss=train_losses, valid_loss=valid_losses, stock_name=kwargs['stock_name'], model_type=kwargs['run_mode'])
 
     # test model
-    test_model(model, test_loader, stock_name=kwargs['stock_name'], model_type=kwargs['run_mode'], loss_function=loss_function, test_data=kwargs['test_data'])
+    results = test_model(model
+               , test_loader
+               , stock_name=kwargs['stock_name']
+               , model_type=kwargs['run_mode']
+               , loss_function=loss_function
+               , test_data=kwargs['test_data']
+               , n_hidden=kwargs['hidden_dim']
+
+               )
+    return results
 
 def valid_epoch(model, data_loader, loss_function):
     # initiate empty list to hold loss values
@@ -163,7 +172,7 @@ def plot_losses(train_loss, valid_loss, stock_name, model_type):
     plt.tight_layout()
     plt.show()
 
-def test_model(model, data_loader, stock_name, model_type, loss_function, test_data):
+def test_model(model, data_loader, stock_name, model_type, loss_function, test_data, n_hidden):
 
     # initialize empty lists to capture data
     losses = []
@@ -208,6 +217,8 @@ def test_model(model, data_loader, stock_name, model_type, loss_function, test_d
     df['targets'] = targets
     df['predictions'] = predictions
 
+    #TODO: Need to re-consider what is being evaluated for MAPE and prediction
+
     # plot the data
     fig, ax, = plt.subplots()
 
@@ -240,13 +251,25 @@ def test_model(model, data_loader, stock_name, model_type, loss_function, test_d
             , label='Predicted Price'
             )
 
-    ax.set_title('{} Stock Price Prediction\nWith {}, Test MAPE: {:.4f}, Mean Test Loss:{:.4f}'.format(stock_name, model_type, error, average_loss))
+    h = n_hidden
+    ax.set_title('{} Stock Price Prediction | Hidden: {}\nWith {}, Test MAPE: {:.4f}, Mean Test Loss:{:.4f}'.format(stock_name, h, model_type, error, average_loss))
     plt.xlabel('Time')
     plt.ylabel('Stock Price')
-    plt.legend()
+    plt.legend(loc="upper left")
     fig.autofmt_xdate()
     plt.tight_layout()
     plt.show()
+
+    results = {'ticker': stock_name
+            , 'N': len(test_data)
+            , 'MAPE': error
+            , 'date_start': min(test_data['t'])
+            , 'date_end': max(test_data['t'])
+            , 'model_type': model_type
+            # TODO: add more params to output
+            }
+
+    return results
 
 
 #TODO: Deprecate train_model_1

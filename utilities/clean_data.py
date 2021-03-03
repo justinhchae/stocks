@@ -22,9 +22,7 @@ def cleaner(df, col):
         , pp.remove_whitespace
         , pp.stem
                 ]
-    print('======================================== Done Cleaning')
     df[col] = hero.clean(df[col], pipeline=pipeline)
-    print('======================================== DataFrame Head')
 
     return df
 
