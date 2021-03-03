@@ -19,8 +19,8 @@ if __name__ == '__main__':
     ## make two options to run the program, one for experiment mode and one run modes
 
     # uncomment one of two types of exp modes
-    # experiment_mode = 'class_data'
-    experiment_mode = 'demo'
+    experiment_mode = 'class_data'
+    # experiment_mode = 'demo'
 
     # uncomment one of two types of run modes
     # if class_data, these values are overridden (fix this later)
@@ -36,7 +36,7 @@ if __name__ == '__main__':
     experiment_results = []
 
     try:
-        tickers_historical = get_stock_tickers()[:5]
+        tickers_historical = get_stock_tickers()
     except:
         pass
 
@@ -49,6 +49,12 @@ if __name__ == '__main__':
 
     # get cpu count for processes
     CPUs = mp.cpu_count()
+
+    n_tickers = len(tickers)
+    tqdm.write(f'Experimenting with {n_tickers} tickers:')
+    #TODO: handle cases like "GOOGL" or "GOOG", ignore for now
+    for ticker in tickers:
+        tqdm.write(ticker)
 
     for ticker in tickers:
 
@@ -94,6 +100,7 @@ if __name__ == '__main__':
                       }
 
         elif experiment_mode == 'class_data':
+
             # override run_modes
             run_modes = ['arima', 'prophet', 'lstm1', 'lstm2']
             # tickers = get_stock_tickers()
