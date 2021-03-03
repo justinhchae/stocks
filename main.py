@@ -19,8 +19,8 @@ if __name__ == '__main__':
     ## make two options to run the program, one for experiment mode and one run modes
 
     # uncomment one of two types of exp modes
-    experiment_mode = 'class_data'
-    # experiment_mode = 'demo'
+    # experiment_mode = 'class_data'
+    experiment_mode = 'demo'
 
     # uncomment one of two types of run modes
     # if class_data, these values are overridden (fix this later)
