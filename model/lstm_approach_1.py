@@ -258,6 +258,7 @@ def test_model(model, data_loader, stock_name, model_type, loss_function, test_d
     plt.legend(loc="upper left")
     fig.autofmt_xdate()
     plt.tight_layout()
+    fig.savefig(f'figures/{stock_name}_{model_type}_results.png')
     plt.show()
 
     results = {'ticker': stock_name

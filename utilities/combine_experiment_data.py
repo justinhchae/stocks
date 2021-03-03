@@ -71,7 +71,7 @@ def combine_news_stock(stock_df
     plt.xlabel('Time')
     plt.legend()
     fig.autofmt_xdate()
-    fig.savefig(f'figures/data_prep_{ticker}.png')
+    fig.savefig(f'figures/{ticker}_data_prep.png')
     plt.show()
 
     return df

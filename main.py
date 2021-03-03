@@ -34,9 +34,11 @@ if __name__ == '__main__':
     tickers_historical = None
     params = {}
     experiment_results = []
+    trouble = []
 
     try:
-        tickers_historical = get_stock_tickers()
+        # tickers_historical = get_stock_tickers()
+        tickers_historical = ['AVGO']
     except:
         pass
 
@@ -108,7 +110,12 @@ if __name__ == '__main__':
             news_df = get_news_real(ticker=ticker)
             stock_df = get_stock_real(ticker=ticker)
             # consolidated data prep for training (scale, combine, filter)
-            df = combine_news_stock(stock_df=stock_df, news_df=news_df, ticker=ticker)
+            try:
+                df = combine_news_stock(stock_df=stock_df, news_df=news_df, ticker=ticker)
+            except:
+                trouble.append(ticker)
+                tqdm.write(f'Trouble with {ticker}, skipping to next.')
+                continue
             # split data on data that is already scaled
             train_scaled_price, valid_scaled_price, test_scaled_price = split_stock_data(df=df[['t', 'c']], time_col='t')
             train_scaled_sentiment, valid_scaled_sentiment, test_scaled_sentiment = split_stock_data(df=df, time_col='t')
@@ -240,3 +247,8 @@ if __name__ == '__main__':
     df = pd.DataFrame(experiment_results)
 
     df.to_csv('data/results.csv')
+
+    tqdm.write('Had trouble with the following and did not run, do some troubleshooting.')
+
+    for i in trouble:
+        tqdm.write(i)

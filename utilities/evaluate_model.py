@@ -41,6 +41,7 @@ def assess_model(data, model_type, stock_name, seasonal_unit, time_col='t', pred
     plt.ylabel('Stock Price')
     plt.legend(loc='upper left')
     fig.autofmt_xdate()
+    fig.savefig(f'figures/{stock_name}_{model_type}_results.png')
     plt.show()
 
     results = {'ticker':stock_name
