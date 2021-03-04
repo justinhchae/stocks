@@ -23,7 +23,7 @@ def assess_model(data, model_type, stock_name, seasonal_unit, time_col='t', pred
     # compute the MAPE over the entire prediction set
     # error = mean_absolute_percentage_error(df['y'].values, df['yhat'].values) * 100
     error = mean_absolute_percentage_error(df[tgt_col].values, df[pred_col].values) * 100
-    tqdm.write(f'MAPE score for {stock_name} on {model_type} model: {error}\n')
+    # tqdm.write(f'MAPE score for {stock_name} on {model_type} model: {error}\n')
 
     # plot the data
     fig, ax, = plt.subplots()
@@ -42,7 +42,7 @@ def assess_model(data, model_type, stock_name, seasonal_unit, time_col='t', pred
     plt.legend(loc='upper left')
     fig.autofmt_xdate()
     fig.savefig(f'figures/{stock_name}_{model_type}_results.png')
-    plt.show()
+    # plt.show()
 
     results = {'ticker':stock_name
             , 'N':n

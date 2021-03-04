@@ -81,7 +81,7 @@ def train_model(train_data, model, sequence_length, pin_memory, epochs=20, learn
         epoch_valid_loss = np.mean(valid_loss)
 
         # update and refresh progress bar each epoch
-        pbar.set_description('Epoch {}...Mean Train Loss: {:.5f}...Mean Valid Loss: {:.5f}'.format(epoch, epoch_train_loss, epoch_valid_loss))
+        pbar.set_description('{}-{} Epoch {}...Mean Train Loss: {:.5f}...Mean Valid Loss: {:.5f}'.format(kwargs['stock_name'],kwargs['run_mode'], epoch, epoch_train_loss, epoch_valid_loss))
         pbar.refresh()
 
     # plot losses
@@ -170,7 +170,7 @@ def plot_losses(train_loss, valid_loss, stock_name, model_type):
     plt.ylabel('Loss')
     plt.legend()
     plt.tight_layout()
-    plt.show()
+    # plt.show()
 
 def test_model(model, data_loader, stock_name, model_type, loss_function, test_data, n_hidden):
 
@@ -206,11 +206,11 @@ def test_model(model, data_loader, stock_name, model_type, loss_function, test_d
 
     # evaluate average MSE
     average_loss = np.mean(losses)
-    print('Mean Test Loss (MSE): {:.5f}'.format(average_loss))
+    # print('Mean Test Loss (MSE): {:.5f}'.format(average_loss))
 
     # evaluate MAPE
     error = mean_absolute_percentage_error(targets, predictions)
-    print('Error (MAPE): {:.5f}'.format(error))
+    # print('Error (MAPE): {:.5f}'.format(error))
 
     # organize data for plotting, pandas for convenience
     df = pd.DataFrame()
@@ -259,7 +259,7 @@ def test_model(model, data_loader, stock_name, model_type, loss_function, test_d
     fig.autofmt_xdate()
     plt.tight_layout()
     fig.savefig(f'figures/{stock_name}_{model_type}_results.png')
-    plt.show()
+    # plt.show()
 
     results = {'ticker': stock_name
             , 'N': len(test_data)

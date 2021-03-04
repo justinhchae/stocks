@@ -25,8 +25,8 @@ if __name__ == '__main__':
 
     # uncomment one of two types of run modes
     # if class_data, these values are overridden (fix this later)
-    run_modes = ['arima', 'prophet']
-    # run_modes = ['lstm1', 'lstm2']
+    # run_modes = ['arima', 'prophet']
+    run_modes = ['lstm1', 'lstm2']
 
     # initialize empty structs
     train_scaled = None
@@ -54,12 +54,14 @@ if __name__ == '__main__':
     CPUs = mp.cpu_count()
 
     n_tickers = len(tickers)
-    tqdm.write(f'Experimenting with {n_tickers} tickers:')
+    print(f'Experimenting with {n_tickers} tickers:')
     #TODO: handle cases like "GOOGL" or "GOOG", ignore for now
-    for ticker in tickers:
-        tqdm.write(ticker)
 
-    for ticker in tickers:
+    ticker_pbar = tqdm(tickers, desc='Running Experiment', position=0, leave=True)
+
+    for ticker in ticker_pbar:
+        ticker_pbar.set_description(f'Run Experiment: {ticker}')
+        ticker_pbar.refresh()
 
         if experiment_mode == 'demo':
             news_df = get_news_dummies(ticker)
@@ -94,7 +96,7 @@ if __name__ == '__main__':
                     , 'n_layers': 1
                     , 'learning_rate': 0.001
                     , 'batch_size': 16
-                    , 'hidden_dim': 50
+                    , 'hidden_dim': 64
                     , 'n_prediction_units': 15
                     , 'device': device
                     , 'max_processes': CPUs // 2
@@ -112,13 +114,13 @@ if __name__ == '__main__':
                 news_df = get_news_real(ticker=ticker)
             except:
                 trouble.append((ticker, "news_df"))
-                tqdm.write(f'Trouble with {ticker}, skipping to next.')
+                # tqdm.write(f'Trouble with {ticker}, skipping to next.')
                 continue
             try:
                 stock_df = get_stock_real(ticker=ticker)
             except:
                 trouble.append((ticker, "stock_df"))
-                tqdm.write(f'Trouble with {ticker}, skipping to next.')
+                # tqdm.write(f'Trouble with {ticker}, skipping to next.')
                 continue
 
             # consolidated data prep for training (scale, combine, filter)
@@ -126,7 +128,7 @@ if __name__ == '__main__':
                 df = combine_news_stock(stock_df=stock_df, news_df=news_df, ticker=ticker)
             except:
                 trouble.append((ticker, "combine_news_stock"))
-                tqdm.write(f'Trouble with {ticker}, skipping to next.')
+                # tqdm.write(f'Trouble with {ticker}, skipping to next.')
                 continue
             # split data on data that is already scaled
             train_scaled_price, valid_scaled_price, test_scaled_price = split_stock_data(df=df[['t', 'c']], time_col='t')
@@ -146,11 +148,11 @@ if __name__ == '__main__':
                     , 'window_size': 4
                     , 'seasonal_unit': 'week'
                     , 'prediction_unit': 'D'
-                    , 'epochs': 50
+                    , 'epochs': 20
                     , 'n_layers': 1
                     , 'learning_rate': 0.001
-                    , 'batch_size': 32
-                    , 'hidden_dim': 128
+                    , 'batch_size': 16
+                    , 'hidden_dim': 64
                     , 'n_prediction_units': 1
                     , 'device': device
                     , 'max_processes': CPUs // 2
@@ -163,19 +165,21 @@ if __name__ == '__main__':
             params.update({'run_mode':run_mode})
 
             if params['run_mode'] == 'arima' or params['run_mode'] == 'prophet':
-                tqdm.write('\nForecasting for {} with Approach run_mode: {}'.format(params['stock_name'], run_mode))
-
-                # for baselines, run train-predict pattern on all available data
-                df = pd.concat([params['train_data'], params['valid_data'], params['test_data']])
+                # tqdm.write('\nForecasting for {} with Approach run_mode: {}'.format(params['stock_name'], run_mode))
+                ## baselines can be trained on all data, but for comparison to lstm, train predict on test set
+                # df = pd.concat([params['train_data'], params['valid_data'], params['test_data']])
 
                 # chunk data
                 chunked_data = chunk_data(**params)
+                desc = '{}-{}'.format(params['stock_name'], params['run_mode'])
+
+                chunked_data_pbar = tqdm(chunked_data, desc=desc, position=0, leave=True)
 
                 # the model_ object is a temporary object to be updated during mp with partial()
                 model = run_arima if run_mode == 'arima' else run_prophet if run_mode == 'prophet' else None
 
                 if params['enable_mp']:
-                    tqdm.write('Pooling {}x Processes with Multiprocessor'.format(params['max_processes']))
+                    # tqdm.write('Pooling {}x Processes with Multiprocessor'.format(params['max_processes']))
                     # pooling enabled
                     p = mp.Pool(params['max_processes'])
                     # pass function params with partial method, then call the partial during mp
@@ -185,21 +189,21 @@ if __name__ == '__main__':
                                      , prediction_frequency=params['prediction_unit'])
                     try:
                         # with pooling, iterate through model and data
-                        results = list(tqdm(p.imap(model_, chunked_data)))
+                        results = list(p.imap(model_, chunked_data_pbar))
                         p.close()
                         p.join()
                     except:
                         trouble.append((ticker, run_mode))
-                        tqdm.write(f'Trouble with {ticker}, skipping to next.')
+                        # tqdm.write(f'Trouble with {ticker}, skipping to next.')
                         continue
 
                 else:
-                    tqdm.write('Forecasting Without Pooling')
+                    # tqdm.write('Forecasting Without Pooling')
                     # list comprehension through the same model and data without pooling
                     results = [model(i
                                      , n_prediction_units=params['n_prediction_units']
                                      , seasonal_unit=params['seasonal_unit']
-                                     , prediction_frequency=params['prediction_unit'] ) for i in tqdm(chunked_data)]
+                                     , prediction_frequency=params['prediction_unit'] ) for i in chunked_data_pbar]
 
                 # assess model results with MAPE and visualize predict V target
                 result = assess_model(results, model_type=run_mode, stock_name=params['stock_name'], seasonal_unit=params['seasonal_unit'])
@@ -208,7 +212,7 @@ if __name__ == '__main__':
 
             elif params['run_mode'] == 'lstm1' or params['run_mode'] =='lstm2':
 
-                tqdm.write('Forecasting for {} with Approach run_mode: {}'.format(params['stock_name'], run_mode))
+                # tqdm.write('Forecasting for {} with Approach run_mode: {}'.format(params['stock_name'], run_mode))
                 # if a cuda is available
                 if is_cuda:
                     params.update({'num_workers': 1
@@ -242,7 +246,7 @@ if __name__ == '__main__':
                     params['model'].share_memory()
 
                     processes = []
-                    tqdm.write('Pooling {}x Processes with Multiprocessor'.format(params['max_processes']))
+                    # tqdm.write('Pooling {}x Processes with Multiprocessor'.format(params['max_processes']))
 
                     # assign processes
                     for rank in tqdm(range(params['max_processes'])):
@@ -254,25 +258,29 @@ if __name__ == '__main__':
                     for p in tqdm(processes):
                         p.join()
                 else:
-                    tqdm.write('Forecasting Without Pooling')
+                    # tqdm.write('Forecasting Without Pooling')
                     try:
                         # run train, validation, and test
                         result = train_model(**params)
                     except:
                         trouble.append((ticker, run_mode))
-                        tqdm.write(f'Trouble with {ticker}, skipping to next.')
+                        # tqdm.write(f'Trouble with {ticker}, skipping to next.')
                         continue
 
                     experiment_results.append(result)
 
         gc.collect()
 
-
     df = pd.DataFrame(experiment_results)
 
     df.to_csv('data/results.csv')
 
-    tqdm.write('Had trouble with the following and did not run, do some troubleshooting.')
+    if len(trouble) > 0:
+        print('Had trouble with the following and did not run, do some troubleshooting.')
 
     for i in trouble:
         tqdm.write(i)
+
+    with open('trouble.txt', 'w') as f:
+        for item in trouble:
+            f.write("%s\n" % item)

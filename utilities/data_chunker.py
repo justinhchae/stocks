@@ -97,7 +97,8 @@ def chunk_data(train_data
 
     # chunking daily data within the context of weeks
     if seasonal_unit == 'week':
-
+        # toggling arima and prophet to run on a similar test set as lstm
+        train_data = kwargs['test_data']
         train_data = train_data.rename(columns=key_map)
         # chunk data into n sized sequences
         chunks = split(train_data, window_size)
