@@ -50,7 +50,7 @@ def assess_model(data, model_type, stock_name, seasonal_unit, time_col='t', pred
             , 'date_start':min(df[ds_col])
             , 'date_end':max(df[ds_col])
             , 'model_type':model_type
-            # TODO: add more params to output
+            , 'notes': ' '
             }
 
     return results

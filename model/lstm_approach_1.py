@@ -267,7 +267,7 @@ def test_model(model, data_loader, stock_name, model_type, loss_function, test_d
             , 'date_start': min(test_data['t'])
             , 'date_end': max(test_data['t'])
             , 'model_type': model_type
-            # TODO: add more params to output
+            , 'notes': ' '
             }
 
     return results

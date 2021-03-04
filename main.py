@@ -17,26 +17,19 @@ import pandas as pd
 import gc
 import time
 
-if __name__ == '__main__':
-    ## make two options to run the program, one for experiment mode and one run modes
+from utilities.run_experiment import run_experiment
 
-    # uncomment one of two types of exp modes
+if __name__ == '__main__':
+    # uncomment one of two types of experiment modes
     # experiment_mode = 'class_data'
     experiment_mode = 'demo'
 
-    # uncomment one of two types of run modes
-    # if class_data, these values are overridden (fix this later)
-    # run_modes = ['arima', 'prophet']
-    run_modes = ['lstm1', 'lstm2']
+    # if debug mode is True, script will run normally without multiprocessing
+    # set to False to run without multiprocessing, this is helpful for debugging things in serial
+    debug_mode = False
 
     # initialize empty structs
-    train_scaled = None
-    valid_scaled = None
-    test_scaled = None
     tickers_historical = None
-    params = {}
-    experiment_results = []
-    trouble = []
 
     try:
         # to run a single ticker, slice the get stock tickers function which returns a list
@@ -45,6 +38,7 @@ if __name__ == '__main__':
     except:
         pass
 
+    # set up tickers iterable object
     tickers = ['Amazon'] if experiment_mode == 'demo' else tickers_historical
 
     # configure gpu if available
@@ -52,241 +46,54 @@ if __name__ == '__main__':
     device = torch.device("cuda" if is_cuda else "cpu")
     mp.set_start_method('spawn')
 
-    # get cpu count for processes
+    # get cpu count for max available processes
     CPUs = mp.cpu_count()
+    max_process = CPUs // 2
 
+    # print what's happening for warm fuzzy feels
     n_tickers = len(tickers)
     print(f'Experimenting with {n_tickers} tickers:')
 
+    # capture exp start time for performance evaluation
     exp_start = time.time()
 
-    ticker_pbar = tqdm(tickers, desc='Running Experiment', position=0, leave=True)
+    # assign list of tickers to tqdm object for status tracking
+    exp_pbar = tqdm(tickers, desc='Experiment Framework', position=0, leave=True)
 
-    for ticker in ticker_pbar:
-        ticker_pbar.set_description(f'Run Experiment: {ticker}')
-        ticker_pbar.refresh()
+    if not debug_mode and experiment_mode != 'demo':
+        # by default run experiments in parallel for all tickers
+        # configure a pool to run experiments
+        exp_pool = mp.Pool(max_process)
+        # pass function params with partial method, then call the partial during mp
+        run_experiment_ = partial(run_experiment
+                                , experiment_mode=experiment_mode
+                                , device=device
+                                , CPUs=CPUs
+                                , run_modes=None)
+        # with pooling, iterate through tickers and evaluate data/models
+        # sub processes ARE NOT pooled
+        exp_results = list(exp_pool.imap(run_experiment_, exp_pbar))
+        exp_pool.close()
+        exp_pool.join()
+    else:
+        # in debug or demo mode, run the experiment in series
+        # sub processes ARE pooled
+        # run_modes = ['lstm1', 'lstm2']
+        run_modes = ['arima', 'prophet']
+        exp_results = [run_experiment(experiment_mode=experiment_mode
+                                      , device=device
+                                      , CPUs=CPUs
+                                      , ticker=i
+                                      , run_modes=run_modes) for i in exp_pbar]
 
-        if experiment_mode == 'demo':
-            news_df = get_news_dummies(ticker)
-            stock_df = get_stock_dummies(ticker)
-            # transform to minute-by-minute sentiment score and stock price
-            df = trading_days(news_df, stock_df)
-            ## run data splits on just price data
-            # split data into train, validation, and testing
-            train, valid, test = split_stock_data(df=df[['t', 'c']], time_col='t')
-            # scale stock data
-            train_scaled_price, valid_scaled_price, test_scaled_price, scaler = scale_stock_data(train=train, valid=valid, test=test)
-            # set parameters unique to demonstration/dummy data
-            ## run data splits with both price and sentiment data
-            train, valid, test = split_stock_data(df=df, time_col='t')
-            # scale stock data
-            train_scaled_sentiment, valid_scaled_sentiment, test_scaled_sentiment, scaler = scale_stock_data(train=train, valid=valid, test=test)
-            # set parameters unique to demonstration/dummy data
-            params = {'stock_name': ticker
-                    , 'train_data': train_scaled_price
-                    , 'valid_data': valid_scaled_price
-                    , 'test_data': test_scaled_price
-                    , 'train_data_sentiment': train_scaled_sentiment
-                    , 'valid_data_sentiment': valid_scaled_sentiment
-                    , 'test_data_sentiment': test_scaled_sentiment
-                    , 'time_col': 't'
-                    , 'price_col': 'c'
-                    , 'run_model': True
-                    , 'window_size': 15
-                    , 'seasonal_unit': 'day'
-                    , 'prediction_unit': '1min'
-                    , 'epochs': 6
-                    , 'n_layers': 1
-                    , 'learning_rate': 0.001
-                    , 'batch_size': 16
-                    , 'hidden_dim': 64
-                    , 'n_prediction_units': 15
-                    , 'device': device
-                    , 'max_processes': CPUs // 2
-                    , 'pin_memory': False
-                    , 'enable_mp': True
-                      }
-
-        elif experiment_mode == 'class_data':
-
-            # override run_modes
-            run_modes = ['arima', 'prophet', 'lstm1', 'lstm2']
-            # tickers = get_stock_tickers()
-            # later, cycle through tickers, for now, work with first ticker in index
-            try:
-                news_df = get_news_real(ticker=ticker)
-            except:
-                trouble.append((ticker, "news_df"))
-                # tqdm.write(f'Trouble with {ticker}, skipping to next.')
-                continue
-            try:
-                stock_df = get_stock_real(ticker=ticker)
-            except:
-                trouble.append((ticker, "stock_df"))
-                # tqdm.write(f'Trouble with {ticker}, skipping to next.')
-                continue
-
-            # consolidated data prep for training (scale, combine, filter)
-            try:
-                df = combine_news_stock(stock_df=stock_df, news_df=news_df, ticker=ticker)
-            except:
-                trouble.append((ticker, "combine_news_stock"))
-                # tqdm.write(f'Trouble with {ticker}, skipping to next.')
-                continue
-            # split data on data that is already scaled
-            train_scaled_price, valid_scaled_price, test_scaled_price = split_stock_data(df=df[['t', 'c']], time_col='t')
-            train_scaled_sentiment, valid_scaled_sentiment, test_scaled_sentiment = split_stock_data(df=df, time_col='t')
-            # set parameters unique to class data
-            params = {'stock_name': ticker
-                    , 'train_data': train_scaled_price
-                    , 'valid_data': valid_scaled_price
-                    , 'test_data': test_scaled_price
-                    , 'train_data_sentiment': train_scaled_sentiment
-                    , 'valid_data_sentiment': valid_scaled_sentiment
-                    , 'test_data_sentiment': test_scaled_sentiment
-                    , 'time_col': 't'
-                    , 'price_col': 'c'
-                    , 'sentiment_col':'compound'
-                    , 'run_model': True
-                    , 'window_size': 4
-                    , 'seasonal_unit': 'week'
-                    , 'prediction_unit': 'D'
-                    , 'epochs': 20
-                    , 'n_layers': 1
-                    , 'learning_rate': 0.001
-                    , 'batch_size': 16
-                    , 'hidden_dim': 64
-                    , 'n_prediction_units': 1
-                    , 'device': device
-                    , 'max_processes': CPUs // 2
-                    , 'pin_memory': False
-                    , 'enable_mp': True
-                      }
-
-        for run_mode in run_modes:
-            # configure parameters for forecasting here
-            params.update({'run_mode':run_mode})
-
-            if params['run_mode'] == 'arima' or params['run_mode'] == 'prophet':
-                # tqdm.write('\nForecasting for {} with Approach run_mode: {}'.format(params['stock_name'], run_mode))
-                ## baselines can be trained on all data, but for comparison to lstm, train predict on test set
-                # df = pd.concat([params['train_data'], params['valid_data'], params['test_data']])
-
-                # chunk data
-                chunked_data = chunk_data(**params)
-                desc = '{}-{}'.format(params['stock_name'], params['run_mode'])
-
-                chunked_data_pbar = tqdm(chunked_data, desc=desc, position=0, leave=True)
-
-                # the model_ object is a temporary object to be updated during mp with partial()
-                model = run_arima if run_mode == 'arima' else run_prophet if run_mode == 'prophet' else None
-
-                if params['enable_mp']:
-                    # tqdm.write('Pooling {}x Processes with Multiprocessor'.format(params['max_processes']))
-                    # pooling enabled
-                    p = mp.Pool(params['max_processes'])
-                    # pass function params with partial method, then call the partial during mp
-                    model_ = partial(model
-                                     , n_prediction_units=params['n_prediction_units']
-                                     , seasonal_unit=params['seasonal_unit']
-                                     , prediction_frequency=params['prediction_unit'])
-                    try:
-                        # with pooling, iterate through model and data
-                        results = list(p.imap(model_, chunked_data_pbar))
-                        p.close()
-                        p.join()
-                    except:
-                        trouble.append((ticker, run_mode))
-                        # tqdm.write(f'Trouble with {ticker}, skipping to next.')
-                        continue
-
-                else:
-                    # tqdm.write('Forecasting Without Pooling')
-                    # list comprehension through the same model and data without pooling
-                    results = [model(i
-                                     , n_prediction_units=params['n_prediction_units']
-                                     , seasonal_unit=params['seasonal_unit']
-                                     , prediction_frequency=params['prediction_unit'] ) for i in chunked_data_pbar]
-
-                # assess model results with MAPE and visualize predict V target
-                result = assess_model(results, model_type=run_mode, stock_name=params['stock_name'], seasonal_unit=params['seasonal_unit'])
-
-                experiment_results.append(result)
-
-            elif params['run_mode'] == 'lstm1' or params['run_mode'] =='lstm2':
-
-                # tqdm.write('Forecasting for {} with Approach run_mode: {}'.format(params['stock_name'], run_mode))
-                # if a cuda is available
-                if is_cuda:
-                    params.update({'num_workers': 1
-                                   ,'pin_memory':True})
-
-                n_features = 1 if run_mode == 'lstm1' else 2 if run_mode == 'lstm2' else None
-
-                # if run mode == lstm2, then refactor data to have both sentiment and price
-                if run_mode == 'lstm2':
-                    params.update({'train_data': params['train_data_sentiment']
-                                  , 'valid_data': params['valid_data_sentiment']
-                                  , 'test_data': params['test_data_sentiment']
-                                   })
-
-                params.update({'n_features':n_features})
-
-                params.update({'input_dim':params['n_features']
-                              , 'seq_length':params['window_size']
-                              , 'sequence_length':params['window_size']
-                               })
-
-                model = Model(**params)
-
-                # update the model in the dict (not sure if this is 100% necessary), check again later
-                params.update({'model': model})
-
-                # force no multiprocessing due to performance issues
-                params.update({'enable_mp': False})
-
-                if params['enable_mp']:
-                    params['model'].share_memory()
-
-                    processes = []
-                    # tqdm.write('Pooling {}x Processes with Multiprocessor'.format(params['max_processes']))
-                    # assign processes
-                    for rank in tqdm(range(params['max_processes'])):
-                        # pool data for train_scaled to function train_model
-                        p = mp.Process(target=train_model, kwargs=params)
-                        p.start()
-                        processes.append(p)
-                    # run computation and then close processes
-                    for p in tqdm(processes):
-                        p.join()
-                else:
-                    # tqdm.write('Forecasting Without Pooling')
-                    try:
-                        # run train, validation, and test
-                        result = train_model(**params)
-                    except:
-                        trouble.append((ticker, run_mode))
-                        # tqdm.write(f'Trouble with {ticker}, skipping to next.')
-                        continue
-
-                    experiment_results.append(result)
-
-        gc.collect()
-
+    # capture total clock time in experiment
     exp_end = time.time()
-    print()
     run_time = exp_end - exp_start
-
     print(f'Total Run Time {run_time}')
-    df = pd.DataFrame(experiment_results)
-
+    # consolidate exp outputs to a single dataframe from a list of dictionaries
+    df = pd.concat([pd.DataFrame(i) for i in exp_results])
+    # reset index and print dataframe head
+    df = df.reset_index(drop=True)
+    print(df.head())
+    # export results to a csv for analysis
     df.to_csv('data/results.csv')
-
-    if len(trouble) > 0:
-        print('Had trouble with the following and did not run, do some troubleshooting.')
-        print(trouble)
-
-        with open('trouble.txt', 'w') as f:
-            for ticker, function in trouble:
-                issue = ticker + '-' + function
-                f.write("%s\n" % issue)
