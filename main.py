@@ -40,7 +40,7 @@ if __name__ == '__main__':
 
     try:
         # to run a single ticker, slice the get stock tickers function which returns a list
-        tickers_historical = get_stock_tickers()[:1]
+        tickers_historical = get_stock_tickers()
         # debugging
     except:
         pass
@@ -57,7 +57,6 @@ if __name__ == '__main__':
 
     n_tickers = len(tickers)
     print(f'Experimenting with {n_tickers} tickers:')
-    #TODO: handle cases like "GOOGL" or "GOOG", ignore for now
 
     exp_start = time.time()
 
@@ -137,7 +136,7 @@ if __name__ == '__main__':
             # split data on data that is already scaled
             train_scaled_price, valid_scaled_price, test_scaled_price = split_stock_data(df=df[['t', 'c']], time_col='t')
             train_scaled_sentiment, valid_scaled_sentiment, test_scaled_sentiment = split_stock_data(df=df, time_col='t')
-
+            # set parameters unique to class data
             params = {'stock_name': ticker
                     , 'train_data': train_scaled_price
                     , 'valid_data': valid_scaled_price

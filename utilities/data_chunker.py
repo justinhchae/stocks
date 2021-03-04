@@ -13,7 +13,7 @@ def split(dfm, chunk_size):
     """
     a helper function to split and chunk a dataframe by row
     :params: dfm -> a dataframe
-    :params: chunk_size -> an inteter
+    :params: chunk_size -> an integer
     :returns: a list of chunked dataframes of size chunk_size
     """
     indices = index_marks(dfm.shape[0], chunk_size)
