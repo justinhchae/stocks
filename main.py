@@ -1,20 +1,9 @@
-from utilities.get_data import get_news_dummies, get_stock_dummies, get_news_real, get_stock_real, get_stock_tickers
-from utilities.clean_data import trading_days
-from utilities.run_arima import run_arima
-from utilities.run_prophet import run_prophet
-from utilities.data_chunker import chunk_data
-from utilities.evaluate_model import assess_model
-from utilities.prep_stock_data import split_stock_data, scale_stock_data
-from model.lstm_approach_1 import train_model, test_model, plot_losses
-from utilities.combine_experiment_data import combine_news_stock
-from model.LSTM import Model
+from utilities.get_data import get_stock_tickers
 from tqdm import tqdm
 import torch
-# from multiprocessing import Pool, cpu_count
 import torch.multiprocessing as mp
 from functools import partial
 import pandas as pd
-import gc
 import time
 
 from utilities.run_experiment import run_experiment
