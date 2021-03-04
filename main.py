@@ -183,10 +183,15 @@ if __name__ == '__main__':
                                      , n_prediction_units=params['n_prediction_units']
                                      , seasonal_unit=params['seasonal_unit']
                                      , prediction_frequency=params['prediction_unit'])
-                    # with pooling, iterate through model and data
-                    results = list(tqdm(p.imap(model_, chunked_data)))
-                    p.close()
-                    p.join()
+                    try:
+                        # with pooling, iterate through model and data
+                        results = list(tqdm(p.imap(model_, chunked_data)))
+                        p.close()
+                        p.join()
+                    except:
+                        trouble.append((ticker, run_mode))
+                        tqdm.write(f'Trouble with {ticker}, skipping to next.')
+                        continue
 
                 else:
                     tqdm.write('Forecasting Without Pooling')
@@ -250,8 +255,13 @@ if __name__ == '__main__':
                         p.join()
                 else:
                     tqdm.write('Forecasting Without Pooling')
-                    # run train, validation, and test
-                    result = train_model(**params)
+                    try:
+                        # run train, validation, and test
+                        result = train_model(**params)
+                    except:
+                        trouble.append((ticker, run_mode))
+                        tqdm.write(f'Trouble with {ticker}, skipping to next.')
+                        continue
 
                     experiment_results.append(result)
 
