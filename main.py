@@ -15,6 +15,7 @@ import torch.multiprocessing as mp
 from functools import partial
 import pandas as pd
 import gc
+import time
 
 if __name__ == '__main__':
     ## make two options to run the program, one for experiment mode and one run modes
@@ -38,7 +39,8 @@ if __name__ == '__main__':
     trouble = []
 
     try:
-        tickers_historical = get_stock_tickers()
+        # to run a single ticker, slice the get stock tickers function which returns a list
+        tickers_historical = get_stock_tickers()[:1]
         # debugging
     except:
         pass
@@ -56,6 +58,8 @@ if __name__ == '__main__':
     n_tickers = len(tickers)
     print(f'Experimenting with {n_tickers} tickers:')
     #TODO: handle cases like "GOOGL" or "GOOG", ignore for now
+
+    exp_start = time.time()
 
     ticker_pbar = tqdm(tickers, desc='Running Experiment', position=0, leave=True)
 
@@ -247,7 +251,6 @@ if __name__ == '__main__':
 
                     processes = []
                     # tqdm.write('Pooling {}x Processes with Multiprocessor'.format(params['max_processes']))
-
                     # assign processes
                     for rank in tqdm(range(params['max_processes'])):
                         # pool data for train_scaled to function train_model
@@ -271,16 +274,20 @@ if __name__ == '__main__':
 
         gc.collect()
 
+    exp_end = time.time()
+    print()
+    run_time = exp_end - exp_start
+
+    print(f'Total Run Time {run_time}')
     df = pd.DataFrame(experiment_results)
 
     df.to_csv('data/results.csv')
 
     if len(trouble) > 0:
         print('Had trouble with the following and did not run, do some troubleshooting.')
+        print(trouble)
 
-    for i in trouble:
-        tqdm.write(i)
-
-    with open('trouble.txt', 'w') as f:
-        for item in trouble:
-            f.write("%s\n" % item)
+        with open('trouble.txt', 'w') as f:
+            for ticker, function in trouble:
+                issue = ticker + '-' + function
+                f.write("%s\n" % issue)

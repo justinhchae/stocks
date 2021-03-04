@@ -226,7 +226,7 @@ def test_model(model, data_loader, stock_name, model_type, loss_function, test_d
     ax.plot(test_data['t']
             , test_data['c']
             , color='red'
-            , label='Actual Price'
+            , label='Scaled Price'
             )
 
     # the target data as paired with the data input
