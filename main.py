@@ -39,9 +39,7 @@ if __name__ == '__main__':
 
     try:
         tickers_historical = get_stock_tickers()
-        # debugging, known good and known bad
-        problemns = ['FB', 'GOOG', 'GOOGL', 'NVDA', 'MA', 'BAC', 'NFLX', 'CMCSA', 'ABT', 'LLY']
-        tickers_historical = [i for i in tickers_historical if i not in problemns]
+        # debugging
     except:
         pass
 
@@ -110,13 +108,24 @@ if __name__ == '__main__':
             run_modes = ['arima', 'prophet', 'lstm1', 'lstm2']
             # tickers = get_stock_tickers()
             # later, cycle through tickers, for now, work with first ticker in index
-            news_df = get_news_real(ticker=ticker)
-            stock_df = get_stock_real(ticker=ticker)
+            try:
+                news_df = get_news_real(ticker=ticker)
+            except:
+                trouble.append((ticker, "news_df"))
+                tqdm.write(f'Trouble with {ticker}, skipping to next.')
+                continue
+            try:
+                stock_df = get_stock_real(ticker=ticker)
+            except:
+                trouble.append((ticker, "stock_df"))
+                tqdm.write(f'Trouble with {ticker}, skipping to next.')
+                continue
+
             # consolidated data prep for training (scale, combine, filter)
             try:
                 df = combine_news_stock(stock_df=stock_df, news_df=news_df, ticker=ticker)
             except:
-                trouble.append(ticker)
+                trouble.append((ticker, "combine_news_stock"))
                 tqdm.write(f'Trouble with {ticker}, skipping to next.')
                 continue
             # split data on data that is already scaled
