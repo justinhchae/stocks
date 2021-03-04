@@ -14,6 +14,7 @@ import torch
 import torch.multiprocessing as mp
 from functools import partial
 import pandas as pd
+import gc
 
 if __name__ == '__main__':
     ## make two options to run the program, one for experiment mode and one run modes
@@ -38,6 +39,9 @@ if __name__ == '__main__':
 
     try:
         tickers_historical = get_stock_tickers()
+        # debugging, known good and known bad
+        problemns = ['FB', 'GOOG', 'GOOGL', 'NVDA', 'MA', 'BAC', 'NFLX', 'CMCSA', 'ABT', 'LLY']
+        tickers_historical = [i for i in tickers_historical if i not in problemns]
     except:
         pass
 
@@ -241,6 +245,8 @@ if __name__ == '__main__':
                     result = train_model(**params)
 
                     experiment_results.append(result)
+
+        gc.collect()
 
 
     df = pd.DataFrame(experiment_results)
