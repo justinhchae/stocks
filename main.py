@@ -5,35 +5,14 @@ import torch.multiprocessing as mp
 from functools import partial
 import pandas as pd
 import time
-
 from utilities.run_experiment import run_experiment
 
-if __name__ == '__main__':
-    # uncomment one of two types of experiment modes
-    # experiment_mode = 'class_data'
-    experiment_mode = 'demo'
 
-    # if debug mode is True, script will run normally without multiprocessing
-    # set to False to run without multiprocessing, this is helpful for debugging things in serial
-    debug_mode = False
-
-    # initialize empty structs
-    tickers_historical = None
-
-    try:
-        # to run a single ticker, slice the get stock tickers function which returns a list
-        tickers_historical = get_stock_tickers()
-        # debugging
-    except:
-        pass
-
-    # set up tickers iterable object
-    tickers = ['Amazon'] if experiment_mode == 'demo' else tickers_historical
-
+def main(experiment_mode, tickers, debug_mode):
     # configure gpu if available
     is_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if is_cuda else "cpu")
-    mp.set_start_method('spawn')
+    mp.set_start_method('spawn', force=True)
 
     # get cpu count for max available processes
     CPUs = mp.cpu_count()
@@ -55,10 +34,10 @@ if __name__ == '__main__':
         exp_pool = mp.Pool(max_process)
         # pass function params with partial method, then call the partial during mp
         run_experiment_ = partial(run_experiment
-                                , experiment_mode=experiment_mode
-                                , device=device
-                                , CPUs=CPUs
-                                , run_modes=None)
+                                  , experiment_mode=experiment_mode
+                                  , device=device
+                                  , CPUs=CPUs
+                                  , run_modes=None)
         # with pooling, iterate through tickers and evaluate data/models
         # sub processes ARE NOT pooled
         exp_results = list(exp_pool.imap(run_experiment_, exp_pbar))
@@ -83,6 +62,34 @@ if __name__ == '__main__':
     df = pd.concat([pd.DataFrame(i) for i in exp_results])
     # reset index and print dataframe head
     df = df.reset_index(drop=True)
-    print(df.head())
+
     # export results to a csv for analysis
     df.to_csv('data/results.csv')
+
+    return df
+
+if __name__ == '__main__':
+    # uncomment one of two types of experiment modes
+    # experiment_mode = 'class_data'
+    experiment_mode = 'demo'
+
+    # if debug mode is True, script will run normally without multiprocessing
+    # set to False to run without multiprocessing, this is helpful for debugging things in serial
+    debug_mode = False
+
+    # initialize empty structs
+    tickers_historical = None
+
+    try:
+        # to run a single ticker, slice the get stock tickers function which returns a list
+        tickers_historical = get_stock_tickers()
+        # debugging
+    except:
+        pass
+
+    # set up tickers iterable object
+    tickers = ['Amazon'] if experiment_mode == 'demo' else tickers_historical
+
+    main(experiment_mode=experiment_mode
+         , tickers=tickers
+         , debug_mode=False)

@@ -94,7 +94,11 @@ dependencies:
   - zlib=1.2.11=h1de35cc_3
   - pip:
     - absl-py==0.11.0
+    - altair==4.1.0
+    - astor==0.8.1
     - astunparse==1.6.3
+    - base58==2.1.0
+    - blinker==1.4
     - blis==0.7.4
     - cachetools==4.2.1
     - catalogue==2.0.1
@@ -112,6 +116,8 @@ dependencies:
     - future==0.18.2
     - gast==0.3.3
     - gensim==3.8.3
+    - gitdb==4.0.5
+    - gitpython==3.1.14
     - google-auth==1.27.0
     - google-auth-oauthlib==0.4.2
     - google-pasta==0.2.0
@@ -144,9 +150,11 @@ dependencies:
     - prawcore==1.5.0
     - preshed==3.0.5
     - protobuf==3.15.3
+    - pyarrow==3.0.0
     - pyasn1==0.4.8
     - pyasn1-modules==0.2.8
     - pydantic==1.7.3
+    - pydeck==0.6.1
     - pymeeus==0.4.0
     - pysocks==1.7.1
     - pystan==2.19.1.1
@@ -162,10 +170,12 @@ dependencies:
     - seaborn==0.11.1
     - setuptools-git==1.2
     - smart-open==3.0.0
+    - smmap==3.0.5
     - spacy==3.0.1
     - spacy-legacy==3.0.1
     - srsly==2.4.0
     - statsmodels==0.12.2
+    - streamlit==0.78.0
     - tensorboard==2.4.1
     - tensorboard-plugin-wit==1.8.0
     - tensorflow==2.4.1
@@ -174,6 +184,8 @@ dependencies:
     - texthero==1.0.9
     - thinc==8.0.1
     - threadpoolctl==2.1.0
+    - toml==0.10.2
+    - toolz==0.11.1
     - torch==1.7.1
     - torchaudio==0.7.2
     - torchvision==0.8.2
@@ -181,10 +193,12 @@ dependencies:
     - tweepy==3.10.0
     - typer==0.3.2
     - typing-extensions==3.7.4.3
+    - tzlocal==2.1
     - unidecode==1.2.0
     - update-checker==0.18.0
     - urllib3==1.26.3
     - vadersentiment==3.3.2
+    - validators==0.18.2
     - wasabi==0.8.2
     - websocket-client==0.57.0
     - werkzeug==1.0.1
