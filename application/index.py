@@ -1,8 +1,9 @@
 from application.config import *
 from application.experiment_mode import exp_mode
 from application.debug_mode import debug_mode
-from application.tickers_mode import tickers_mode
+from application.default_run_modes import default_runs
 from utilities.get_data import get_stock_tickers
+
 
 from main import main
 
@@ -36,10 +37,16 @@ class Application():
 
         debug_type = debug_mode()
 
-        # tickers = tickers_mode(experiment_mode)
+        demo_run_mode = None
 
         if experiment_mode == 'demo':
             tickers = ['Amazon']
+            run_modes_selection = default_runs()
+            st.write('Default Run Modes set to:', run_modes_selection)
+            if run_modes_selection == 'Baseline (ARIMA and FB Prophet)':
+                demo_run_mode = ['arima', 'prophet']
+            elif run_modes_selection == 'Featured (LSTMs)':
+                demo_run_mode = ['lstm1', 'lstm2']
         else:
             tickers = get_stock_tickers()
 
@@ -47,8 +54,6 @@ class Application():
         st.write('Experiment Mode:', experiment_mode)
         st.write('Debug Mode:',  debug_type)
         st.write('Tickers:', len(tickers))
-
-
 
         run_exp = st.button('Run!')
 
@@ -59,7 +64,11 @@ class Application():
                 st.write('Running with Multiprocessor')
 
             with st.spinner('Running The Experiment!...'):
-                results_df = main(experiment_mode=experiment_mode, tickers=tickers, debug_mode=debug_type)
+                if demo_run_mode:
+                    results_df = main(experiment_mode=experiment_mode, tickers=tickers, debug_mode=debug_type, demo_run_mode=demo_run_mode)
+
+                else:
+                    results_df = main(experiment_mode=experiment_mode, tickers=tickers, debug_mode=debug_type)
 
             st.success('Yay! Made Predictions.')
 
@@ -67,7 +76,6 @@ class Application():
 
         if results_df is not None:
             st.dataframe(results_df)
-
 
     def footer(self):
         # make st calls for footer section here

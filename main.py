@@ -8,7 +8,7 @@ import time
 from utilities.run_experiment import run_experiment
 
 
-def main(experiment_mode, tickers, debug_mode):
+def main(experiment_mode, tickers, debug_mode, demo_run_mode=None):
     # configure gpu if available
     is_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if is_cuda else "cpu")
@@ -46,8 +46,7 @@ def main(experiment_mode, tickers, debug_mode):
     else:
         # in debug or demo mode, run the experiment in series
         # sub processes ARE pooled
-        # run_modes = ['lstm1', 'lstm2']
-        run_modes = ['arima', 'prophet']
+        run_modes = demo_run_mode
         exp_results = [run_experiment(experiment_mode=experiment_mode
                                       , device=device
                                       , CPUs=CPUs
