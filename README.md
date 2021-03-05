@@ -8,6 +8,23 @@ This project is about Sentiement Analysis for Stock Prediction by @justinhchae @
 
 Based on the paper ["Stock Price Prediction Using News Sentiment Analysis"](https://ieeexplore.ieee.org/document/8848203) by Saloni Mohan, Sahitya Mullapudi, Sudheer Sammeta, Parag Vijayvergia and David C. Anastasiu.
 
+## Get Started
+
+1. Clone this repo
+```terminal
+git clone https://github.com/justinhchae/court_volume
+```
+
+2. Create a new conda environment from the environment.yml file
+```terminal
+conda env create -f environment.yml
+```
+
+3. From terminal
+```terminal
+streamlit run app.py
+```
+
 ## Brief
 
 1. Overview: Predict a stock price given its prior prices and sentiment from news articles about that stock.
