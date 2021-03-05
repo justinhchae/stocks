@@ -20,10 +20,14 @@ git clone https://github.com/justinhchae/court_volume
 conda env create -f environment.yml
 ```
 
-3. From terminal
+3. From terminal, run app
 ```terminal
 streamlit run app.py
 ```
+
+4. From app, make experiement selections. 
+
+[application](https://github.com/justinhchae/stocks/blob/main/app_cap.png)
 
 ## Brief
 
