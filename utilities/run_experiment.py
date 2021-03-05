@@ -136,6 +136,9 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
             experiment_results.append(result)
             return experiment_results
 
+    if run_modes is None:
+        run_modes = ['arima', 'prophet']
+
     for run_mode in run_modes:
         # configure parameters for forecasting here
         params.update({'run_mode': run_mode})

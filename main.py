@@ -6,9 +6,13 @@ from functools import partial
 import pandas as pd
 import time
 from utilities.run_experiment import run_experiment
-
+import os
 
 def main(experiment_mode, tickers, debug_mode, demo_run_mode=None):
+    # make figures directory if not exists
+    if not os.path.exists('figures'):
+        os.makedirs('figures')
+
     # configure gpu if available
     is_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if is_cuda else "cpu")
