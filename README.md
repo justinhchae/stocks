@@ -27,7 +27,7 @@ streamlit run app.py
 
 4. From app, make experiement selections. 
 
-[application](https://github.com/justinhchae/stocks/blob/main/app_cap.png)
+![application](https://github.com/justinhchae/stocks/blob/main/app_cap.png)
 
 ## Brief
 
