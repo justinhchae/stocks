@@ -12,7 +12,7 @@ Based on the paper ["Stock Price Prediction Using News Sentiment Analysis"](http
 
 1. Clone this repo
 ```terminal
-git clone https://github.com/justinhchae/court_volume
+git clone https://github.com/justinhchae/stocks
 ```
 
 2. Create a new conda environment from the environment.yml file
