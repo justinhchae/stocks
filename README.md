@@ -12,7 +12,18 @@ Based on the paper ["Stock Price Prediction Using News Sentiment Analysis"](http
 
 1. The proprietary class data is ignored by Git, as a result, to run this program on class data, please follow this setup.
 
-2. Unzip stock and news data to the data folder
+2. Unzip stock and news data to the data folder in accordance with the following structure:
+
+```
+stocks|
+      |/data|
+            |/class_data|
+                        |/historical_price| # to contain all unzipped CSV files
+                        |news.json # the provided news data
+       
+```
+
+A Screen shot of the folder structure:
 
 ![path](https://github.com/justinhchae/stocks/blob/main/data_cap.png)
 
