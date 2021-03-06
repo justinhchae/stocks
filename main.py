@@ -95,4 +95,4 @@ if __name__ == '__main__':
 
     main(experiment_mode=experiment_mode
          , tickers=tickers
-         , debug_mode=False)
+         , debug_mode=debug_mode)

@@ -52,7 +52,7 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
             , 'price_col': 'c'
             , 'run_model': True
             , 'window_size': 15
-            , 'seasonal_unit': 'day'
+            , 'seasonal_unit': 'sliding_sequence'
             , 'prediction_unit': '1min'
             , 'epochs': 6
             , 'n_layers': 1
@@ -110,7 +110,7 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
                 , 'sentiment_col': 'compound'
                 , 'run_model': True
                 , 'window_size': 4
-                , 'seasonal_unit': 'week'
+                , 'seasonal_unit': 'sliding_sequence' #options: 'day', 'week', 'sliding_sequence'
                 , 'prediction_unit': 'D'
                 , 'epochs': 20
                 , 'n_layers': 1

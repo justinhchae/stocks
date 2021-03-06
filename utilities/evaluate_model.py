@@ -13,7 +13,7 @@ def assess_model(data, model_type, stock_name, seasonal_unit, time_col='t', pred
         df = pd.concat([pd.concat(i) for i in data])
         df = df.reset_index(drop=True)
 
-    elif seasonal_unit == 'week':
+    elif seasonal_unit == 'week' or seasonal_unit == 'sliding_sequence':
         df = pd.concat(data)
         df = df.reset_index(drop=True)
 

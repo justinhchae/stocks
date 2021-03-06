@@ -19,6 +19,33 @@ def split(dfm, chunk_size):
     indices = index_marks(dfm.shape[0], chunk_size)
     return np.split(dfm, indices)
 
+def sliding_sequence(df, seq_len, target_len=None):
+    """
+    a helper function to split df into sliding sequences
+    this is not aware of dates, just the sequences
+    :params: dfm -> a dataframe
+    :params: seq_len -> an integer
+    :returns: a list of tuples having x,y sliding dataframes
+    """
+    # initialize empty list
+    x, y = [], []
+
+    N = len(df)
+
+    if target_len is None:
+      target_len = seq_len
+    #TODO: add step size to array slicing
+    for i in range(N - seq_len):
+      x_i = df[i: i + seq_len].reset_index(drop=True)
+      y_i = df[i + seq_len: i + seq_len + target_len].reset_index(drop=True)
+
+      x.append(x_i)
+      y.append(y_i)
+
+    chunked_data = list(zip(x,y))
+
+    return chunked_data
+
 def chunk_data(train_data
                 , price_col
                 , time_col
@@ -39,7 +66,7 @@ def chunk_data(train_data
     key_map = {time_col: ds_col, price_col: y_col}
 
     # full chunking intended for sub daily data such as minutes
-    if seasonal_unit=='day':
+    if seasonal_unit =='day':
         # extract the week number and day number for each timestamp for sorting
         train_data['week'] = train_data[time_col].dt.isocalendar().week
         train_data[seasonal_unit] = train_data[time_col].dt.isocalendar().day
@@ -125,6 +152,17 @@ def chunk_data(train_data
 
             # save targets y and forecast predictions yhat
             chunked_data.append((x_i, y_i))
+
+        return chunked_data
+
+    if seasonal_unit == 'sliding_sequence':
+        # toggling arima and prophet to run on a similar test set as lstm
+        train_data = kwargs['test_data']
+        train_data = train_data.rename(columns=key_map)
+        chunked_data = sliding_sequence(df=train_data
+                                        , seq_len=window_size
+                                        , target_len=n_prediction_units
+                                        )
 
         return chunked_data
 

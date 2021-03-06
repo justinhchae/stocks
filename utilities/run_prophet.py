@@ -65,7 +65,7 @@ def run_prophet(chunked_data, seasonal_unit, prediction_frequency, n_prediction_
         # return a list of results
         return results
 
-    elif seasonal_unit == 'week':
+    elif seasonal_unit == 'week'or seasonal_unit =='sliding_sequence':
 
         x = chunked_data[0]
         y = chunked_data[1]

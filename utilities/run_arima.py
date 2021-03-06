@@ -52,7 +52,7 @@ def run_arima(chunked_data, seasonal_unit, price_col='y', n_prediction_units=1, 
         # return a list of dataframes
         return results
 
-    elif seasonal_unit == 'week':
+    elif seasonal_unit == 'week' or seasonal_unit == 'sliding_sequence':
         # each element is a target predict pair
         x_i = chunked_data[0]
         y_i = chunked_data[1]
@@ -64,8 +64,6 @@ def run_arima(chunked_data, seasonal_unit, price_col='y', n_prediction_units=1, 
         yhat = m_fit.forecast(steps=n_prediction_units)
         # return a dataframe of targets and predictions of len targets
         y_i['yhat'] = yhat[:len(y_i)]
-        # add the result to a list (should be a list of one, but putting in a list for consistency)
-
         # return a list of dataframes
         return y_i
 
