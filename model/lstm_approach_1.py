@@ -229,17 +229,6 @@ def test_model(model, data_loader, stock_name, model_type, loss_function, test_d
             , label='Scaled Price'
             )
 
-    # the target data as paired with the data input
-    ax.plot(test_data['t'][:len(targets)]
-            , targets
-            , color='green'
-            , marker='o'
-            , markersize=3
-            , linestyle='dashed'
-            , linewidth=1
-            , label='Target Price'
-            )
-
     # the predicted data at the equivalent index of target
     ax.plot(test_data['t'][:len(predictions)]
             , predictions
