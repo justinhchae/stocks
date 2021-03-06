@@ -2,7 +2,7 @@ import pandas as pd
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 analyzer = SentimentIntensityAnalyzer()
 import matplotlib.pyplot as plt
-
+import numpy as np
 
 def score_sentiment(df
                     , data_col
@@ -31,6 +31,8 @@ def score_sentiment(df
     df = df[[date_col, score_type]]
     df = df.set_index(date_col)
 
+    sentiment_variance = np.var(df[score_type].values)
+
     if is_resample:
         df = df.resample('1min').fillna('nearest')
         df[score_type] = df[score_type].rolling(window_minutes).mean()
@@ -49,5 +51,5 @@ def score_sentiment(df
 
     df.rename(columns={date_col:'t'}, inplace=True)
 
-    return df
+    return df, sentiment_variance
 

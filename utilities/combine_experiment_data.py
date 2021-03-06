@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
+import numpy as np
 
 def combine_news_stock(stock_df
                        , news_df
@@ -27,6 +28,11 @@ def combine_news_stock(stock_df
     # merge on common frequency time period, left on stocks
     df = pd.merge(stock_df, news_df, how='left', left_on=time_col, right_on=time_col)
 
+    # get variance of sentiment data to understand more
+    sentiment_variance = np.var(df[sentiment_col].values)
+
+
+    # resample to fill in missing values with spline
     df['resampled_compound'] = df[sentiment_col].interpolate(method='spline', order=4)
     # fill na values with resampled points
     df[sentiment_col] = df[sentiment_col].fillna(df['resampled_compound'])
@@ -78,4 +84,4 @@ def combine_news_stock(stock_df
     fig.savefig(f'figures/{ticker}_data_prep.png')
     # plt.show()
 
-    return df
+    return df, sentiment_variance

@@ -67,14 +67,14 @@ def main(experiment_mode, tickers, debug_mode, demo_run_mode=None):
     df = df.reset_index(drop=True)
 
     # export results to a csv for analysis
-    df.to_csv('data/results.csv')
+    df.to_csv('data/results.csv', index=False)
 
     return df
 
 if __name__ == '__main__':
     # uncomment one of two types of experiment modes
-    experiment_mode = 'class_data'
-    # experiment_mode = 'demo'
+    # experiment_mode = 'class_data'
+    experiment_mode = 'demo'
 
     # if debug mode is True, script will run normally without multiprocessing
     # set to False to run without multiprocessing, this is helpful for debugging things in serial

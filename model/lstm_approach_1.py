@@ -61,14 +61,31 @@ def train_model(train_data, model, sequence_length, pin_memory, epochs=20, learn
     # init empty lists for overall loss values
     train_losses = []
     valid_losses = []
-    curr_loss = np.inf
 
     # init a progress bar object of range epoch
     # ref: https://stackoverflow.com/questions/37506645/can-i-add-message-to-the-tqdm-progressbar
     pbar = tqdm(range(epochs), desc='Epoch', position=0, leave=True)
 
+    # patience value for early stopping
+    patience = 2
+    # ideal target loss threshold based on testing
+    target_loss = 0.1
+    # get a true count of actual epochs run
+    actual_run_epochs = 0
+    # absolute max epochs to run
+    max_epochs = epochs * 2
+    # threshold for min variance
+    min_variance = 0.000001
+    # stopping reason for tracking
+    stop_reason = 'ran all planned epochs'
     # iterate through n pbars
     for epoch in pbar:
+        # if the epoch is reset more than max_epochs, break
+        if actual_run_epochs > max_epochs:
+            stop_reason = 'model could not converge'
+            break
+        # increment a counter to track actual run epochs
+        actual_run_epochs += 1
         # run train epoch, return losses
         train_loss = train_epoch(model, train_loader, loss_function, optimizer)
         train_losses.append(train_loss)
@@ -84,10 +101,30 @@ def train_model(train_data, model, sequence_length, pin_memory, epochs=20, learn
         # update and refresh progress bar each epoch
         pbar.set_description('{}-{} Epoch {}...Mean Train Loss: {:.5f}...Mean Valid Loss: {:.5f}'.format(kwargs['stock_name'],kwargs['run_mode'], epoch, epoch_train_loss, epoch_valid_loss))
         pbar.refresh()
-        #TODO: Early stopping based on loss
-        # if epoch > 2:
 
+        # testing some early stopping criteria
+        if epoch > patience:
+            curr_loss = valid_losses[-1]
+            last_loss = valid_losses[-2]
+            try:
+                last_prior_loss = valid_losses[-3]
+            except:
+                last_prior_loss = 1000000
 
+            ave_loss = np.mean(valid_losses)
+            last_n_losses = valid_losses[-2:]
+            variance = np.var(last_n_losses)
+
+            # if loss increases, break if the ave loss is below target loss threshold
+            if curr_loss > last_loss and curr_loss > last_prior_loss:
+                # stop training if the epoch loss increases
+                stop_reason = 'loss started increasing'
+                break
+
+            elif variance < min_variance:
+                # stop training if loss effectively stops changing
+                stop_reason = 'loss stopped changing'
+                break
 
 
     # plot losses
@@ -101,8 +138,10 @@ def train_model(train_data, model, sequence_length, pin_memory, epochs=20, learn
                , loss_function=loss_function
                , test_data=kwargs['test_data']
                , n_hidden=kwargs['hidden_dim']
-
+               , n_epochs=actual_run_epochs
+               , stop_reason=stop_reason
                )
+
     return results
 
 def valid_epoch(model, data_loader, loss_function):
@@ -179,7 +218,7 @@ def plot_losses(train_loss, valid_loss, stock_name, model_type):
     fig.savefig(f'figures/{stock_name}_{model_type}_loss.png')
     # plt.show()
 
-def test_model(model, data_loader, stock_name, model_type, loss_function, test_data, n_hidden):
+def test_model(model, data_loader, stock_name, model_type, loss_function, test_data, n_hidden, stop_reason, n_epochs):
 
     # initialize empty lists to capture data
     losses = []
@@ -248,7 +287,7 @@ def test_model(model, data_loader, stock_name, model_type, loss_function, test_d
            )
 
     h = n_hidden
-    ax.set_title('{} Stock Price Prediction | Hidden: {}\nWith {}, Test MAPE: {:.4f}, Mean Test Loss:{:.4f}'.format(stock_name, h, model_type, error, average_loss))
+    ax.set_title('{} Stock Price Prediction | Hidden: {} | Epochs: {}\nWith {}, Test MAPE: {:.4f}, Mean Test Loss:{:.4f}'.format(stock_name, h, n_epochs,model_type, error, average_loss))
     plt.xlabel('Time')
     plt.ylabel('Stock Price')
     plt.legend(loc="upper left")
@@ -263,7 +302,8 @@ def test_model(model, data_loader, stock_name, model_type, loss_function, test_d
              , 'date_start': min(test_data['t'])
              , 'date_end': max(test_data['t'])
              , 'model_type': model_type
-             , 'notes': ' '
+             , 'notes': stop_reason
+             , 'n_epochs': n_epochs
               }
 
     return results

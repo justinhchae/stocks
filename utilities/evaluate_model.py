@@ -51,6 +51,7 @@ def assess_model(data, model_type, stock_name, seasonal_unit, time_col='t', pred
             , 'date_end':max(df[ds_col])
             , 'model_type':model_type
             , 'notes': ' '
-            }
+            , 'n_epochs': None
+               }
 
     return results
