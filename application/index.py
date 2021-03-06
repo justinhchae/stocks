@@ -2,6 +2,7 @@ from application.config import *
 from application.experiment_mode import exp_mode
 from application.debug_mode import debug_mode
 from application.default_run_modes import default_runs
+from application.make_charts import make_histograms
 from utilities.get_data import get_stock_tickers
 
 
@@ -76,6 +77,7 @@ class Application():
 
         if results_df is not None:
             st.dataframe(results_df)
+            make_histograms(results_df)
 
     def footer(self):
         # make st calls for footer section here

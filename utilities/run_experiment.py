@@ -21,6 +21,8 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
     trouble = []
     experiment_results = []
     df = None
+    if run_modes is None:
+        run_modes = ['arima', 'prophet']
 
     if experiment_mode == 'demo':
         news_df = get_news_dummies(ticker)
@@ -95,34 +97,37 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
 
         if df is not None:
             # split data on data that is already scaled
-            train_scaled_price, valid_scaled_price, test_scaled_price = split_stock_data(df=df[['t', 'c']], time_col='t')
-            train_scaled_sentiment, valid_scaled_sentiment, test_scaled_sentiment = split_stock_data(df=df, time_col='t')
-            # set parameters unique to class data
-            params = {'stock_name': ticker
-                , 'train_data': train_scaled_price
-                , 'valid_data': valid_scaled_price
-                , 'test_data': test_scaled_price
-                , 'train_data_sentiment': train_scaled_sentiment
-                , 'valid_data_sentiment': valid_scaled_sentiment
-                , 'test_data_sentiment': test_scaled_sentiment
-                , 'time_col': 't'
-                , 'price_col': 'c'
-                , 'sentiment_col': 'compound'
-                , 'run_model': True
-                , 'window_size': 4
-                , 'seasonal_unit': 'sliding_sequence' #options: 'day', 'week', 'sliding_sequence'
-                , 'prediction_unit': 'D'
-                , 'epochs': 20
-                , 'n_layers': 1
-                , 'learning_rate': 0.001
-                , 'batch_size': 16
-                , 'hidden_dim': 64
-                , 'n_prediction_units': 1
-                , 'device': device
-                , 'max_processes': CPUs // 2
-                , 'pin_memory': False
-                , 'enable_mp': False # running exps in mp from the top, disable sub mps
-                      }
+            try:
+                train_scaled_price, valid_scaled_price, test_scaled_price = split_stock_data(df=df[['t', 'c']], time_col='t')
+                train_scaled_sentiment, valid_scaled_sentiment, test_scaled_sentiment = split_stock_data(df=df, time_col='t')
+                # set parameters unique to class data
+                params = {'stock_name': ticker
+                    , 'train_data': train_scaled_price
+                    , 'valid_data': valid_scaled_price
+                    , 'test_data': test_scaled_price
+                    , 'train_data_sentiment': train_scaled_sentiment
+                    , 'valid_data_sentiment': valid_scaled_sentiment
+                    , 'test_data_sentiment': test_scaled_sentiment
+                    , 'time_col': 't'
+                    , 'price_col': 'c'
+                    , 'sentiment_col': 'compound'
+                    , 'run_model': True
+                    , 'window_size': 4
+                    , 'seasonal_unit': 'sliding_sequence' #options: 'day', 'week', 'sliding_sequence'
+                    , 'prediction_unit': 'D'
+                    , 'epochs': 20
+                    , 'n_layers': 1
+                    , 'learning_rate': 0.001
+                    , 'batch_size': 16
+                    , 'hidden_dim': 64
+                    , 'n_prediction_units': 1
+                    , 'device': device
+                    , 'max_processes': CPUs // 2
+                    , 'pin_memory': False
+                    , 'enable_mp': False # running exps in mp from the top, disable sub mps
+                          }
+            except:
+                pass
         else:
             result = {'ticker': ticker
                      , 'N': ' '
@@ -130,14 +135,11 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
                      , 'date_start': ' '
                      , 'date_end': ' '
                      , 'model_type': ' '
-                     , 'notes': 'error when extracting data, skipped this experiment'
+                     , 'notes': 'error when extracting data, skipped this experiment with data_prep'
                        }
 
             experiment_results.append(result)
             return experiment_results
-
-    if run_modes is None:
-        run_modes = ['arima', 'prophet']
 
     for run_mode in run_modes:
         # configure parameters for forecasting here
@@ -179,17 +181,28 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
             else:
                 # tqdm.write('Forecasting Without Pooling')
                 # list comprehension through the same model and data without pooling
-                results = [model(i
-                                 , n_prediction_units=params['n_prediction_units']
-                                 , seasonal_unit=params['seasonal_unit']
-                                 , prediction_frequency=params['prediction_unit']) for i in chunked_data_pbar]
+                try:
+                    results = [model(i
+                                     , n_prediction_units=params['n_prediction_units']
+                                     , seasonal_unit=params['seasonal_unit']
+                                     , prediction_frequency=params['prediction_unit']) for i in chunked_data_pbar]
+                    # assess model results with MAPE and visualize predict V target
+                    result = assess_model(results
+                                          , model_type=run_mode
+                                          , stock_name=params['stock_name']
+                                          , seasonal_unit=params['seasonal_unit']
+                                          )
+                except:
+                    result = {'ticker': ticker
+                        , 'N': ' '
+                        , 'MAPE': ' '
+                        , 'date_start': ' '
+                        , 'date_end': ' '
+                        , 'model_type': ' '
+                        , 'notes': f'error when extracting data, skipped this experiment during {run_mode}'
+                              }
 
-            # assess model results with MAPE and visualize predict V target
-            result = assess_model(results
-                                  , model_type=run_mode
-                                  , stock_name=params['stock_name']
-                                  , seasonal_unit=params['seasonal_unit']
-                                  )
+
 
             experiment_results.append(result)
 
@@ -250,7 +263,7 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
                              , 'date_start': ' '
                              , 'date_end': ' '
                              , 'model_type': ' '
-                             , 'notes': 'error during lstm run, skipped this ticker'
+                             , 'notes': f'error during lstm run, skipped this ticker with {run_mode}'
                                }
                     pass
 

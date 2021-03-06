@@ -27,6 +27,10 @@ def combine_news_stock(stock_df
     # merge on common frequency time period, left on stocks
     df = pd.merge(stock_df, news_df, how='left', left_on=time_col, right_on=time_col)
 
+    df['resampled_compound'] = df[sentiment_col].interpolate(method='spline', order=4)
+    # fill na values with resampled points
+    df[sentiment_col] = df[sentiment_col].fillna(df['resampled_compound'])
+
     # drop records not having enough data to resample and fill by year
     time_filter = df.groupby([pd.Grouper(key=time_col, freq='Y')]).agg('count').reset_index()
     time_filter = time_filter[(time_filter[sentiment_col] == 0)]
@@ -37,16 +41,16 @@ def combine_news_stock(stock_df
     df = df.reset_index(drop=True)
 
     # set index to datetime for resampling
-    df = df.set_index(time_col)
-    df['resampled_compound'] = df[sentiment_col].interpolate(method='polynomial', order=3)
-    df = df.reset_index()
+    # df = df.set_index(time_col)
+    # interpolate method to spline to fill in reasonable values for missing
+    # df['resampled_compound'] = df[sentiment_col].interpolate(method='spline', order=4)
+    #TODO: conduct testing to determine why spline or alt methods
+    # df = df.reset_index()
 
     # scale stock prices
     scaler = StandardScaler()
     df[[data_col]] = scaler.fit_transform(df[[data_col]])
 
-    # fill na values with resampled points
-    df[sentiment_col] = df[sentiment_col].fillna(df['resampled_compound'])
     df = df.dropna()
     df = df.drop(columns=['resampled_compound'])
     df = df.reset_index(drop=True)

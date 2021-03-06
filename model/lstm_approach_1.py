@@ -83,6 +83,7 @@ def train_model(train_data, model, sequence_length, pin_memory, epochs=20, learn
         # update and refresh progress bar each epoch
         pbar.set_description('{}-{} Epoch {}...Mean Train Loss: {:.5f}...Mean Valid Loss: {:.5f}'.format(kwargs['stock_name'],kwargs['run_mode'], epoch, epoch_train_loss, epoch_valid_loss))
         pbar.refresh()
+        #TODO: Early stopping based on loss
 
     # plot losses
     plot_losses(train_loss=train_losses, valid_loss=valid_losses, stock_name=kwargs['stock_name'], model_type=kwargs['run_mode'])
