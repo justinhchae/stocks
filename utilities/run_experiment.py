@@ -135,7 +135,7 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
                      , 'date_start': ' '
                      , 'date_end': ' '
                      , 'model_type': ' '
-                     , 'notes': 'error when extracting data, skipped this experiment with data_prep'
+                     , 'notes': f'error during data_prep'
                        }
 
             experiment_results.append(result)
@@ -181,28 +181,35 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
             else:
                 # tqdm.write('Forecasting Without Pooling')
                 # list comprehension through the same model and data without pooling
+                results = None
+                result = {'ticker': ticker
+                        , 'N': ' '
+                        , 'MAPE': ' '
+                        , 'date_start': ' '
+                        , 'date_end': ' '
+                        , 'model_type': ' '
+                        , 'notes': run_mode}
                 try:
                     results = [model(i
                                      , n_prediction_units=params['n_prediction_units']
                                      , seasonal_unit=params['seasonal_unit']
                                      , prediction_frequency=params['prediction_unit']) for i in chunked_data_pbar]
                     # assess model results with MAPE and visualize predict V target
+                except:
+                    result = {'ticker': ticker
+                             , 'N': ' '
+                             , 'MAPE': ' '
+                             , 'date_start': ' '
+                             , 'date_end': ' '
+                             , 'model_type': ' '
+                             , 'notes': f'error during {run_mode}'
+                              }
+                if results:
                     result = assess_model(results
                                           , model_type=run_mode
                                           , stock_name=params['stock_name']
                                           , seasonal_unit=params['seasonal_unit']
                                           )
-                except:
-                    result = {'ticker': ticker
-                        , 'N': ' '
-                        , 'MAPE': ' '
-                        , 'date_start': ' '
-                        , 'date_end': ' '
-                        , 'model_type': ' '
-                        , 'notes': f'error when extracting data, skipped this experiment during {run_mode}'
-                              }
-
-
 
             experiment_results.append(result)
 
@@ -263,7 +270,7 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
                              , 'date_start': ' '
                              , 'date_end': ' '
                              , 'model_type': ' '
-                             , 'notes': f'error during lstm run, skipped this ticker with {run_mode}'
+                             , 'notes': f'error during {run_mode}'
                                }
                     pass
 

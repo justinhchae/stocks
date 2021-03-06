@@ -61,6 +61,7 @@ def train_model(train_data, model, sequence_length, pin_memory, epochs=20, learn
     # init empty lists for overall loss values
     train_losses = []
     valid_losses = []
+    curr_loss = np.inf
 
     # init a progress bar object of range epoch
     # ref: https://stackoverflow.com/questions/37506645/can-i-add-message-to-the-tqdm-progressbar
@@ -84,6 +85,10 @@ def train_model(train_data, model, sequence_length, pin_memory, epochs=20, learn
         pbar.set_description('{}-{} Epoch {}...Mean Train Loss: {:.5f}...Mean Valid Loss: {:.5f}'.format(kwargs['stock_name'],kwargs['run_mode'], epoch, epoch_train_loss, epoch_valid_loss))
         pbar.refresh()
         #TODO: Early stopping based on loss
+        # if epoch > 2:
+
+
+
 
     # plot losses
     plot_losses(train_loss=train_losses, valid_loss=valid_losses, stock_name=kwargs['stock_name'], model_type=kwargs['run_mode'])
@@ -171,6 +176,7 @@ def plot_losses(train_loss, valid_loss, stock_name, model_type):
     plt.ylabel('Loss')
     plt.legend()
     plt.tight_layout()
+    fig.savefig(f'figures/{stock_name}_{model_type}_loss.png')
     # plt.show()
 
 def test_model(model, data_loader, stock_name, model_type, loss_function, test_data, n_hidden):
@@ -210,7 +216,9 @@ def test_model(model, data_loader, stock_name, model_type, loss_function, test_d
     # print('Mean Test Loss (MSE): {:.5f}'.format(average_loss))
 
     # evaluate MAPE
-    error = mean_absolute_percentage_error(targets, predictions) * 100
+    eval_targets = test_data['c'].values
+    eval_targets = eval_targets[:len(predictions)]
+    error = mean_absolute_percentage_error(eval_targets, predictions) * 100
     # print('Error (MAPE): {:.5f}'.format(error))
 
     # organize data for plotting, pandas for convenience
@@ -218,28 +226,26 @@ def test_model(model, data_loader, stock_name, model_type, loss_function, test_d
     df['targets'] = targets
     df['predictions'] = predictions
 
-    #TODO: Need to re-consider what is being evaluated for MAPE and prediction
-
     # plot the data
     fig, ax, = plt.subplots()
 
     # the actual data
     ax.plot(test_data['t']
-            , test_data['c']
-            , color='red'
-            , label='Scaled Price'
+          , test_data['c']
+          , color='red'
+          , label='Scaled Price'
             )
 
     # the predicted data at the equivalent index of target
     ax.plot(test_data['t'][:len(predictions)]
-            , predictions
-            , color='blue'
-            , marker='o'
-            , markersize=3
-            , linestyle='dashed'
-            , linewidth=1
-            , label='Predicted Price'
-            )
+          , predictions
+          , color='blue'
+          , marker='o'
+          , markersize=3
+          , linestyle='dashed'
+          , linewidth=1
+          , label='Predicted Price'
+           )
 
     h = n_hidden
     ax.set_title('{} Stock Price Prediction | Hidden: {}\nWith {}, Test MAPE: {:.4f}, Mean Test Loss:{:.4f}'.format(stock_name, h, model_type, error, average_loss))
@@ -252,13 +258,13 @@ def test_model(model, data_loader, stock_name, model_type, loss_function, test_d
     # plt.show()
 
     results = {'ticker': stock_name
-            , 'N': len(test_data)
-            , 'MAPE': error
-            , 'date_start': min(test_data['t'])
-            , 'date_end': max(test_data['t'])
-            , 'model_type': model_type
-            , 'notes': ' '
-            }
+             , 'N': len(test_data)
+             , 'MAPE': error
+             , 'date_start': min(test_data['t'])
+             , 'date_end': max(test_data['t'])
+             , 'model_type': model_type
+             , 'notes': ' '
+              }
 
     return results
 
