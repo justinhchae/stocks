@@ -209,7 +209,7 @@ def test_model(model, data_loader, stock_name, model_type, loss_function, test_d
     # print('Mean Test Loss (MSE): {:.5f}'.format(average_loss))
 
     # evaluate MAPE
-    error = mean_absolute_percentage_error(targets, predictions)
+    error = mean_absolute_percentage_error(targets, predictions) * 100
     # print('Error (MAPE): {:.5f}'.format(error))
 
     # organize data for plotting, pandas for convenience
