@@ -8,4 +8,4 @@ def default_runs():
     # return the select box with options as st object
     return st.sidebar.selectbox(label='Select Default Run Mode'
                                 , options=sidebar_picklist
-                                , key='index_main_menu')
+                                , key='default_runs')

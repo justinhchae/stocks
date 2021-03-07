@@ -13,4 +13,4 @@ def exp_mode():
     # return the select box with options as st object
     return st.sidebar.selectbox(label='Select Experiment Mode'
                                 , options=sidebar_picklist
-                                , key='index_main_menu')
+                                , key='exp_mode')

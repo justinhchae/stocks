@@ -31,4 +31,4 @@ def tickers_mode(exp_mode):
     # convenience object
     sidebar_picklist = pick_list_values
     # return the select box with options as st object
-    return st.sidebar.selectbox(label='Set Tickers', options=sidebar_picklist, key='index_main_menu')
+    return st.sidebar.selectbox(label='Set Tickers', options=sidebar_picklist, key='tickers_mode')
