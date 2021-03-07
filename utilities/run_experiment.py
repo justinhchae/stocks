@@ -22,6 +22,7 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
     experiment_results = []
     df = None
     sentiment_variance = None
+    price_variance = None
 
     if run_modes is None:
         # run_modes = ['arima', 'prophet']
@@ -80,7 +81,7 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
         try:
             news_df = get_news_real(ticker=ticker)
             stock_df = get_stock_real(ticker=ticker)
-            df, sentiment_variance = combine_news_stock(stock_df=stock_df, news_df=news_df, ticker=ticker)
+            df, sentiment_variance, price_variance = combine_news_stock(stock_df=stock_df, news_df=news_df, ticker=ticker)
             train_scaled_price, valid_scaled_price, test_scaled_price = split_stock_data(df=df[['t', 'c']], time_col='t')
             train_scaled_sentiment, valid_scaled_sentiment, test_scaled_sentiment = split_stock_data(df=df, time_col='t')
             # set parameters unique to class data
@@ -202,7 +203,9 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
                                       , seasonal_unit=params['seasonal_unit']
                                       )
 
-            result.update({'sentiment_variance':sentiment_variance})
+            result.update({'sentiment_variance':sentiment_variance
+                           ,'price_variance':price_variance
+                           })
             experiment_results.append(result)
 
         elif params['run_mode'] == 'lstm1' or params['run_mode'] == 'lstm2':
@@ -266,7 +269,9 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
                                }
                     pass
 
-                result.update({'sentiment_variance': sentiment_variance})
+                result.update({'sentiment_variance': sentiment_variance
+                                  , 'price_variance': price_variance
+                               })
 
             experiment_results.append(result)
 
