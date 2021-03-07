@@ -224,6 +224,8 @@ df['resampled_compound'] = df[sentiment_col].interpolate(method='spline', order=
 
 * The model in each prediction window is a new model, only predicting the next sequence.
 
+* The ARIMA [module](https://github.com/justinhchae/stocks/blob/main/utilities/run_arima.py)
+
 ## Facebook Prophet Methodology
 
 * Train model on a period, forecast the period that immediately follows; consume chunked data
@@ -234,6 +236,8 @@ df['resampled_compound'] = df[sentiment_col].interpolate(method='spline', order=
 
 * The model in each prediction window is a new model, only predicting the next sequence.
 
+* The PyTorch [module](https://github.com/justinhchae/stocks/blob/main/utilities/run_prophet.py)
+
 ## LSTM PyTorch Methodology
 
 * Unlike ARIMA and Prophet, the LSTM model is used to predict sequences that are far outisde the training window.
@@ -243,6 +247,10 @@ df['resampled_compound'] = df[sentiment_col].interpolate(method='spline', order=
 * In addition to sequence alone, a second LSTM model combines a sequence of past prices with the sentiment score of the sentiment score associated with the time index of the predicted price.
 
 * Example: Train on data for from index 0 to 14 and predict the value at index 15, then increment window size from [1:15] and predict index at 16, and so on.
+
+* The LSTM [model](https://github.com/justinhchae/stocks/blob/main/model/LSTM.py)
+
+* The LSTM [training configuration](https://github.com/justinhchae/stocks/blob/main/model/lstm_approach_1.py)
 
 ## Early Stopping in LSTM Training
 
