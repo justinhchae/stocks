@@ -27,6 +27,11 @@ stocks|
        
 ```
 
+3. Follow Steps in *Getting Started*
+
+
+4. Launch the app and select mode to *class_data*
+
 A Screen shot of the folder structure:
 
 ![path](https://github.com/justinhchae/stocks/blob/main/data_cap.png)
