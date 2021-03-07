@@ -21,8 +21,9 @@ def make_scatter(df, title):
 
     st.altair_chart(c, use_container_width=True)
 
-def make_line(df, title):
-    # TODO: display sample charts of loss and predictions
-    alt.Chart(df).mark_line().encode(
-        x='x',
-        y='f(x)')
+def make_line():
+
+    df = pd.read_csv('application/app_data/ABBV_arima_loss.csv')
+    df = df.set_index('ds')
+
+    st.line_chart(data=df, width=0, height=0, use_container_width=True)
