@@ -32,10 +32,6 @@ def combine_news_stock(stock_df
     sentiment_values = list(df[sentiment_col].dropna().values)
     sentiment_variance = np.var(sentiment_values)
 
-    # get variance of price data to understand more
-    price_values = list(df[data_col].dropna().values)
-    price_variance = np.var(price_values)
-
     # resample to fill in missing values with spline
     df['resampled_compound'] = df[sentiment_col].interpolate(method='spline', order=4)
     # fill na values with resampled points
@@ -81,4 +77,4 @@ def combine_news_stock(stock_df
     fig.savefig(f'figures/{ticker}_data_prep.png')
     # plt.show()
 
-    return df, sentiment_variance, price_variance
+    return df, sentiment_variance

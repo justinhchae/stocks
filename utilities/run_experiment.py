@@ -11,7 +11,7 @@ from model.LSTM import Model
 from tqdm import tqdm
 import torch.multiprocessing as mp
 from functools import partial
-
+import numpy as np
 
 def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
     #TODO: data struct error when running baseline exps in series from arima, prohpet to lstms
@@ -81,8 +81,13 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
         try:
             news_df = get_news_real(ticker=ticker)
             stock_df = get_stock_real(ticker=ticker)
-            df, sentiment_variance, price_variance = combine_news_stock(stock_df=stock_df, news_df=news_df, ticker=ticker)
+            df, sentiment_variance = combine_news_stock(stock_df=stock_df, news_df=news_df, ticker=ticker)
             train_scaled_price, valid_scaled_price, test_scaled_price = split_stock_data(df=df[['t', 'c']], time_col='t')
+
+            # get variance of price data to understand more
+            scaled_price_values = list(test_scaled_price['c'].dropna().values)
+            price_variance = np.var(scaled_price_values)
+
             train_scaled_sentiment, valid_scaled_sentiment, test_scaled_sentiment = split_stock_data(df=df, time_col='t')
             # set parameters unique to class data
             params = {'stock_name': ticker
@@ -269,9 +274,9 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
                                }
                     pass
 
-                result.update({'sentiment_variance': sentiment_variance
-                                  , 'price_variance': price_variance
-                               })
+            result.update({'sentiment_variance': sentiment_variance
+                         , 'price_variance': price_variance
+                           })
 
             experiment_results.append(result)
 
