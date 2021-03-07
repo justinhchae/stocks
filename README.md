@@ -244,6 +244,46 @@ df['resampled_compound'] = df[sentiment_col].interpolate(method='spline', order=
 
 * Example: Train on data for from index 0 to 14 and predict the value at index 15, then increment window size from [1:15] and predict index at 16, and so on.
 
+## Early Stopping in LSTM Training
+
+* We set default epochs to n=50 but set several early stopping criteria to enable learning while avoiding overfitting.
+
+* Currently, stopping criteria is configured to evaluate after the completion of each epoch (we plan to implement mid-epoch stopping at a later date).
+
+* Break training if the current validation loss is greater than the prior two losses.
+
+* Break training if the variance of the last 3 validation losses are less than 0.000001 (a number that we feel is effectively close to zero).
+
+* Allow model to continue trainin beyond set epoch number but break if the number of epochs more than double (this feature currently being debugged).
+
+```python
+# example code for early stopping in LSTM
+
+        # from within the training loop in LSTM training
+        if epoch > patience:
+            curr_loss = valid_losses[-1]
+            last_loss = valid_losses[-2]
+            try:
+                last_prior_loss = valid_losses[-3]
+            except:
+                last_prior_loss = 1000000
+
+            # ave_loss = np.mean(valid_losses)
+            last_n_losses = valid_losses[-2:]
+            variance = np.var(last_n_losses)
+
+            # if loss increases, break if the ave loss is below target loss threshold
+            if curr_loss > last_loss and curr_loss > last_prior_loss:
+                # stop training if the epoch loss increases
+                stop_reason = 'loss started increasing'
+                break
+
+            elif variance < min_variance:
+                # stop training if loss effectively stops changing
+                stop_reason = 'loss stopped changing'
+                break
+```
+
 ## Relevant Documentation
 
 * [PyTorch](https://pytorch.org/docs/stable/generated/torch.nn.LSTM.html)
