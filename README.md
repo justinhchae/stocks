@@ -8,6 +8,10 @@ This project is about Sentiement Analysis for Stock Prediction by @justinhchae @
 
 Based on the paper ["Stock Price Prediction Using News Sentiment Analysis"](https://ieeexplore.ieee.org/document/8848203) by Saloni Mohan, Sahitya Mullapudi, Sudheer Sammeta, Parag Vijayvergia and David C. Anastasiu.
 
+##
+
+![results](https://github.com/justinhchae/stocks/blob/main/app_scatter.png)
+
 ## For Instructor Evaluation
 
 1. The proprietary class data is ignored by Git, as a result, to run this program on class data, please follow this setup.
