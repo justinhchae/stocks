@@ -35,7 +35,7 @@ A Screen shot of the folder structure:
 
 ![path](https://github.com/justinhchae/stocks/blob/main/data_cap.png)
 
-## Get Started
+## Getting Started
 
 1. Clone this repo
 
@@ -79,7 +79,39 @@ streamlit run app.py
 
 * Stock timestamps are assumed to be US/Eastern.
 
+```python
+# example code for datetime conversions
+def get_news_dummies(filepath
+                  , date_col='pub_time'
+                  , date_conversion='US/Eastern'):
+    
+    # after reading json data as data
+    df = pd.DataFrame(data)
+    df[date_col] = pd.to_datetime(df[date_col])
+
+    if date_conversion:
+        date_est =  date_col + '_est'
+        df[date_est] = (df[date_col].dt.tz_convert(date_conversion))
+        df[date_est] = df[date_est].dt.tz_localize(tz=None)
+        df.drop(columns=date_col, inplace=True)
+```
+
 * We use VADER for sentiment score as a proxy for the polarity score in the source paper.
+
+```python
+# example code for sentiment score
+import pandas as pd
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+analyzer = SentimentIntensityAnalyzer()
+
+def score_sentiment(df
+                  , data_col
+                  , date_col
+                  , score_type='compound'
+                  ):
+
+df[score_type] = [analyzer.polarity_scores(v)[score_type] for v in df[data_col]]
+```
   
 ### Demo Data
 
@@ -89,13 +121,42 @@ streamlit run app.py
 
 * We create a dataframe of time 't', sentiment score 'compound', and price 'c'. To fill in missing data points, the data is resampled on a two-day rolling average to produce a pair of scores for each minute of the trading day.
 
+```python
+# example code for price resample
+def get_stock_dummies(filepath
+                      , time_col='t'
+                      , data_col='c'
+                      , window_minutes=2880
+                      ):
+    # ...
+    df = df.set_index(time_col)
+
+    df = df.resample('1min').fillna('nearest')
+    df['c'] = df['c'].rolling(window_minutes).mean()
+    # ... 
+```
+
 ### Experiment Data (Class Data)
 
 * Class data is based on historical prices and news data for approximately 81 tickers.
 
 * Per the source paper methods, we resample the data to obtain a daily price at closing and a single sentiment score for a given stock. For stock prices, we return the last closing price for each day as the daily closing price. For news sentiment score, we take the average compound score per day.
 
+```python
+# example code for resample price to daily
+
+#...
+stock_df = stock_df.groupby(
+        [pd.Grouper(key=time_col, freq=frequency)]).agg(stock_aggregator).dropna().reset_index()
+#...
+```
+
 * There are large gaps of time periods wherein we have stock data but no news data. As a result, to fill in missing time periods without sentiment scores, engineer new features with spline to interpolate missing scores. We find that spline adequately fits a line representing a somewhat nuetral score for a given stock-setiment combination.
+
+```python
+# example code for resample with spline
+df['resampled_compound'] = df[sentiment_col].interpolate(method='spline', order=4)
+```
 
 * For the experiement, we focus on replicating the concept of training with 4 days of data to predict the 5th day in the sequence for all variations of forecasting.
 
@@ -114,6 +175,46 @@ streamlit run app.py
 * We combine price and sentiment into a single data frame, then parse it into sequences.
 
 * With time as an index, parse data into sliding sequences based on a window size of n and a step size of 1. The sliding sequnces are used to train, predict, and evaluate the ARIMA and Prophet methods. The sliding sequences are similar to the DataLoader objects we utilize to train, validate, and test the PyTorch LSTM models.
+
+* Data sequencer for ARIMA and Prophet:
+  
+```python
+# example code for sequence slider
+    #...
+    x, y = [], []
+
+    N = len(df)
+
+    if target_len is None:
+      target_len = seq_len
+    
+    for i in range(N - seq_len):
+      x_i = df[i: i + seq_len].reset_index(drop=True)
+      y_i = df[i + seq_len: i + seq_len + target_len].reset_index(drop=True)
+
+      x.append(x_i)
+      y.append(y_i)
+
+    chunked_data = list(zip(x,y))
+    #...
+```
+
+* The equivialent sequence is provided in the LSTM2 model with the following DataLoader code example:
+
+```python
+    #...
+    def __getitem__(self, index):
+        x = self.data.iloc[index: index + self.window, 1:]
+        y = self.data.iloc[index + self.window, self.yhat:self.yhat+1]
+
+        # set sentiment score to that of the one corresponding to the target price
+        if self.sentiment in self.data.columns:
+            y_sentiment = self.data[self.sentiment].iloc[index + self.window]
+            x[self.sentiment] = y_sentiment
+
+        return torch.tensor(x.to_numpy(), dtype=torch.float32), torch.tensor(y, dtype=torch.float32)
+    #...
+```
 
 ## ARIMA Methodology
 
