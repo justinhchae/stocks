@@ -74,7 +74,7 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
     elif experiment_mode == 'class_data':
 
         # override run_modes
-        run_modes = ['lstm1', 'lstm2']
+        run_modes = ['arima', 'prophet', 'lstm1', 'lstm2']
 
         # wrap functions in try to work out issues in bad data
         try:
@@ -92,7 +92,7 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
 
         # consolidated data prep for training (scale, combine, filter)
         try:
-            df, sentiment_variance = combine_news_stock(stock_df=stock_df, news_df=news_df, ticker=ticker)
+            df = combine_news_stock(stock_df=stock_df, news_df=news_df, ticker=ticker)
         except:
             trouble.append((ticker, "combine_news_stock"))
             # tqdm.write(f'Trouble with {ticker}, skipping to next.')

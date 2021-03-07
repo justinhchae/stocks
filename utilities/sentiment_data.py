@@ -31,7 +31,7 @@ def score_sentiment(df
     df = df[[date_col, score_type]]
     df = df.set_index(date_col)
 
-    sentiment_variance = np.var(df[score_type].values)
+    # sentiment_variance = np.var(df[score_type].values)
 
     if is_resample:
         df = df.resample('1min').fillna('nearest')
@@ -51,5 +51,5 @@ def score_sentiment(df
 
     df.rename(columns={date_col:'t'}, inplace=True)
 
-    return df, sentiment_variance
+    return df
 

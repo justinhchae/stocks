@@ -29,7 +29,7 @@ def combine_news_stock(stock_df
     df = pd.merge(stock_df, news_df, how='left', left_on=time_col, right_on=time_col)
 
     # get variance of sentiment data to understand more
-    sentiment_variance = np.var(df[sentiment_col].values)
+    # sentiment_variance = np.var(df[sentiment_col].values)
 
 
     # resample to fill in missing values with spline
@@ -84,4 +84,4 @@ def combine_news_stock(stock_df
     fig.savefig(f'figures/{ticker}_data_prep.png')
     # plt.show()
 
-    return df, sentiment_variance
+    return df#, sentiment_variance
