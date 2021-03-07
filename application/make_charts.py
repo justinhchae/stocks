@@ -22,6 +22,7 @@ def make_scatter(df, title):
     st.altair_chart(c, use_container_width=True)
 
 def make_line(df, title):
+    # TODO: display sample charts of loss and predictions
     alt.Chart(df).mark_line().encode(
         x='x',
         y='f(x)')
