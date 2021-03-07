@@ -24,11 +24,11 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
     sentiment_variance = None
 
     if run_modes is None:
-        run_modes = ['arima', 'prophet']
-        # run_modes = ['lstm1', 'lstm2']
+        # run_modes = ['arima', 'prophet']
+        run_modes = ['lstm1', 'lstm2']
 
     if experiment_mode == 'demo':
-        news_df, sentiment_variance = get_news_dummies(ticker)
+        news_df = get_news_dummies(ticker)
         stock_df = get_stock_dummies(ticker)
         # transform to minute-by-minute sentiment score and stock price
         df = trading_days(news_df, stock_df)
@@ -79,59 +79,37 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
         # wrap functions in try to work out issues in bad data
         try:
             news_df = get_news_real(ticker=ticker)
-        except:
-            trouble.append((ticker, "news_df"))
-            # tqdm.write(f'Trouble with {ticker}, skipping to next.')
-            pass
-        try:
             stock_df = get_stock_real(ticker=ticker)
-        except:
-            trouble.append((ticker, "stock_df"))
-            # tqdm.write(f'Trouble with {ticker}, skipping to next.')
-            pass
-
-        # consolidated data prep for training (scale, combine, filter)
-        try:
             df, sentiment_variance = combine_news_stock(stock_df=stock_df, news_df=news_df, ticker=ticker)
+            train_scaled_price, valid_scaled_price, test_scaled_price = split_stock_data(df=df[['t', 'c']], time_col='t')
+            train_scaled_sentiment, valid_scaled_sentiment, test_scaled_sentiment = split_stock_data(df=df, time_col='t')
+            # set parameters unique to class data
+            params = {'stock_name': ticker
+                    , 'train_data': train_scaled_price
+                    , 'valid_data': valid_scaled_price
+                    , 'test_data': test_scaled_price
+                    , 'train_data_sentiment': train_scaled_sentiment
+                    , 'valid_data_sentiment': valid_scaled_sentiment
+                    , 'test_data_sentiment': test_scaled_sentiment
+                    , 'time_col': 't'
+                    , 'price_col': 'c'
+                    , 'sentiment_col': 'compound'
+                    , 'run_model': True
+                    , 'window_size': 4
+                    , 'seasonal_unit': 'sliding_sequence' #options: 'day', 'week', 'sliding_sequence'
+                    , 'prediction_unit': 'D'
+                    , 'epochs': 100
+                    , 'n_layers': 1
+                    , 'learning_rate': 0.001
+                    , 'batch_size': 16
+                    , 'hidden_dim': 64
+                    , 'n_prediction_units': 1
+                    , 'device': device
+                    , 'max_processes': CPUs // 2
+                    , 'pin_memory': False
+                    , 'enable_mp': False # running exps in mp from the top, disable sub mps
+                    }
         except:
-            trouble.append((ticker, "combine_news_stock"))
-            # tqdm.write(f'Trouble with {ticker}, skipping to next.')
-            pass
-
-        if df is not None:
-            # split data on data that is already scaled
-            try:
-                train_scaled_price, valid_scaled_price, test_scaled_price = split_stock_data(df=df[['t', 'c']], time_col='t')
-                train_scaled_sentiment, valid_scaled_sentiment, test_scaled_sentiment = split_stock_data(df=df, time_col='t')
-                # set parameters unique to class data
-                params = {'stock_name': ticker
-                        , 'train_data': train_scaled_price
-                        , 'valid_data': valid_scaled_price
-                        , 'test_data': test_scaled_price
-                        , 'train_data_sentiment': train_scaled_sentiment
-                        , 'valid_data_sentiment': valid_scaled_sentiment
-                        , 'test_data_sentiment': test_scaled_sentiment
-                        , 'time_col': 't'
-                        , 'price_col': 'c'
-                        , 'sentiment_col': 'compound'
-                        , 'run_model': True
-                        , 'window_size': 4
-                        , 'seasonal_unit': 'sliding_sequence' #options: 'day', 'week', 'sliding_sequence'
-                        , 'prediction_unit': 'D'
-                        , 'epochs': 100
-                        , 'n_layers': 1
-                        , 'learning_rate': 0.001
-                        , 'batch_size': 16
-                        , 'hidden_dim': 64
-                        , 'n_prediction_units': 1
-                        , 'device': device
-                        , 'max_processes': CPUs // 2
-                        , 'pin_memory': False
-                        , 'enable_mp': False # running exps in mp from the top, disable sub mps
-                        }
-            except:
-                pass
-        else:
             result = {'ticker': ticker
                      , 'N': ' '
                      , 'MAPE': ' '
@@ -139,17 +117,17 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
                      , 'date_end': ' '
                      , 'model_type': ' '
                      , 'notes': f'error during data_prep'
-                       }
-
+                      }
             experiment_results.append(result)
             return experiment_results
 
     for run_mode in run_modes:
-        results = None
+
         # configure parameters for forecasting here
         params.update({'run_mode': run_mode})
 
         if params['run_mode'] == 'arima' or params['run_mode'] == 'prophet':
+            results = None
             # tqdm.write('\nForecasting for {} with Approach run_mode: {}'.format(params['stock_name'], run_mode))
             ## baselines can be trained on all data, but for comparison to lstm, train predict on test set
             # df = pd.concat([params['train_data'], params['valid_data'], params['test_data']])
@@ -185,14 +163,21 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
                     p.close()
                     p.join()
                 except:
-                    trouble.append((ticker, run_mode))
+                    # trouble.append((ticker, run_mode))
                     # tqdm.write(f'Trouble with {ticker}, skipping to next.')
+                    result = {'ticker': ticker
+                             , 'N': ' '
+                             , 'MAPE': ' '
+                             , 'date_start': ' '
+                             , 'date_end': ' '
+                             , 'model_type': ' '
+                             , 'notes': f'error during {run_mode}'
+                              }
                     continue
 
             else:
                 # tqdm.write('Forecasting Without Pooling')
                 # list comprehension through the same model and data without pooling
-
                 try:
                     results = [model(i
                                      , n_prediction_units=params['n_prediction_units']
@@ -208,6 +193,7 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
                              , 'model_type': ' '
                              , 'notes': f'error during {run_mode}'
                               }
+                    pass
 
             if results:
                 result = assess_model(results
@@ -216,12 +202,11 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
                                       , seasonal_unit=params['seasonal_unit']
                                       )
 
-                result.update({'sentiment_variance':sentiment_variance})
-
+            result.update({'sentiment_variance':sentiment_variance})
             experiment_results.append(result)
 
         elif params['run_mode'] == 'lstm1' or params['run_mode'] == 'lstm2':
-
+            result = None
             # tqdm.write('Forecasting for {} with Approach run_mode: {}'.format(params['stock_name'], run_mode))
             # if a cuda is available
             if device=='cpu':
@@ -280,7 +265,9 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
                              , 'notes': f'error during {run_mode}'
                                }
                     pass
+
                 result.update({'sentiment_variance': sentiment_variance})
-                experiment_results.append(result)
+
+            experiment_results.append(result)
 
     return experiment_results

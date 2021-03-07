@@ -60,7 +60,7 @@ def main(experiment_mode, tickers, debug_mode, demo_run_mode=None):
     # capture total clock time in experiment
     exp_end = time.time()
     run_time = exp_end - exp_start
-    print(f'Total Run Time {run_time}')
+    # print(f'Total Run Time {run_time}')
     # consolidate exp outputs to a single dataframe from a list of dictionaries
     df = pd.concat([pd.DataFrame(i) for i in exp_results])
     # reset index and print dataframe head
@@ -73,8 +73,8 @@ def main(experiment_mode, tickers, debug_mode, demo_run_mode=None):
 
 if __name__ == '__main__':
     # uncomment one of two types of experiment modes
-    # experiment_mode = 'class_data'
-    experiment_mode = 'demo'
+    experiment_mode = 'class_data'
+    # experiment_mode = 'demo'
 
     # if debug mode is True, script will run normally without multiprocessing
     # set to False to run without multiprocessing, this is helpful for debugging things in serial

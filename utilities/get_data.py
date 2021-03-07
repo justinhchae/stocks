@@ -8,7 +8,6 @@ from utilities.clean_data import cleaner
 from utilities.sentiment_data import score_sentiment
 
 
-
 def get_news_dummies(filepath
                      , date_col='pub_time'
                      , date_conversion='US/Eastern'):

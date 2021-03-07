@@ -2,9 +2,10 @@ from application.config import *
 from application.experiment_mode import exp_mode
 from application.debug_mode import debug_mode
 from application.default_run_modes import default_runs
-from application.make_charts import make_histograms
+from application.make_charts import make_scatter
 from utilities.get_data import get_stock_tickers
 
+import pandas as pd
 
 from main import main
 
@@ -12,6 +13,7 @@ class Application():
     def __init__(self):
         # the text that displays in the tab at the very top of the page
         st.set_page_config(page_title='Stock Forecasting')
+        self.sample_chart = 'application/app_data/results_app_scatter.csv'
 
     def run_app(self):
         # primary app call will run everything contained in frame()
@@ -32,7 +34,8 @@ class Application():
         # a header for this section
         sub_title = 'Application Experiment for Advanced Deep Learning'
         st.markdown(f"<h3 style='text-align: center; color: black;font-family:courier;'>{sub_title}</h3>", unsafe_allow_html=True)
-
+        df = pd.read_csv(self.sample_chart)
+        make_scatter(df=df, title='Current Experiment Results')
         # makes a sidebar selection in index
         experiment_mode = exp_mode()
 
@@ -77,7 +80,8 @@ class Application():
 
         if results_df is not None:
             st.dataframe(results_df)
-            make_histograms(results_df)
+            make_scatter(df=results_df, title='Your Experiment Results')
+            st.balloons()
 
     def footer(self):
         # make st calls for footer section here
