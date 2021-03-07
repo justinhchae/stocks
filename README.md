@@ -8,7 +8,7 @@ This project is about Sentiement Analysis for Stock Prediction by @justinhchae @
 
 Based on the paper ["Stock Price Prediction Using News Sentiment Analysis"](https://ieeexplore.ieee.org/document/8848203) by Saloni Mohan, Sahitya Mullapudi, Sudheer Sammeta, Parag Vijayvergia and David C. Anastasiu.
 
-##
+## High-level Results
 
 ![results](https://github.com/justinhchae/stocks/blob/main/app_scatter.png)
 
@@ -38,21 +38,24 @@ A Screen shot of the folder structure:
 ## Get Started
 
 1. Clone this repo
+
 ```terminal
 git clone https://github.com/justinhchae/stocks
 ```
 
 2. Create a new conda environment from the environment.yml file
+
 ```terminal
 conda env create -f environment.yml
 ```
 
 3. From terminal, run app
+
 ```terminal
 streamlit run app.py
 ```
 
-4. From app, make experiement selections. 
+4. From app, make experiement selections.
 
 ![application](https://github.com/justinhchae/stocks/blob/main/app_cap.png)
 
@@ -60,13 +63,13 @@ streamlit run app.py
 
 1. Overview: Predict a stock price given its prior prices and sentiment from news articles about that stock.
 
-2. Run forecasting experiements with ARIMA: train on a sequence of stock prices and predict the next in sequence.
+2. Run forecasting experiments with ARIMA: train on a sequence of stock prices and predict the next in sequence.
 
-3. Run forecasting experiements with Facebook Prophet: train on a sequence of stock prices and predict the next in sequence.
+3. Run forecasting experiments with Facebook Prophet: train on a sequence of stock prices and predict the next in sequence.
 
-4. Run forecasting experiements with LSTM Neural Netowrk: train on a sequence of stock prices and predict the next in sequence.
+4. Run forecasting experiments with LSTM Neural Netowrk: train on a sequence of stock prices and predict the next in sequence.
 
-5. Run forecasting experiements with LSTM Neural Netowrk: train on a sequence of stock prices with sentiment scores for that stock and predict the next in sequence.
+5. Run forecasting experiments with LSTM Neural Netowrk: train on a sequence of stock prices and predict the next in sequence based on the current sentiment score.
 
 ## Data
 
@@ -84,7 +87,7 @@ The development data is based on a sample of dummy data news articles for Amazon
 
 ## Data Chunker
 
-* Concept: Combine sentiment scores and prices per minute into a single dataframe, then parse it into chunks. 
+* Concept: Combine sentiment scores and prices per minute into a single dataframe, then parse it into chunks.
 
 * Each chunk of data is a 15-minute block of data that starts at 9 am each trading day and ends at 1600
 
