@@ -73,33 +73,53 @@ streamlit run app.py
 
 ## Data
 
-The development data is based on a sample of dummy data news articles for Amazon (price history and news articles).
-
-* We use VADER compound score as a single value for sentiment score of a given news article.
-
-* We use closing price of a stock in a minute of a trading day.
-
-* We create a dataframe of time 't', sentiment score 'compound', and price 'c'. The data is resampled on a two-day rolling average to produce a pair of scores for each minute of the trading day.
+### Overall Data
 
 * News timesstamps that originate in UTC are converted to US/Eastern.
 
 * Stock timestamps are assumed to be US/Eastern.
 
-## Data Chunker
+* We use VADER for sentiment score as a proxy for the polarity score in the source paper.
+  
+### Demo Data
 
-* Concept: Combine sentiment scores and prices per minute into a single dataframe, then parse it into chunks.
+* The demo data is based on a sample of dummy data news articles for Amazon (price history and news articles).
+
+* We use closing price of a stock in a minute of a trading day wherein a trading day is defined as weekdays from 9 am to 4 pm US Eastern time.
+
+* We create a dataframe of time 't', sentiment score 'compound', and price 'c'. To fill in missing data points, the data is resampled on a two-day rolling average to produce a pair of scores for each minute of the trading day.
+
+### Experiment Data (Class Data)
+
+* Class data is based on historical prices and news data for approximately 81 tickers.
+
+* Per the source paper methods, we resample the data to obtain a daily price at closing and a single sentiment score for a given stock. For stock prices, we return the last closing price for each day as the daily closing price. For news sentiment score, we take the average compound score per day.
+
+* There are large gaps of time periods wherein we have stock data but no news data. As a result, to fill in missing time periods without sentiment scores, engineer new features with spline to interpolate missing scores. We find that spline adequately fits a line representing a somewhat nuetral score for a given stock-setiment combination.
+
+* For the experiement, we focus on replicating the concept of training with 4 days of data to predict the 5th day in the sequence for all variations of forecasting.
+
+## Data Chunker and Data Sequencer
+
+### Demo Concept
+
+* Combine sentiment scores and prices per minute into a single dataframe, then parse it into chunks.
 
 * Each chunk of data is a 15-minute block of data that starts at 9 am each trading day and ends at 1600
 
 * See [utilities/data_chunker.py](https://github.com/justinhchae/stocks/blob/main/utilities/data_chunker.py)
 
+### Experiment Concept
+
+* We combine price and sentiment into a single data frame, then parse it into sequences.
+
+* With time as an index, parse data into sliding sequences based on a window size of n and a step size of 1. The sliding sequnces are used to train, predict, and evaluate the ARIMA and Prophet methods. The sliding sequences are similar to the DataLoader objects we utilize to train, validate, and test the PyTorch LSTM models.
+
 ## ARIMA Methodology
 
-* Train model on a period, forecast the period that immediately follows; consume chunked data
+* Train model on a period, forecast the period that immediately follows; consume chunked or sequened data.
 
 * Example: train on data from index 0 to index 14 and predict the value at the 15th index position.
-
-* Data is sequenced at index 0 (equal to 9 am on the first trading day in dataset) and continues until the last in sequence.
 
 * The model in each prediction window is a new model, only predicting the next sequence.
 
@@ -115,15 +135,13 @@ The development data is based on a sample of dummy data news articles for Amazon
 
 ## LSTM PyTorch Methodology
 
-### For Demo Data
+* Unlike ARIMA and Prophet, the LSTM model is used to predict sequences that are far outisde the training window.
 
 * Parse data for each trading day into windows of size 15 and increment step size by 1 then consume batched data from PyTorch DataLoader objects
 
+* In addition to sequence alone, a second LSTM model combines a sequence of past prices with the sentiment score of the sentiment score associated with the time index of the predicted price.
+
 * Example: Train on data for from index 0 to 14 and predict the value at index 15, then increment window size from [1:15] and predict index at 16, and so on.
-
-* Unlike ARIMA and Prophet, the LSTM Model is used to predict sequences far outisde the training window.
-
-* In addition to sequence alone, a second LSTM combines price with the sentiment score of the predicted price.
 
 ## Relevant Documentation
 
