@@ -29,8 +29,8 @@ def combine_news_stock(stock_df
     df = pd.merge(stock_df, news_df, how='left', left_on=time_col, right_on=time_col)
 
     # get variance of sentiment data to understand more
-    # sentiment_variance = np.var(df[sentiment_col].values)
-
+    sentiment_values = list(df[sentiment_col].dropna().values)
+    sentiment_variance = np.var(sentiment_values)
 
     # resample to fill in missing values with spline
     df['resampled_compound'] = df[sentiment_col].interpolate(method='spline', order=4)
@@ -45,13 +45,6 @@ def combine_news_stock(stock_df
     # filter dataframe having both sentiemnet scores and prices
     df = df[df[time_col] >= min_date].copy()
     df = df.reset_index(drop=True)
-
-    # set index to datetime for resampling
-    # df = df.set_index(time_col)
-    # interpolate method to spline to fill in reasonable values for missing
-    # df['resampled_compound'] = df[sentiment_col].interpolate(method='spline', order=4)
-    #TODO: conduct testing to determine why spline or alt methods
-    # df = df.reset_index()
 
     # scale stock prices
     scaler = StandardScaler()
@@ -84,4 +77,4 @@ def combine_news_stock(stock_df
     fig.savefig(f'figures/{ticker}_data_prep.png')
     # plt.show()
 
-    return df#, sentiment_variance
+    return df, sentiment_variance

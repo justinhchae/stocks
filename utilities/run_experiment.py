@@ -92,7 +92,7 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
 
         # consolidated data prep for training (scale, combine, filter)
         try:
-            df = combine_news_stock(stock_df=stock_df, news_df=news_df, ticker=ticker)
+            df, sentiment_variance = combine_news_stock(stock_df=stock_df, news_df=news_df, ticker=ticker)
         except:
             trouble.append((ticker, "combine_news_stock"))
             # tqdm.write(f'Trouble with {ticker}, skipping to next.')
