@@ -38,7 +38,7 @@ class Application():
         my_expander = st.beta_expander("Experiment Results (Click to Hide or Show)", expanded=True)
         with my_expander:
             df = pd.read_csv(self.sample_chart)
-            make_scatter(df=df, title='High-level Results for Error by Sentiment Variance')
+            make_scatter(df=df, title='High-level Results for Error by Sentiment and Price Variance')
             # make_line()
 
         # makes a sidebar selection in index

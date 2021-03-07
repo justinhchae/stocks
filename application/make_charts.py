@@ -13,11 +13,11 @@ def make_scatter(df, title):
     st.write(title)
 
     c = alt.Chart(df).mark_circle().encode(alt.X('sentiment_variance'),
-                                           alt.Y('MAPE', bin=True),
-                                           size = 'N'
+                                           alt.Y('price_variance'),
+                                           size = 'MAPE'
                                          , color = 'model_type'
                                          , tooltip = ['ticker','model_type', 'MAPE', 'notes']
-                                           ).transform_bin('N','N', bin=alt.Bin(maxbins=10))
+                                           ).transform_bin('MAPE','MAPE', bin=alt.Bin(maxbins=10))
 
     st.altair_chart(c, use_container_width=True)
 
