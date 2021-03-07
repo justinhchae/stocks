@@ -18,12 +18,12 @@ Based on the paper ["Stock Price Prediction Using News Sentiment Analysis"](http
 
 2. Unzip stock and news data to the data folder in accordance with the following structure:
 
-```
-stocks|
-      |/data|
-            |/class_data|
-                        |/historical_price| # to contain all unzipped CSV files
-                        |news.json # the provided news data
+```terminal
+stocks
+  /data
+  /class_data
+    /historical_price # to contain all unzipped CSV files
+    /news.json # the provided news data
        
 ```
 
@@ -115,11 +115,15 @@ The development data is based on a sample of dummy data news articles for Amazon
 
 ## LSTM PyTorch Methodology
 
-* Parse data for each trading day into windows of size 15 and increment step size by 1; ; consume batched data from PyTorch DataLoader objects
+### For Demo Data
 
-* Example: train on data for from index 0 to 14 and predict the value at index 15, then increment window size from [1:15] and predict index at 16, and so on.
+* Parse data for each trading day into windows of size 15 and increment step size by 1 then consume batched data from PyTorch DataLoader objects
 
-* Unlike ARIMA and Prophet, the LSTM Model is used to predict sequences after the training window.
+* Example: Train on data for from index 0 to 14 and predict the value at index 15, then increment window size from [1:15] and predict index at 16, and so on.
+
+* Unlike ARIMA and Prophet, the LSTM Model is used to predict sequences far outisde the training window.
+
+* In addition to sequence alone, a second LSTM combines price with the sentiment score of the predicted price.
 
 ## Relevant Documentation
 
