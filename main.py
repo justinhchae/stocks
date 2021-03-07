@@ -13,6 +13,9 @@ def main(experiment_mode, tickers, debug_mode, demo_run_mode=None):
     if not os.path.exists('figures'):
         os.makedirs('figures')
 
+    if not os.path.exists('data/model_results'):
+        os.makedirs('data/model_results')
+
     # configure gpu if available
     is_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if is_cuda else "cpu")

@@ -222,6 +222,13 @@ def plot_losses(train_loss, valid_loss, stock_name, model_type):
     fig.savefig(f'figures/{stock_name}_{model_type}_loss.png')
     # plt.show()
 
+    df = pd.DataFrame()
+    df['train_loss'] = ave_train_loss
+    df['validation_loss'] = ave_valid_loss
+
+    df['model_type'] = model_type
+    df.to_csv(f'data/model_results/{stock_name}_{model_type}_loss.csv', index=False)
+
 def test_model(model, data_loader, stock_name, model_type, loss_function, test_data, n_hidden, stop_reason, n_epochs):
 
     # initialize empty lists to capture data
@@ -309,6 +316,9 @@ def test_model(model, data_loader, stock_name, model_type, loss_function, test_d
              , 'notes': stop_reason
              , 'n_epochs': n_epochs
               }
+
+    df['model_type'] = model_type
+    df.to_csv(f'data/model_results/{stock_name}_{model_type}_results.csv', index=False)
 
     return results
 

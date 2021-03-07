@@ -53,5 +53,7 @@ def assess_model(data, model_type, stock_name, seasonal_unit, time_col='t', pred
             , 'notes': ' '
             , 'n_epochs': None
                }
+    df['model_type'] = model_type
+    df.to_csv(f'data/model_results/{stock_name}_{model_type}_loss.csv', index=False)
 
     return results

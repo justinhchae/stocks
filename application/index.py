@@ -34,8 +34,11 @@ class Application():
         # a header for this section
         sub_title = 'Application Experiment for Advanced Deep Learning'
         st.markdown(f"<h3 style='text-align: center; color: black;font-family:courier;'>{sub_title}</h3>", unsafe_allow_html=True)
-        df = pd.read_csv(self.sample_chart)
-        make_scatter(df=df, title='Current Experiment Results')
+        # display some overview graphs
+        my_expander = st.beta_expander("Experiment Results (Click to Hide or Show)", expanded=True)
+        with my_expander:
+            df = pd.read_csv(self.sample_chart)
+            make_scatter(df=df, title='High-level Results for Error by Sentiment Variance')
         # makes a sidebar selection in index
         experiment_mode = exp_mode()
 

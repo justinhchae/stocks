@@ -1,5 +1,6 @@
 from application.config import *
 import altair as alt
+
 import pandas as pd
 
 def make_scatter(df, title):
@@ -16,10 +17,11 @@ def make_scatter(df, title):
                                            size = 'N'
                                          , color = 'model_type'
                                          , tooltip = ['ticker','model_type', 'MAPE', 'notes']
-                                           )\
-        #.transform_bin('sentiment_variance', 'sentiment_variance', bin=alt.Bin(maxbins=8))
+                                           ).transform_bin('N','N', bin=alt.Bin(maxbins=10))
 
     st.altair_chart(c, use_container_width=True)
 
-
-
+def make_line(df, title):
+    alt.Chart(df).mark_line().encode(
+        x='x',
+        y='f(x)')
