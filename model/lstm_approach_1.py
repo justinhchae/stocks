@@ -16,10 +16,11 @@ import os
 from tqdm import tqdm
 
 class Data(Dataset):
-    def __init__(self, data, window, yhat='c', step_size=1):
+    def __init__(self, data, window, yhat='c', sentiment='compound', step_size=1):
         self.data = data
         self.window = window
         self.step_size = step_size
+        self.sentiment = sentiment
         # self._xdata = # index of times
         self.yhat = data.columns.get_loc(yhat)
         self.shape = self.__getshape__()
@@ -28,6 +29,12 @@ class Data(Dataset):
     def __getitem__(self, index):
         x = self.data.iloc[index: index + self.window, 1:]
         y = self.data.iloc[index + self.window, self.yhat:self.yhat+1]
+
+        # set sentiment score to that of the one corresponding to the target price
+        if self.sentiment in self.data.columns:
+            y_sentiment = self.data[self.sentiment].iloc[index + self.window]
+            x[self.sentiment] = y_sentiment
+
         return torch.tensor(x.to_numpy(), dtype=torch.float32), torch.tensor(y, dtype=torch.float32)
 
     def __len__(self):
@@ -68,8 +75,6 @@ def train_model(train_data, model, sequence_length, pin_memory, epochs=20, learn
 
     # patience value for early stopping
     patience = 2
-    # ideal target loss threshold based on testing
-    target_loss = 0.1
     # get a true count of actual epochs run
     actual_run_epochs = 0
     # absolute max epochs to run
@@ -111,7 +116,7 @@ def train_model(train_data, model, sequence_length, pin_memory, epochs=20, learn
             except:
                 last_prior_loss = 1000000
 
-            ave_loss = np.mean(valid_losses)
+            # ave_loss = np.mean(valid_losses)
             last_n_losses = valid_losses[-2:]
             variance = np.var(last_n_losses)
 
@@ -125,7 +130,6 @@ def train_model(train_data, model, sequence_length, pin_memory, epochs=20, learn
                 # stop training if loss effectively stops changing
                 stop_reason = 'loss stopped changing'
                 break
-
 
     # plot losses
     plot_losses(train_loss=train_losses, valid_loss=valid_losses, stock_name=kwargs['stock_name'], model_type=kwargs['run_mode'])
