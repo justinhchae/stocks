@@ -6,6 +6,7 @@ from application.make_charts import make_scatter, make_histogram
 from utilities.get_data import get_stock_tickers
 
 import pandas as pd
+from PIL import Image
 
 from main import main
 
@@ -14,6 +15,16 @@ class Application():
         # the text that displays in the tab at the very top of the page
         st.set_page_config(page_title='Stock Forecasting')
         self.sample_chart = 'application/app_data/results_app_scatter.csv'
+        self.seq_1 = Image.open('application/app_data/sequence_1.png')
+        self.seq_2 = Image.open('application/app_data/sequence_2.png')
+        self.data_1 = Image.open('application/app_data/FB_data_prep.png')
+        self.data_2 = Image.open('application/app_data/CBOE_data_prep.png')
+        self.results1 = Image.open('application/app_data/FB_arima_results.png')
+        self.results2 = Image.open('application/app_data/FB_prophet_results.png')
+        self.results31 = Image.open('application/app_data/FB_lstm1_loss.png')
+        self.results32 = Image.open('application/app_data/FB_lstm1_results.png')
+        self.results41 = Image.open('application/app_data/FB_lstm2_loss.png')
+        self.results42 = Image.open('application/app_data/FB_lstm2_results.png')
 
     def run_app(self):
         # primary app call will run everything contained in frame()
@@ -35,11 +46,68 @@ class Application():
         sub_title = 'Application Experiment for Advanced Deep Learning'
         st.markdown(f"<h3 style='text-align: center; color: black;font-family:courier;'>{sub_title}</h3>", unsafe_allow_html=True)
         # display some overview graphs
-        my_expander = st.beta_expander("Experiment Results (Click to Hide or Show)", expanded=True)
+        my_expander = st.beta_expander("Project Methods and Results (Click to Hide or Show)", expanded=True)
         with my_expander:
+            st.markdown("<h2 style='text-align: center; color: black;'> * * * </h2>", unsafe_allow_html=True)
+            st.header('Concept')
+            st.write('Train various models on stock data with a focus on timeseries and sentiment data from news about the stock.')
+            st.write('Baseline forecasting with ARIMA, Facebook Prophet, and LSTM.')
+            st.write('Combine prices with sentiment scores and train a second LSTM.')
+            st.write('Compare results with MAPE (Mean Absolute Percentage Error)')
+
+            st.markdown("<h2 style='text-align: center; color: black;'> * * * </h2>", unsafe_allow_html=True)
+            st.header('Data Preparation')
+            d_col1, d_col2 = st.beta_columns(2)
+            d_col1.write('Scale prices and interpolate sentiment scores with spline.')
+            d_col1.image(self.data_1)
+            d_col2.write('Data with varying degrees of missing values and date ranges.')
+            d_col2.image(self.data_2)
+
+            st.markdown("<h2 style='text-align: center; color: black;'> * * * </h2>", unsafe_allow_html=True)
+            st.header('Data Sequences')
+            st.write('Sliding Sequences of Prices')
+            st.image(self.seq_1)
+            st.write('Sliding Sequences of Prices and Sentiment Data')
+            st.image(self.seq_2)
+
+            st.markdown("<h2 style='text-align: center; color: black;'> * * * </h2>", unsafe_allow_html=True)
+            st.header('Results')
+            st.write('Baseline Experiments')
+            res1 = st.beta_columns(2)
+            res1[0].write('ARIMA train-predict results.')
+            res1[0].image(self.results1)
+            res1[1].write('FB Prophet train-predict results.')
+            res1[1].image(self.results2)
+
+            st.write('LSTM Experiments')
+            res2 = st.beta_columns(2)
+            res2[0].write('LSTM 1 - Stock Price Only')
+            res2[0].image(self.results31)
+            res2[0].image(self.results32)
+            res2[1].write('LSTM 2 - Stock Price With Sentiment')
+            res2[1].image(self.results41)
+            res2[1].image(self.results42)
+
+            st.markdown("<h2 style='text-align: center; color: black;'> * * * </h2>", unsafe_allow_html=True)
+            st.header('LSTM Notes')
+            st.write('Set default epochs to 100 with multiple early stopping conditions.')
+            st.write('High variance in stock prices make prediction accuracy difficult.')
+
+            st.markdown("<h2 style='text-align: center; color: black;'> * * * </h2>", unsafe_allow_html=True)
+            st.header('Analysis of Price and Sentiment Variance')
             df = pd.read_csv(self.sample_chart)
             make_scatter(df=df, title='High-level Results for Error by Sentiment and Price Variance')
             make_histogram(filename=self.sample_chart)
+
+            st.markdown("<h2 style='text-align: center; color: black;'> * * * </h2>", unsafe_allow_html=True)
+            st.header('Conclusions')
+            st.write('1. Feature engineering was the most complex part of this project.')
+            st.write('2. Standard models like ARIMA and Prophet do very well within the training range.')
+            st.write('3. LSTMs do okay, both with price and with sentiment, but underperform.')
+            st.write('4. High levels of variance in sentiment and in price have major impacts on model accuracy.')
+            st.write('5. Combination of a forecasting model with a reinforcement learning ageny may be interesting.')
+            st.write(' ')
+            st.markdown("<h2 style='text-align: center; color: black;'> * * * </h2>", unsafe_allow_html=True)
 
         # makes a sidebar selection in index
         experiment_mode = exp_mode()
