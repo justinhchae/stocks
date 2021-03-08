@@ -23,7 +23,7 @@ Based on the paper ["Stock Price Prediction Using News Sentiment Analysis"](http
 2. Unzip stock and news data to the data folder in accordance with the following structure:
 
 ```terminal
-stocks
+<project_root>
   /data
   /class_data
     /historical_price # to contain all unzipped CSV files
