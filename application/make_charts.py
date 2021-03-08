@@ -44,9 +44,9 @@ def make_histogram(filename, group_by='model_type'):
         high = x.tail(1)[['ticker', 'MAPE']]
         c = alt.Chart(x).mark_bar().encode(alt.X("MAPE", bin=True), y='count()')
         cols[idx].write(f'MAPE Distribution for {name}')
-        cols[idx].write('high')
+        cols[idx].write('worst')
         cols[idx].table(high)
-        cols[idx].write('low')
+        cols[idx].write('best')
         cols[idx].table(low)
         cols[idx].altair_chart(c, use_container_width=True)
 
