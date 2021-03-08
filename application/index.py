@@ -38,7 +38,7 @@ class Application():
 
     def title(self):
         # execute st calls for title section
-        st.title('Experimenting With Stock Price Prediction')
+        st.title('Experimenting With Stock Price Prediction - Presentation Mode')
 
     def body(self):
         # execute st calls for body section
@@ -57,7 +57,7 @@ class Application():
 
             st.markdown("<h2 style='text-align: center; color: black;'> * * * </h2>", unsafe_allow_html=True)
             st.header('Model Overview')
-            st.write('LSTM Math (from PyTorch Docs)')
+            st.markdown('LSTM Math [from PyTorch Docs](https://pytorch.org/docs/stable/generated/torch.nn.LSTM.html)')
             st.latex(r'''i_t=σ(W_{ii}x_t+b_{ii}+W_{hi}h_{t−1}+b_{hi})''')
             st.latex(r'''f_t=σ(W_{if}x_t+b_{if}+W_{hf}h_{t−1}+b_{hf})''')
             st.latex(r'''g_t=tanh(W_{ig}x_t+b_{ig}+W_{hg}h_{t−1}+b_{hg})''')
@@ -67,7 +67,7 @@ class Application():
             # source: https://pytorch.org/docs/stable/generated/torch.nn.LSTM.html
 
             st.markdown("<h2 style='text-align: center; color: black;'> - - </h2>", unsafe_allow_html=True)
-            st.write('ARIMA Math (from Duke)')
+            st.markdown('ARIMA Math [from Duke](https://people.duke.edu/~rnau/411arim.htm)')
             st.latex('yhat_t = μ + Y_{t-1}')
             st.write('ARIMA stands for Autoregressive Integrated Moving Average')
             st.write('Or in other words, a regression fit with conditional sum of square or MLE.')
@@ -75,7 +75,7 @@ class Application():
             # source: https://people.duke.edu/~rnau/411arim.htm
 
             st.markdown("<h2 style='text-align: center; color: black;'> - - </h2>", unsafe_allow_html=True)
-            st.write('Facebook Prophet Math (from Facebook)')
+            st.markdown('Facebook Prophet Math [from Facebook](https://peerj.com/preprints/3190.pdf)')
             st.latex('y(t) = g(t) + s(t) + h(t) + e(t)')
             st.write('Or in other words, a regression fit that accounts for trend(g), seasonality (s), holidays (h), and error (e).')
             # source: https://peerj.com/preprints/3190.pdf
@@ -135,51 +135,51 @@ class Application():
             st.markdown("<h2 style='text-align: center; color: black;'> * * * </h2>", unsafe_allow_html=True)
 
         # makes a sidebar selection in index
-        experiment_mode = exp_mode()
-
-        debug_type = debug_mode()
-
-        demo_run_mode = None
-
-        if experiment_mode == 'demo':
-            tickers = ['Amazon']
-            run_modes_selection = default_runs()
-            st.write('Default Run Modes set to:', run_modes_selection)
-            if run_modes_selection == 'Baseline (ARIMA and FB Prophet)':
-                demo_run_mode = ['arima', 'prophet']
-            elif run_modes_selection == 'Featured (LSTMs)':
-                demo_run_mode = ['lstm1', 'lstm2']
-        else:
-            tickers = get_stock_tickers()
-
-        st.write('Experiment Configuration:')
-        st.write('Experiment Mode:', experiment_mode)
-        st.write('Debug Mode:',  debug_type)
-        st.write('Tickers:', len(tickers))
-
-        run_exp = st.button('Run!')
-
-        results_df = None
-
-        if run_exp:
-            if not debug_type:
-                st.write('Running with Multiprocessor')
-
-            with st.spinner('Running The Experiment!...'):
-                if demo_run_mode:
-                    results_df = main(experiment_mode=experiment_mode, tickers=tickers, debug_mode=debug_type, demo_run_mode=demo_run_mode)
-
-                else:
-                    results_df = main(experiment_mode=experiment_mode, tickers=tickers, debug_mode=debug_type)
-
-            st.success('Yay! Made Predictions.')
-
-            st.write('Check data/ and figures/ for results')
-
-        if results_df is not None:
-            st.dataframe(results_df)
-            make_scatter(df=results_df, title='Your Experiment Results')
-            st.balloons()
+        # experiment_mode = exp_mode()
+        #
+        # debug_type = debug_mode()
+        #
+        # demo_run_mode = None
+        #
+        # if experiment_mode == 'demo':
+        #     tickers = ['Amazon']
+        #     run_modes_selection = default_runs()
+        #     st.write('Default Run Modes set to:', run_modes_selection)
+        #     if run_modes_selection == 'Baseline (ARIMA and FB Prophet)':
+        #         demo_run_mode = ['arima', 'prophet']
+        #     elif run_modes_selection == 'Featured (LSTMs)':
+        #         demo_run_mode = ['lstm1', 'lstm2']
+        # else:
+        #     tickers = get_stock_tickers()
+        #
+        # st.write('Experiment Configuration:')
+        # st.write('Experiment Mode:', experiment_mode)
+        # st.write('Debug Mode:',  debug_type)
+        # st.write('Tickers:', len(tickers))
+        #
+        # run_exp = st.button('Run!')
+        #
+        # results_df = None
+        #
+        # if run_exp:
+        #     if not debug_type:
+        #         st.write('Running with Multiprocessor')
+        #
+        #     with st.spinner('Running The Experiment!...'):
+        #         if demo_run_mode:
+        #             results_df = main(experiment_mode=experiment_mode, tickers=tickers, debug_mode=debug_type, demo_run_mode=demo_run_mode)
+        #
+        #         else:
+        #             results_df = main(experiment_mode=experiment_mode, tickers=tickers, debug_mode=debug_type)
+        #
+        #     st.success('Yay! Made Predictions.')
+        #
+        #     st.write('Check data/ and figures/ for results')
+        #
+        # if results_df is not None:
+        #     st.dataframe(results_df)
+        #     make_scatter(df=results_df, title='Your Experiment Results')
+        #     st.balloons()
 
     def footer(self):
         # make st calls for footer section here
