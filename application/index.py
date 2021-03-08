@@ -50,10 +50,35 @@ class Application():
         with my_expander:
             st.markdown("<h2 style='text-align: center; color: black;'> * * * </h2>", unsafe_allow_html=True)
             st.header('Concept')
-            st.write('Train various models on stock data with a focus on timeseries and sentiment data from news about the stock.')
-            st.write('Baseline forecasting with ARIMA, Facebook Prophet, and LSTM.')
-            st.write('Combine prices with sentiment scores and train a second LSTM.')
-            st.write('Compare results with MAPE (Mean Absolute Percentage Error)')
+            st.write('1. Train various models on stock data with a focus on timeseries and sentiment data from news about the stock.')
+            st.write('2. Baseline forecasting with ARIMA, Facebook Prophet, and LSTM.')
+            st.write('3. Combine prices with sentiment scores and train a second LSTM having sentiment scores.')
+            st.write('4. Compare results with MAPE (Mean Absolute Percentage Error)')
+
+            st.markdown("<h2 style='text-align: center; color: black;'> * * * </h2>", unsafe_allow_html=True)
+            st.header('Model Overview')
+            st.write('LSTM Math (from PyTorch Docs)')
+            st.latex(r'''i_t=σ(W_{ii}x_t+b_{ii}+W_{hi}h_{t−1}+b_{hi})''')
+            st.latex(r'''f_t=σ(W_{if}x_t+b_{if}+W_{hf}h_{t−1}+b_{hf})''')
+            st.latex(r'''g_t=tanh(W_{ig}x_t+b_{ig}+W_{hg}h_{t−1}+b_{hg})''')
+            st.latex(r'''o_t=σ(W_{io}x_t+b_{io}+W_{ho}h_{t−1}+b_{ho})''')
+            st.latex(r'''c_t=f_t⊙c_{t−1}+i_t⊙g_t''')
+            st.latex(r'''h_t=o_t⊙tanh(c_t)''')
+            # source: https://pytorch.org/docs/stable/generated/torch.nn.LSTM.html
+
+            st.markdown("<h2 style='text-align: center; color: black;'> - - </h2>", unsafe_allow_html=True)
+            st.write('ARIMA Math (from Duke)')
+            st.latex('yhat_t = μ + Y_{t-1}')
+            st.write('ARIMA stands for Autoregressive Integrated Moving Average')
+            st.write('Or in other words, a regression fit with conditional sum of square or MLE.')
+            st.write('We use parameters of (0,1,0) which is known as random walk.')
+            # source: https://people.duke.edu/~rnau/411arim.htm
+
+            st.markdown("<h2 style='text-align: center; color: black;'> - - </h2>", unsafe_allow_html=True)
+            st.write('Facebook Prophet Math (from Facebook)')
+            st.latex('y(t) = g(t) + s(t) + h(t) + e(t)')
+            st.write('Or in other words, a regression fit that accounts for trend(g), seasonality (s), holidays (h), and error (e).')
+            # source: https://peerj.com/preprints/3190.pdf
 
             st.markdown("<h2 style='text-align: center; color: black;'> * * * </h2>", unsafe_allow_html=True)
             st.header('Data Preparation')
@@ -103,9 +128,9 @@ class Application():
             st.header('Conclusions')
             st.write('1. Feature engineering was the most complex part of this project.')
             st.write('2. Standard models like ARIMA and Prophet do very well within the training range.')
-            st.write('3. LSTMs do okay, both with price and with sentiment, but underperform.')
+            st.write('3. LSTMs do okay, both with price and with sentiment, but underperform overall.')
             st.write('4. High levels of variance in sentiment and in price have major impacts on model accuracy.')
-            st.write('5. Combination of a forecasting model with a reinforcement learning ageny may be interesting.')
+            st.write('5. Combination of a forecasting model with a reinforcement learning agent may be interesting.')
             st.write(' ')
             st.markdown("<h2 style='text-align: center; color: black;'> * * * </h2>", unsafe_allow_html=True)
 
