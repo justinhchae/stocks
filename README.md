@@ -10,6 +10,8 @@ Based on the paper ["Stock Price Prediction Using News Sentiment Analysis"](http
 
 ## High-level Results
 
+* See our [streamlit app](https://share.streamlit.io/justinhchae/stocks/presentation_only/app.py) for more details. 
+
 * Based on preliminary analysis, all models tend to perform well when the variance of price and sentiment data is relatively lower. 
 
 * In the scatter plot of variance and error, plots that are small in size, low, and left are better. 
