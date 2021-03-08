@@ -131,6 +131,7 @@ class Application():
             st.write('3. LSTMs do okay, both with price and with sentiment, but underperform overall.')
             st.write('4. High levels of variance in sentiment and in price have major impacts on model accuracy.')
             st.write('5. Combination of a forecasting model with a reinforcement learning agent may be interesting.')
+            st.write('6. Despite lower accuracy for LSTMs, they still tracked the direction of movement and only missed the magnitude.')
             st.write(' ')
             st.markdown("<h2 style='text-align: center; color: black;'> * * * </h2>", unsafe_allow_html=True)
 
