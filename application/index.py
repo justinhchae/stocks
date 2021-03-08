@@ -2,7 +2,7 @@ from application.config import *
 from application.experiment_mode import exp_mode
 from application.debug_mode import debug_mode
 from application.default_run_modes import default_runs
-from application.make_charts import make_scatter, make_line
+from application.make_charts import make_scatter, make_histogram
 from utilities.get_data import get_stock_tickers
 
 import pandas as pd
@@ -39,7 +39,7 @@ class Application():
         with my_expander:
             df = pd.read_csv(self.sample_chart)
             make_scatter(df=df, title='High-level Results for Error by Sentiment and Price Variance')
-            # make_line()
+            make_histogram(filename=self.sample_chart)
 
         # makes a sidebar selection in index
         experiment_mode = exp_mode()

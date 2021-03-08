@@ -208,9 +208,9 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
                                       , seasonal_unit=params['seasonal_unit']
                                       )
 
-            result.update({'sentiment_variance':sentiment_variance
-                           ,'price_variance':price_variance
-                           })
+                result.update({'sentiment_variance':sentiment_variance
+                               ,'price_variance':price_variance
+                               })
             experiment_results.append(result)
 
         elif params['run_mode'] == 'lstm1' or params['run_mode'] == 'lstm2':
@@ -274,9 +274,9 @@ def run_experiment(ticker, experiment_mode, device, CPUs, run_modes):
                                }
                     pass
 
-            result.update({'sentiment_variance': sentiment_variance
-                         , 'price_variance': price_variance
-                           })
+                result.update({'sentiment_variance': sentiment_variance
+                             , 'price_variance': price_variance
+                               })
 
             experiment_results.append(result)
 
