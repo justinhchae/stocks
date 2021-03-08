@@ -298,6 +298,16 @@ df['resampled_compound'] = df[sentiment_col].interpolate(method='spline', order=
                 break
 ```
 
+## Program Architecture
+
+* We leverage the PyTorch multiprocessing (MP) library to compute in parallel. 
+
+* MP is enabled by default (debug = False) but it can be disabled by setting debug = True
+
+* In demo mode, we evaluate a single stock and iterate through each of the types of models; within each model evaluation, we use MP to speed up the computations. 
+
+* In class_data mode, we evaluate many stocks and apply MP to iterate through the entire training cycle for each stock in parallel.
+
 ## Relevant Documentation
 
 * [PyTorch](https://pytorch.org/docs/stable/generated/torch.nn.LSTM.html)
