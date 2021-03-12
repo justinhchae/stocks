@@ -135,51 +135,51 @@ class Application():
             st.markdown("<h2 style='text-align: center; color: black;'> * * * </h2>", unsafe_allow_html=True)
 
         # makes a sidebar selection in index
-        # experiment_mode = exp_mode()
-        #
-        # debug_type = debug_mode()
-        #
-        # demo_run_mode = None
-        #
-        # if experiment_mode == 'demo':
-        #     tickers = ['Amazon']
-        #     run_modes_selection = default_runs()
-        #     st.write('Default Run Modes set to:', run_modes_selection)
-        #     if run_modes_selection == 'Baseline (ARIMA and FB Prophet)':
-        #         demo_run_mode = ['arima', 'prophet']
-        #     elif run_modes_selection == 'Featured (LSTMs)':
-        #         demo_run_mode = ['lstm1', 'lstm2']
-        # else:
-        #     tickers = get_stock_tickers()
-        #
-        # st.write('Experiment Configuration:')
-        # st.write('Experiment Mode:', experiment_mode)
-        # st.write('Debug Mode:',  debug_type)
-        # st.write('Tickers:', len(tickers))
-        #
-        # run_exp = st.button('Run!')
-        #
-        # results_df = None
-        #
-        # if run_exp:
-        #     if not debug_type:
-        #         st.write('Running with Multiprocessor')
-        #
-        #     with st.spinner('Running The Experiment!...'):
-        #         if demo_run_mode:
-        #             results_df = main(experiment_mode=experiment_mode, tickers=tickers, debug_mode=debug_type, demo_run_mode=demo_run_mode)
-        #
-        #         else:
-        #             results_df = main(experiment_mode=experiment_mode, tickers=tickers, debug_mode=debug_type)
-        #
-        #     st.success('Yay! Made Predictions.')
-        #
-        #     st.write('Check data/ and figures/ for results')
-        #
-        # if results_df is not None:
-        #     st.dataframe(results_df)
-        #     make_scatter(df=results_df, title='Your Experiment Results')
-        #     st.balloons()
+        experiment_mode = exp_mode()
+
+        debug_type = debug_mode()
+
+        demo_run_mode = None
+
+        if experiment_mode == 'demo':
+            tickers = ['Amazon']
+            run_modes_selection = default_runs()
+            st.write('Default Run Modes set to:', run_modes_selection)
+            if run_modes_selection == 'Baseline (ARIMA and FB Prophet)':
+                demo_run_mode = ['arima', 'prophet']
+            elif run_modes_selection == 'Featured (LSTMs)':
+                demo_run_mode = ['lstm1', 'lstm2']
+        else:
+            tickers = get_stock_tickers()
+
+        st.write('Experiment Configuration:')
+        st.write('Experiment Mode:', experiment_mode)
+        st.write('Debug Mode:',  debug_type)
+        st.write('Tickers:', len(tickers))
+
+        run_exp = st.button('Run!')
+
+        results_df = None
+
+        if run_exp:
+            if not debug_type:
+                st.write('Running with Multiprocessor')
+
+            with st.spinner('Running The Experiment!...'):
+                if demo_run_mode:
+                    results_df = main(experiment_mode=experiment_mode, tickers=tickers, debug_mode=debug_type, demo_run_mode=demo_run_mode)
+
+                else:
+                    results_df = main(experiment_mode=experiment_mode, tickers=tickers, debug_mode=debug_type)
+
+            st.success('Yay! Made Predictions.')
+
+            st.write('Check data/ and figures/ for results')
+
+        if results_df is not None:
+            st.dataframe(results_df)
+            make_scatter(df=results_df, title='Your Experiment Results')
+            st.balloons()
 
     def footer(self):
         # make st calls for footer section here
