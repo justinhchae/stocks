@@ -2,8 +2,9 @@ import pandas as pd
 from sklearn.metrics import mean_absolute_percentage_error
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import os
 
-def assess_model(data, model_type, stock_name, seasonal_unit, time_col='t', pred_col='yhat', tgt_col='y'):
+def assess_model(data, model_type, stock_name, seasonal_unit, model_results_folder, time_col='t', pred_col='yhat', tgt_col='y'):
     # initialize empty object for df
     df = None
     # set a ds col
@@ -41,7 +42,10 @@ def assess_model(data, model_type, stock_name, seasonal_unit, time_col='t', pred
     plt.ylabel('Stock Price')
     plt.legend(loc='upper left')
     fig.autofmt_xdate()
-    fig.savefig(f'figures/{stock_name}_{model_type}_results.png')
+    out_filename = f'{stock_name}_{model_type}_results.png'
+    out_path = os.sep.join([model_results_folder, out_filename])
+    fig.savefig(out_path)
+    # uncomment to show during run time
     # plt.show()
 
     results = {'ticker':stock_name
@@ -53,7 +57,10 @@ def assess_model(data, model_type, stock_name, seasonal_unit, time_col='t', pred
             , 'notes': ' '
             , 'n_epochs': None
                }
+
     df['model_type'] = model_type
-    df.to_csv(f'data/model_results/{stock_name}_{model_type}_results.csv', index=False)
+    out_filename = f'{stock_name}_{model_type}_results.csv'
+    out_path = os.sep.join([model_results_folder, out_filename])
+    df.to_csv(out_path, index=False)
 
     return results

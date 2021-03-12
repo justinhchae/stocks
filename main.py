@@ -7,14 +7,46 @@ import pandas as pd
 import time
 from utilities.run_experiment import run_experiment
 import os
+import logging
+
 
 def main(experiment_mode, tickers, debug_mode, demo_run_mode=None):
-    # make figures directory if not exists
-    if not os.path.exists('figures'):
-        os.makedirs('figures')
+    pd.set_option('display.max_columns', None)
+    logging.basicConfig(level=logging.INFO)
 
-    if not os.path.exists('data/model_results'):
-        os.makedirs('data/model_results')
+    # make figures directory if not exists
+    figures_folder = os.sep.join([os.environ['PWD'], 'figures'])
+    if not os.path.exists(figures_folder):
+        os.makedirs(figures_folder)
+
+    # make model_results folder if not exists
+    data_folder = os.sep.join([os.environ['PWD'], 'data'])
+    model_results_folder = os.sep.join([data_folder, 'model_results'])
+    if not os.path.exists(model_results_folder):
+        os.makedirs(model_results_folder)
+
+    # dummy data directories and paths
+    dummy_news_filename = 'dummy_news.json'
+    dummy_news_path = os.sep.join([data_folder, 'dummies', dummy_news_filename])
+    dummy_stock_filename = 'price_minute.csv'
+    dummy_stock_path = os.sep.join([data_folder, 'dummies', dummy_stock_filename])
+
+    # real data path -> class_data
+    class_data_folder = os.sep.join([os.environ['PWD'], 'data', 'class_data'])
+    if not os.path.exists(class_data_folder):
+        os.makedirs(class_data_folder)
+
+    # this section only works when having the class data files
+    try:
+        # real news path
+        historical_news_filename = 'news.json'
+        historical_news_path = os.sep.join([class_data_folder, historical_news_filename])
+
+        # real stock data path
+        historical_stock_path = os.sep.join([class_data_folder, 'historical_price'])
+    except:
+        historical_news_path = None
+        historical_stock_path = None
 
     # configure gpu if available
     is_cuda = torch.cuda.is_available()
@@ -44,7 +76,13 @@ def main(experiment_mode, tickers, debug_mode, demo_run_mode=None):
                                   , experiment_mode=experiment_mode
                                   , device=device
                                   , CPUs=CPUs
-                                  , run_modes=None)
+                                  , run_modes=None
+                                  , dummy_news_path=dummy_news_path
+                                  , dummy_stock_path=dummy_stock_path
+                                  , historical_news_path=historical_news_path
+                                  , historical_stock_path=historical_stock_path
+                                  , model_results_folder=model_results_folder
+                                  )
         # with pooling, iterate through tickers and evaluate data/models
         # sub processes ARE NOT pooled
         exp_results = list(exp_pool.imap(run_experiment_, exp_pbar))
@@ -58,7 +96,12 @@ def main(experiment_mode, tickers, debug_mode, demo_run_mode=None):
                                       , device=device
                                       , CPUs=CPUs
                                       , ticker=i
-                                      , run_modes=run_modes) for i in exp_pbar]
+                                      , run_modes=run_modes
+                                      , dummy_news_path=dummy_news_path
+                                      , dummy_stock_path=dummy_stock_path
+                                      , historical_news_path=historical_news_path
+                                      , historical_stock_path=historical_stock_path
+                                      , model_results_folder=model_results_folder) for i in exp_pbar]
 
     # capture total clock time in experiment
     exp_end = time.time()
@@ -70,14 +113,16 @@ def main(experiment_mode, tickers, debug_mode, demo_run_mode=None):
     df = df.reset_index(drop=True)
 
     # export results to a csv for analysis
-    df.to_csv('data/results.csv', index=False)
+    results_filename = 'results.csv'
+    results_output = os.sep.join([os.environ['PWD'], 'data', results_filename])
+    df.to_csv(results_output, index=False)
 
     return df
 
 if __name__ == '__main__':
     # uncomment one of two types of experiment modes
-    # experiment_mode = 'class_data'
-    experiment_mode = 'demo'
+    experiment_mode = 'class_data'
+    # experiment_mode = 'demo'
 
     # if debug mode is True, script will run normally without multiprocessing
     # set to False to run without multiprocessing, this is helpful for debugging things in serial
@@ -87,8 +132,12 @@ if __name__ == '__main__':
     tickers_historical = None
 
     try:
+        # 'data/class_data/news.json'
+        historical_news_filename = 'news.json'
+        class_data_folder = os.sep.join([os.environ['PWD'], 'data', 'class_data'])
+        historical_news_path = os.sep.join([class_data_folder, historical_news_filename])
         # to run a single ticker, slice the get stock tickers function which returns a list
-        tickers_historical = get_stock_tickers()
+        tickers_historical = get_stock_tickers(historical_news_path)[:2]
         # debugging
     except:
         pass

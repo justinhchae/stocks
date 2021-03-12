@@ -49,6 +49,10 @@ class Data(Dataset):
 def train_model(train_data, model, sequence_length, pin_memory, epochs=20, learning_rate=0.001, batch_size=16, **kwargs):
     # new train function, replace train_model1 with this
     # https://pytorch.org/docs/stable/notes/multiprocessing.html
+    if kwargs['model_results_folder']:
+        model_results_folder = kwargs['model_results_folder']
+    else:
+        model_results_folder = None
 
     # return data_loader objects for train, validation, and test
     train_set = Data(train_data, sequence_length)
@@ -132,7 +136,12 @@ def train_model(train_data, model, sequence_length, pin_memory, epochs=20, learn
                 break
 
     # plot losses
-    plot_losses(train_loss=train_losses, valid_loss=valid_losses, stock_name=kwargs['stock_name'], model_type=kwargs['run_mode'])
+    plot_losses(train_loss=train_losses
+                , valid_loss=valid_losses
+                , stock_name=kwargs['stock_name']
+                , model_type=kwargs['run_mode']
+                , model_results_folder=model_results_folder
+                )
 
     # test model
     results = test_model(model
@@ -144,6 +153,7 @@ def train_model(train_data, model, sequence_length, pin_memory, epochs=20, learn
                , n_hidden=kwargs['hidden_dim']
                , n_epochs=actual_run_epochs
                , stop_reason=stop_reason
+               , model_results_folder=model_results_folder
                )
 
     return results
@@ -203,7 +213,7 @@ def train_epoch(model, data_loader, loss_function, optimizer):
 
     return losses
 
-def plot_losses(train_loss, valid_loss, stock_name, model_type):
+def plot_losses(train_loss, valid_loss, stock_name, model_type, model_results_folder):
 
     # return averages for each epoch loss
     ave_train_loss = [np.mean(i) for i in train_loss]
@@ -219,7 +229,9 @@ def plot_losses(train_loss, valid_loss, stock_name, model_type):
     plt.ylabel('Loss')
     plt.legend()
     plt.tight_layout()
-    fig.savefig(f'figures/{stock_name}_{model_type}_loss.png')
+    out_filename = f'{stock_name}_{model_type}_loss.png'
+    out_path = os.sep.join([model_results_folder, out_filename])
+    fig.savefig(out_path)
     # plt.show()
 
     df = pd.DataFrame()
@@ -227,9 +239,11 @@ def plot_losses(train_loss, valid_loss, stock_name, model_type):
     df['validation_loss'] = ave_valid_loss
 
     df['model_type'] = model_type
-    df.to_csv(f'data/model_results/{stock_name}_{model_type}_loss.csv', index=False)
+    out_filename = f'{stock_name}_{model_type}_loss.csv'
+    out_path = os.sep.join([model_results_folder, out_filename])
+    df.to_csv(out_path, index=False)
 
-def test_model(model, data_loader, stock_name, model_type, loss_function, test_data, n_hidden, stop_reason, n_epochs):
+def test_model(model, data_loader, stock_name, model_type, loss_function, test_data, n_hidden, stop_reason, n_epochs, model_results_folder):
 
     # initialize empty lists to capture data
     losses = []
@@ -304,7 +318,9 @@ def test_model(model, data_loader, stock_name, model_type, loss_function, test_d
     plt.legend(loc="upper left")
     fig.autofmt_xdate()
     plt.tight_layout()
-    fig.savefig(f'figures/{stock_name}_{model_type}_results.png')
+    out_filename = f'{stock_name}_{model_type}_results.png'
+    out_path = os.sep.join([model_results_folder, out_filename])
+    fig.savefig(out_path)
     # plt.show()
 
     results = {'ticker': stock_name
@@ -318,7 +334,10 @@ def test_model(model, data_loader, stock_name, model_type, loss_function, test_d
               }
 
     df['model_type'] = model_type
-    df.to_csv(f'data/model_results/{stock_name}_{model_type}_results.csv', index=False)
+    out_filename = f'{stock_name}_{model_type}_results.csv'
+    out_path = os.sep.join([model_results_folder, out_filename])
+    df.to_csv(out_path, index=False)
+    # df.to_csv(f'data/model_results/{stock_name}_{model_type}_results.csv', index=False)
 
     return results
 

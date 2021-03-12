@@ -15,11 +15,6 @@ def get_news_dummies(filepath
     :return: pandas df from dict of dummy news data
     """
 
-    if filepath == 'Amazon':
-        filepath = 'data/dummies/dummy_news.json'
-    else:
-        filepath = 'data/dummies/dummy_news.json'
-
     pd.set_option('display.max_columns', None)
 
     with open(filepath) as f:
@@ -48,12 +43,7 @@ def get_stock_dummies(filepath
     """
     :return: pandas df from dict of dummy news data
     """
-    if filepath == 'Amazon':
-        filepath = 'data/dummies/price_minute.csv'
-    else:
-        filepath = 'data/dummies/price_minute.csv'
 
-    pd.set_option('display.max_columns', None)
     df = pd.read_csv(filepath, index_col=0)
     df[time_col] = pd.to_datetime(df[time_col])
 
@@ -77,8 +67,7 @@ def get_stock_dummies(filepath
 
     return df
 
-
-def get_stock_tickers(filepath='data/class_data/news.json'):
+def get_stock_tickers(filepath):
     """
     :return: a list of stock tickers to analyze
     """
@@ -90,9 +79,8 @@ def get_stock_tickers(filepath='data/class_data/news.json'):
 
     return list(data.keys())
 
-
 def get_news_real(ticker
-                , filepath='data/class_data/news.json'
+                , filepath
                 , date_col='pub_time'
                 , date_conversion='US/Eastern'
                 , time_col='t'):
@@ -133,17 +121,14 @@ def get_news_real(ticker
 
 
 def get_stock_real(ticker
+                 , filepath
                  , time_col='t'
                  , data_col='c'):
     """
     :return: pandas df from dict of real news data
     help from: https://stackoverflow.com/questions/20906474/import-multiple-csv-files-into-pandas-and-concatenate-into-one-dataframe
     """
-
-    # enable view all cols
-    pd.set_option('display.max_columns', None)
-    path = r'data/class_data/historical_price'
-    target_files = glob.glob(path + f"/{ticker}*.csv")
+    target_files = glob.glob(filepath + f"/{ticker}*.csv")
 
     li = []
 
