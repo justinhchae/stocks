@@ -5,7 +5,7 @@ from utilities.run_prophet import run_prophet
 from utilities.data_chunker import chunk_data
 from utilities.evaluate_model import assess_model
 from utilities.prep_stock_data import split_stock_data, scale_stock_data
-from model.lstm_approach_1 import train_model
+from model.run_lstm import train_model
 from utilities.combine_experiment_data import combine_news_stock
 from model.LSTM import Model
 from tqdm import tqdm
