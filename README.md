@@ -56,10 +56,10 @@ git clone https://github.com/justinhchae/stocks
 conda env create -f environment.yml
 ```
 
-3. From terminal, run app
+3. From terminal, run application with Streamlit
 
 ```terminal
-streamlit run app.py
+streamlit run src/app.py
 ```
 
 4. From app, make experiement selections.
