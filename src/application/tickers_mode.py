@@ -18,7 +18,7 @@ def tickers_mode(exp_mode):
         try:
             # to run a single ticker, slice the get stock tickers function which returns a list
             historical_news_filename = 'news.json'
-            class_data_folder = os.sep.join([os.environ['PWD'], 'data', 'class_data'])
+            class_data_folder = os.sep.join([os.environ['PWD'], 'src', 'data', 'class_data'])
             historical_news_path = os.sep.join([class_data_folder, historical_news_filename])
             tickers_historical = get_stock_tickers(historical_news_path)
             # debugging

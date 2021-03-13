@@ -3,6 +3,9 @@ from application.experiment_mode import exp_mode
 from application.debug_mode import debug_mode
 from application.default_run_modes import default_runs
 from application.make_charts import make_scatter, make_histogram
+from application.latex_equations import lstm_math, arima_math, prophet_math
+from application.narratives import narrative_introduction, narrative_conclusion
+
 from utilities.get_data import get_stock_tickers
 
 import pandas as pd
@@ -14,17 +17,21 @@ class Application():
     def __init__(self):
         # the text that displays in the tab at the very top of the page
         st.set_page_config(page_title='Stock Forecasting')
-        self.sample_chart = 'application/app_data/results_app_scatter.csv'
-        self.seq_1 = Image.open('application/app_data/sequence_1.png')
-        self.seq_2 = Image.open('application/app_data/sequence_2.png')
-        self.data_1 = Image.open('application/app_data/FB_data_prep.png')
-        self.data_2 = Image.open('application/app_data/CBOE_data_prep.png')
-        self.results1 = Image.open('application/app_data/FB_arima_results.png')
-        self.results2 = Image.open('application/app_data/FB_prophet_results.png')
-        self.results31 = Image.open('application/app_data/FB_lstm1_loss.png')
-        self.results32 = Image.open('application/app_data/FB_lstm1_results.png')
-        self.results41 = Image.open('application/app_data/FB_lstm2_loss.png')
-        self.results42 = Image.open('application/app_data/FB_lstm2_results.png')
+        app_data_path = class_data_folder = os.sep.join([os.environ['PWD'], 'src', 'application', 'app_data'])
+
+        self.sample_chart = os.sep.join([app_data_path, 'results_app_scatter.csv'])
+
+        self.seq_1 = Image.open(os.sep.join([app_data_path, 'sequence_1.png']))
+        self.seq_2 = Image.open(os.sep.join([app_data_path, 'sequence_2.png']))
+
+        self.data_1 = Image.open(os.sep.join([app_data_path, 'FB_data_prep.png']))
+        self.data_2 = Image.open(os.sep.join([app_data_path, 'CBOE_data_prep.png']))
+        self.results1 = Image.open(os.sep.join([app_data_path, 'FB_arima_results.png']))
+        self.results2 = Image.open(os.sep.join([app_data_path, 'FB_prophet_results.png']))
+        self.results31 = Image.open(os.sep.join([app_data_path, 'FB_lstm1_loss.png']))
+        self.results32 = Image.open(os.sep.join([app_data_path, 'FB_lstm1_results.png']))
+        self.results41 = Image.open(os.sep.join([app_data_path, 'FB_lstm2_loss.png']))
+        self.results42 = Image.open(os.sep.join([app_data_path, 'FB_lstm2_results.png']))
 
     def run_app(self):
         # primary app call will run everything contained in frame()
@@ -46,39 +53,20 @@ class Application():
         sub_title = 'Application Experiment for Advanced Deep Learning'
         st.markdown(f"<h3 style='text-align: center; color: black;font-family:courier;'>{sub_title}</h3>", unsafe_allow_html=True)
         # display some overview graphs
-        my_expander = st.beta_expander("Project Methods and Results (Click to Hide or Show)", expanded=True)
+        my_expander = st.beta_expander("Project Methods and Results (Click to Hide or Show)", expanded=False)
         with my_expander:
             st.markdown("<h2 style='text-align: center; color: black;'> * * * </h2>", unsafe_allow_html=True)
-            st.header('Concept')
-            st.write('1. Train various models on stock data with a focus on timeseries and sentiment data from news about the stock.')
-            st.write('2. Baseline forecasting with ARIMA, Facebook Prophet, and LSTM.')
-            st.write('3. Combine prices with sentiment scores and train a second LSTM having sentiment scores.')
-            st.write('4. Compare results with MAPE (Mean Absolute Percentage Error)')
+            narrative_introduction()
 
             st.markdown("<h2 style='text-align: center; color: black;'> * * * </h2>", unsafe_allow_html=True)
             st.header('Model Overview')
-            st.markdown('LSTM Math [from PyTorch Docs](https://pytorch.org/docs/stable/generated/torch.nn.LSTM.html)')
-            st.latex(r'''i_t=σ(W_{ii}x_t+b_{ii}+W_{hi}h_{t−1}+b_{hi})''')
-            st.latex(r'''f_t=σ(W_{if}x_t+b_{if}+W_{hf}h_{t−1}+b_{hf})''')
-            st.latex(r'''g_t=tanh(W_{ig}x_t+b_{ig}+W_{hg}h_{t−1}+b_{hg})''')
-            st.latex(r'''o_t=σ(W_{io}x_t+b_{io}+W_{ho}h_{t−1}+b_{ho})''')
-            st.latex(r'''c_t=f_t⊙c_{t−1}+i_t⊙g_t''')
-            st.latex(r'''h_t=o_t⊙tanh(c_t)''')
-            # source: https://pytorch.org/docs/stable/generated/torch.nn.LSTM.html
+            lstm_math()
 
             st.markdown("<h2 style='text-align: center; color: black;'> - - </h2>", unsafe_allow_html=True)
-            st.markdown('ARIMA Math [from Duke](https://people.duke.edu/~rnau/411arim.htm)')
-            st.latex('yhat_t = μ + Y_{t-1}')
-            st.write('ARIMA stands for Autoregressive Integrated Moving Average')
-            st.write('Or in other words, a regression fit with conditional sum of square or MLE.')
-            st.write('We use parameters of (0,1,0) which is known as random walk.')
-            # source: https://people.duke.edu/~rnau/411arim.htm
+            arima_math()
 
             st.markdown("<h2 style='text-align: center; color: black;'> - - </h2>", unsafe_allow_html=True)
-            st.markdown('Facebook Prophet Math [from Facebook](https://peerj.com/preprints/3190.pdf)')
-            st.latex('y(t) = g(t) + s(t) + h(t) + e(t)')
-            st.write('Or in other words, a regression fit that accounts for trend(g), seasonality (s), holidays (h), and error (e).')
-            # source: https://peerj.com/preprints/3190.pdf
+            prophet_math()
 
             st.markdown("<h2 style='text-align: center; color: black;'> * * * </h2>", unsafe_allow_html=True)
             st.header('Data Preparation')
@@ -125,14 +113,7 @@ class Application():
             make_histogram(filename=self.sample_chart)
 
             st.markdown("<h2 style='text-align: center; color: black;'> * * * </h2>", unsafe_allow_html=True)
-            st.header('Conclusions')
-            st.write('1. Feature engineering was the most complex part of this project.')
-            st.write('2. Standard models like ARIMA and Prophet do very well within the training range.')
-            st.write('3. LSTMs do okay, both with price and with sentiment, but underperform overall.')
-            st.write('4. High levels of variance in sentiment and in price have major impacts on model accuracy.')
-            st.write('5. Combination of a forecasting model with a reinforcement learning agent may be interesting.')
-            st.write('6. Despite lower accuracy for LSTMs, they still tracked the direction of movement and only missed the magnitude.')
-            st.write(' ')
+            narrative_conclusion()
             st.markdown("<h2 style='text-align: center; color: black;'> * * * </h2>", unsafe_allow_html=True)
 
         # makes a sidebar selection in index
@@ -141,6 +122,8 @@ class Application():
         debug_type = debug_mode()
 
         demo_run_mode = None
+
+        tickers = []
 
         if experiment_mode == 'demo':
             tickers = ['Amazon']
@@ -151,7 +134,14 @@ class Application():
             elif run_modes_selection == 'Featured (LSTMs)':
                 demo_run_mode = ['lstm1', 'lstm2']
         else:
-            tickers = get_stock_tickers()
+            # dummy data directories and paths
+            try:
+                historical_news_filename = 'news.json'
+                class_data_folder = os.sep.join([os.environ['PWD'], 'src', 'data', 'class_data'])
+                historical_news_path = os.sep.join([class_data_folder, historical_news_filename])
+                tickers = get_stock_tickers(historical_news_path)
+            except:
+                pass
 
         st.write('Experiment Configuration:')
         st.write('Experiment Mode:', experiment_mode)

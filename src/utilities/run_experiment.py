@@ -5,9 +5,11 @@ from utilities.run_prophet import run_prophet
 from utilities.data_chunker import chunk_data
 from utilities.evaluate_model import assess_model
 from utilities.prep_stock_data import split_stock_data, scale_stock_data
-from model.run_lstm import train_model
 from utilities.combine_experiment_data import combine_news_stock
+
+from model.run_lstm import train_model
 from model.LSTM import Model
+
 from tqdm import tqdm
 import torch.multiprocessing as mp
 from functools import partial
@@ -17,26 +19,21 @@ def run_experiment(ticker
                    , experiment_mode
                    , device
                    , CPUs
-                   , run_modes
                    , dummy_news_path
                    , dummy_stock_path
                    , historical_news_path
                    , historical_stock_path
                    , model_results_folder
+                   , run_modes
                    ):
     #TODO: data struct error when running baseline exps in series from arima, prohpet to lstms
     # problem: cannot run all exps in a loop for demo mode
 
     params = {}
-    trouble = []
     experiment_results = []
     df = None
     sentiment_variance = None
     price_variance = None
-
-    if run_modes is None:
-        run_modes = ['arima', 'prophet']
-        # run_modes = ['lstm1', 'lstm2']
 
     if experiment_mode == 'demo':
         news_df = get_news_dummies(dummy_news_path)
@@ -91,7 +88,7 @@ def run_experiment(ticker
         try:
             news_df = get_news_real(ticker=ticker, filepath=historical_news_path)
             stock_df = get_stock_real(ticker=ticker, filepath=historical_stock_path)
-            df, sentiment_variance = combine_news_stock(stock_df=stock_df, news_df=news_df, ticker=ticker)
+            df, sentiment_variance = combine_news_stock(stock_df=stock_df, news_df=news_df, ticker=ticker, model_results_folder=model_results_folder)
             train_scaled_price, valid_scaled_price, test_scaled_price = split_stock_data(df=df[['t', 'c']], time_col='t')
 
             # get variance of price data to understand more
@@ -222,9 +219,11 @@ def run_experiment(ticker
                 result.update({'sentiment_variance':sentiment_variance
                                ,'price_variance':price_variance
                                })
+
             experiment_results.append(result)
 
         elif params['run_mode'] == 'lstm1' or params['run_mode'] == 'lstm2':
+
             result = None
             # tqdm.write('Forecasting for {} with Approach run_mode: {}'.format(params['stock_name'], run_mode))
             # if a cuda is available
@@ -270,11 +269,10 @@ def run_experiment(ticker
                 for p in tqdm(processes):
                     p.join()
             else:
-                # tqdm.write('Forecasting Without Pooling')
                 try:
                     # run train, validation, and test
                     # TODO: integrate folder path dirs fully into params dict
-                    params.update({model_results_folder:model_results_folder})
+                    params.update({'model_results_folder':model_results_folder})
                     result = train_model(**params)
                 except:
                     result = {'ticker': ticker

@@ -14,13 +14,18 @@ def main(experiment_mode, tickers, debug_mode, demo_run_mode=None):
     pd.set_option('display.max_columns', None)
     logging.basicConfig(level=logging.INFO)
 
+    # demo_run_mode is a list that can be toggled from the streamlit UI
+    if demo_run_mode is not None:
+        run_modes = demo_run_mode
+
+    # figures folder not being utilized at the moment
     # make figures directory if not exists
-    figures_folder = os.sep.join([os.environ['PWD'], 'figures'])
-    if not os.path.exists(figures_folder):
-        os.makedirs(figures_folder)
+    # figures_folder = os.sep.join([os.environ['PWD'], 'src', 'figures'])
+    # if not os.path.exists(figures_folder):
+    #     os.makedirs(figures_folder)
 
     # make model_results folder if not exists
-    data_folder = os.sep.join([os.environ['PWD'], 'data'])
+    data_folder = os.sep.join([os.environ['PWD'], 'src', 'data'])
     model_results_folder = os.sep.join([data_folder, 'model_results'])
     if not os.path.exists(model_results_folder):
         os.makedirs(model_results_folder)
@@ -31,20 +36,16 @@ def main(experiment_mode, tickers, debug_mode, demo_run_mode=None):
     dummy_stock_filename = 'price_minute.csv'
     dummy_stock_path = os.sep.join([data_folder, 'dummies', dummy_stock_filename])
 
-    # real data path -> class_data
-    class_data_folder = os.sep.join([os.environ['PWD'], 'data', 'class_data'])
-    if not os.path.exists(class_data_folder):
-        os.makedirs(class_data_folder)
-
-    # this section only works when having the class data files
-    try:
+    if experiment_mode == 'class_data':
+        # this section only works when having the class data files
+        class_data_folder = os.sep.join([os.environ['PWD'], 'src', 'data', 'class_data'])
         # real news path
         historical_news_filename = 'news.json'
         historical_news_path = os.sep.join([class_data_folder, historical_news_filename])
-
         # real stock data path
         historical_stock_path = os.sep.join([class_data_folder, 'historical_price'])
-    except:
+        run_modes = ['arima', 'prophet', 'lstm1', 'lstm2']
+    else:
         historical_news_path = None
         historical_stock_path = None
 
@@ -76,12 +77,12 @@ def main(experiment_mode, tickers, debug_mode, demo_run_mode=None):
                                   , experiment_mode=experiment_mode
                                   , device=device
                                   , CPUs=CPUs
-                                  , run_modes=None
                                   , dummy_news_path=dummy_news_path
                                   , dummy_stock_path=dummy_stock_path
                                   , historical_news_path=historical_news_path
                                   , historical_stock_path=historical_stock_path
                                   , model_results_folder=model_results_folder
+                                  , run_modes=run_modes
                                   )
         # with pooling, iterate through tickers and evaluate data/models
         # sub processes ARE NOT pooled
@@ -91,17 +92,18 @@ def main(experiment_mode, tickers, debug_mode, demo_run_mode=None):
     else:
         # in debug or demo mode, run the experiment in series
         # sub processes ARE pooled
-        run_modes = demo_run_mode
+
         exp_results = [run_experiment(experiment_mode=experiment_mode
                                       , device=device
                                       , CPUs=CPUs
                                       , ticker=i
-                                      , run_modes=run_modes
                                       , dummy_news_path=dummy_news_path
                                       , dummy_stock_path=dummy_stock_path
                                       , historical_news_path=historical_news_path
                                       , historical_stock_path=historical_stock_path
-                                      , model_results_folder=model_results_folder) for i in exp_pbar]
+                                      , model_results_folder=model_results_folder
+                                      , run_modes=run_modes
+                                      ) for i in exp_pbar]
 
     # capture total clock time in experiment
     exp_end = time.time()
@@ -114,7 +116,7 @@ def main(experiment_mode, tickers, debug_mode, demo_run_mode=None):
 
     # export results to a csv for analysis
     results_filename = 'results.csv'
-    results_output = os.sep.join([os.environ['PWD'], 'data', results_filename])
+    results_output = os.sep.join([os.environ['PWD'], 'src', 'data', results_filename])
     df.to_csv(results_output, index=False)
 
     return df
@@ -133,11 +135,10 @@ if __name__ == '__main__':
 
     try:
         historical_news_filename = 'news.json'
-        class_data_folder = os.sep.join([os.environ['PWD'], 'data', 'class_data'])
+        class_data_folder = os.sep.join([os.environ['PWD'], 'src', 'data', 'class_data'])
         historical_news_path = os.sep.join([class_data_folder, historical_news_filename])
         # to run a single ticker, slice the get stock tickers function which returns a list
         tickers_historical = get_stock_tickers(historical_news_path)[:2]
-        # debugging
     except:
         pass
 
@@ -145,5 +146,5 @@ if __name__ == '__main__':
     tickers = ['Amazon'] if experiment_mode == 'demo' else tickers_historical
 
     main(experiment_mode=experiment_mode
-         , tickers=tickers
-         , debug_mode=debug_mode)
+       , tickers=tickers
+       , debug_mode=debug_mode)

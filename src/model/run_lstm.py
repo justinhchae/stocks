@@ -49,6 +49,7 @@ class Data(Dataset):
 def train_model(train_data, model, sequence_length, pin_memory, epochs=20, learning_rate=0.001, batch_size=16, **kwargs):
     # new train function, replace train_model1 with this
     # https://pytorch.org/docs/stable/notes/multiprocessing.html
+    # TODO: don't do this, fix how to better pass results folder
     if kwargs['model_results_folder']:
         model_results_folder = kwargs['model_results_folder']
     else:

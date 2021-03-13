@@ -3,10 +3,12 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 import numpy as np
+import os
 
 def combine_news_stock(stock_df
                        , news_df
                        , ticker
+                       , model_results_folder
                        , time_col='t'
                        , data_col='c'
                        , sentiment_col='compound'
@@ -74,7 +76,9 @@ def combine_news_stock(stock_df
     plt.xlabel('Time')
     plt.legend()
     fig.autofmt_xdate()
-    fig.savefig(f'figures/{ticker}_data_prep.png')
+    out_filename = f'{ticker}_data_prep.png'
+    out_path = os.sep.join([model_results_folder, out_filename])
+    fig.savefig(out_path)
     # plt.show()
 
     return df, sentiment_variance
