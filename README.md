@@ -16,7 +16,7 @@ Based on the paper ["Stock Price Prediction Using News Sentiment Analysis"](http
 
 * In the scatter plot of variance and error, plots that are small in size, low, and left are better. 
 
-![results](https://github.com/justinhchae/stocks/blob/main/app_scatter.png)
+![results](https://github.com/justinhchae/stocks/blob/main/images/app_scatter.png)
 
 ## For Instructor Evaluation
 
