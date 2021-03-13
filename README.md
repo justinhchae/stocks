@@ -28,6 +28,8 @@ Based on the paper ["Stock Price Prediction Using News Sentiment Analysis"](http
 <project_root>
   /src
     /data
+    /dummies # contains dummy stock and news data
+    /model_results # created on execution and holds results of training
     /class_data
       /historical_price # to contain all unzipped CSV files
       /news.json # the provided news data
