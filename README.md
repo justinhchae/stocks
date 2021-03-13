@@ -26,10 +26,11 @@ Based on the paper ["Stock Price Prediction Using News Sentiment Analysis"](http
 
 ```terminal
 <project_root>
-  /data
-  /class_data
-    /historical_price # to contain all unzipped CSV files
-    /news.json # the provided news data
+  /src
+    /data
+    /class_data
+      /historical_price # to contain all unzipped CSV files
+      /news.json # the provided news data
        
 ```
 
