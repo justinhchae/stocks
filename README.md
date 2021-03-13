@@ -56,13 +56,35 @@ git clone https://github.com/justinhchae/stocks
 conda env create -f environment.yml
 ```
 
-3. From terminal, run application with Streamlit
+3. Install depedencies (installing the yml should be enough but it does not seem to get everything).
+
+```terminal
+pip install -r requirements.txt
+```
+
+
+4. From terminal, run application with Streamlit
 
 ```terminal
 streamlit run src/app.py
 ```
 
-4. From app, make experiement selections.
+In some cases there is an error with Prophet related to a stanmodel error. The following may help based on some of the help blogs. 
+
+Try this:
+
+```terminal
+pip install fbprophet --no-cache-dir
+```
+
+Or try this:
+
+```terminal
+pip3 install fbprophet --no-cache-dir --no-binary :all:
+```
+
+
+5. From app, make experiement selections.
 
 ![application](https://github.com/justinhchae/stocks/blob/main/images/app_cap.png)
 
