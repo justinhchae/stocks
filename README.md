@@ -309,6 +309,15 @@ df['resampled_compound'] = df[sentiment_col].interpolate(method='spline', order=
 
 * In class_data mode, we evaluate many stocks and apply MP to iterate through the entire training cycle for each stock in parallel.
 
+## Conclusions
+
+1. Feature engineering was the most complex part of this project.
+2. Standard models like ARIMA and Prophet do very well within the training range.
+3. LSTMs do okay, both with price and with sentiment, but underperform overall.
+4. High levels of variance in sentiment and in price have major impacts on model accuracy.
+5. Combination of a forecasting model with a reinforcement learning agent may be interesting.
+6. Despite lower accuracy for LSTMs, they still tracked the direction of movement and only missed the magnitude.
+
 ## Relevant Documentation
 
 * [PyTorch](https://pytorch.org/docs/stable/generated/torch.nn.LSTM.html)
