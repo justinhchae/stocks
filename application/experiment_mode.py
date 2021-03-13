@@ -2,8 +2,9 @@ from application.config import *
 import os
 
 def exp_mode():
+    class_data_folder = os.sep.join([os.environ['PWD'], 'data', 'class_data'])
 
-    if not os.path.exists('data/class_data'):
+    if not os.path.exists(class_data_folder):
         pick_list_values = ['demo']
     else:
         # set available modes for data
