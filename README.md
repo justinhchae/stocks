@@ -231,6 +231,8 @@ df['resampled_compound'] = df[sentiment_col].interpolate(method='spline', order=
 
 * The model in each prediction window is a new model, only predicting the next sequence.
 
+* We utilize random walk parameters for ARIMA (0,1,0) which is close enough to a default settings with no other configuration.
+
 * The ARIMA [module](https://github.com/justinhchae/stocks/blob/main/utilities/run_arima.py)
 
 ## Facebook Prophet Methodology
@@ -243,7 +245,9 @@ df['resampled_compound'] = df[sentiment_col].interpolate(method='spline', order=
 
 * The model in each prediction window is a new model, only predicting the next sequence.
 
-* The PyTorch [module](https://github.com/justinhchae/stocks/blob/main/utilities/run_prophet.py)
+* We run Prophet with default settings (auto).
+
+* The Prophet [module](https://github.com/justinhchae/stocks/blob/main/utilities/run_prophet.py)
 
 ## LSTM PyTorch Methodology
 
