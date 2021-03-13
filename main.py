@@ -121,8 +121,8 @@ def main(experiment_mode, tickers, debug_mode, demo_run_mode=None):
 
 if __name__ == '__main__':
     # uncomment one of two types of experiment modes
-    experiment_mode = 'class_data'
-    # experiment_mode = 'demo'
+    # experiment_mode = 'class_data'
+    experiment_mode = 'demo'
 
     # if debug mode is True, script will run normally without multiprocessing
     # set to False to run without multiprocessing, this is helpful for debugging things in serial
@@ -132,7 +132,6 @@ if __name__ == '__main__':
     tickers_historical = None
 
     try:
-        # 'data/class_data/news.json'
         historical_news_filename = 'news.json'
         class_data_folder = os.sep.join([os.environ['PWD'], 'data', 'class_data'])
         historical_news_path = os.sep.join([class_data_folder, historical_news_filename])
