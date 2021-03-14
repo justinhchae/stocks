@@ -1,8 +1,8 @@
-from application.config import *
+from src.application.config import *
 import os
 
 def exp_mode():
-    class_data_folder = os.sep.join([os.environ['PWD'], 'src', 'data', 'class_data'])
+    class_data_folder = os.sep.join([os.environ['PWD'], 'data', 'class_data'])
 
     if not os.path.exists(class_data_folder):
         pick_list_values = ['demo']

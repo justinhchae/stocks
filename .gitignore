@@ -131,14 +131,12 @@ dmypy.json
 
 # image
 figures/
-data/facebook_prophet_results.csv
+/data/facebook_prophet_results.csv
 *.json
-data/real/news.json
+/data/real/news.json
 *.zip
 data/class_data
 results.csv
 trouble.txt
 /data/model_results/
-/src/data/class_data/
-/src/data/model_results/
-/src/figures/
+/data/class_data/

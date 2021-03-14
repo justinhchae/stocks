@@ -1,4 +1,4 @@
-from utilities.get_reddit import *
+from src.utilities.get_reddit import *
 
 # reddits = GetReddit()
 

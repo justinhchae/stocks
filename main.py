@@ -1,31 +1,43 @@
-from utilities.get_data import get_stock_tickers
+from src.utilities.get_data import get_stock_tickers
+from src.utilities.run_experiment import run_experiment
+
+import pandas as pd
+
 from tqdm import tqdm
 import torch
 import torch.multiprocessing as mp
 from functools import partial
-import pandas as pd
-import time
-from utilities.run_experiment import run_experiment
+
 import os
 import logging
+import time
 
 
 def main(experiment_mode, tickers, debug_mode, demo_run_mode=None):
+    """
+    the main runner for this experiment
+    :param experiment_mode: demo or class_data, default to demo mode
+    :param tickers: a list of strings that represent stock tickers
+    :param debug_mode: a boolean flag, default to False -> toggles multiprocessing
+    :param demo_run_mode: a list of strings for configuring run_modes in demo mode
+    :args -> runs a series of forecasting experiments
+    :return: a dataframe of results
+    """
+
     pd.set_option('display.max_columns', None)
     logging.basicConfig(level=logging.INFO)
 
     # demo_run_mode is a list that can be toggled from the streamlit UI
     if demo_run_mode is not None:
         run_modes = demo_run_mode
-
-    # figures folder not being utilized at the moment
-    # make figures directory if not exists
-    # figures_folder = os.sep.join([os.environ['PWD'], 'src', 'figures'])
-    # if not os.path.exists(figures_folder):
-    #     os.makedirs(figures_folder)
+    else:
+        # for demo, default to running baseline forecasting
+        # can switch to lstm1 and lstm2 here or through app UI
+        run_modes = ['arima', 'prophet']
+        # run_modes = ['lstm1', 'lstm2']
 
     # make model_results folder if not exists
-    data_folder = os.sep.join([os.environ['PWD'], 'src', 'data'])
+    data_folder = os.sep.join([os.environ['PWD'], 'data'])
     model_results_folder = os.sep.join([data_folder, 'model_results'])
     if not os.path.exists(model_results_folder):
         os.makedirs(model_results_folder)
@@ -38,7 +50,7 @@ def main(experiment_mode, tickers, debug_mode, demo_run_mode=None):
 
     if experiment_mode == 'class_data':
         # this section only works when having the class data files
-        class_data_folder = os.sep.join([os.environ['PWD'], 'src', 'data', 'class_data'])
+        class_data_folder = os.sep.join([os.environ['PWD'], 'data', 'class_data'])
         # real news path
         historical_news_filename = 'news.json'
         historical_news_path = os.sep.join([class_data_folder, historical_news_filename])
@@ -116,7 +128,7 @@ def main(experiment_mode, tickers, debug_mode, demo_run_mode=None):
 
     # export results to a csv for analysis
     results_filename = 'results.csv'
-    results_output = os.sep.join([os.environ['PWD'], 'src', 'data', results_filename])
+    results_output = os.sep.join([os.environ['PWD'], 'data', results_filename])
     df.to_csv(results_output, index=False)
 
     return df
@@ -135,10 +147,10 @@ if __name__ == '__main__':
 
     try:
         historical_news_filename = 'news.json'
-        class_data_folder = os.sep.join([os.environ['PWD'], 'src', 'data', 'class_data'])
+        class_data_folder = os.sep.join([os.environ['PWD'], 'data', 'class_data'])
         historical_news_path = os.sep.join([class_data_folder, historical_news_filename])
         # to run a single ticker, slice the get stock tickers function which returns a list
-        tickers_historical = get_stock_tickers(historical_news_path)[:2]
+        tickers_historical = get_stock_tickers(historical_news_path)
     except:
         pass
 

@@ -1,4 +1,4 @@
-from application.config import *
+from src.application.config import *
 
 
 def lstm_math():

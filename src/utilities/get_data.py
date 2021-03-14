@@ -4,8 +4,8 @@ import glob
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from utilities.clean_data import cleaner
-from utilities.sentiment_data import score_sentiment
+from src.utilities.clean_data import cleaner
+from src.utilities.sentiment_data import score_sentiment
 
 
 def get_news_dummies(filepath

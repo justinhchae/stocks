@@ -1,12 +1,12 @@
-from application.config import *
-from application.experiment_mode import exp_mode
-from application.debug_mode import debug_mode
-from application.default_run_modes import default_runs
-from application.make_charts import make_scatter, make_histogram
-from application.latex_equations import lstm_math, arima_math, prophet_math
-from application.narratives import narrative_introduction, narrative_conclusion
+from src.application.config import *
+from src.application.experiment_mode import exp_mode
+from src.application.debug_mode import debug_mode
+from src.application.default_run_modes import default_runs
+from src.application.make_charts import make_scatter, make_histogram
+from src.application.latex_equations import lstm_math, arima_math, prophet_math
+from src.application.narratives import narrative_introduction, narrative_conclusion
 
-from utilities.get_data import get_stock_tickers
+from src.utilities.get_data import get_stock_tickers
 
 import pandas as pd
 from PIL import Image
@@ -17,21 +17,21 @@ class Application():
     def __init__(self):
         # the text that displays in the tab at the very top of the page
         st.set_page_config(page_title='Stock Forecasting')
-        app_data_path = class_data_folder = os.sep.join([os.environ['PWD'], 'src', 'application', 'app_data'])
+        app_data_folder = os.sep.join([os.environ['PWD'], 'src', 'application', 'app_data'])
 
-        self.sample_chart = os.sep.join([app_data_path, 'results_app_scatter.csv'])
+        self.sample_chart = os.sep.join([app_data_folder, 'results_app_scatter.csv'])
 
-        self.seq_1 = Image.open(os.sep.join([app_data_path, 'sequence_1.png']))
-        self.seq_2 = Image.open(os.sep.join([app_data_path, 'sequence_2.png']))
+        self.seq_1 = Image.open(os.sep.join([app_data_folder, 'sequence_1.png']))
+        self.seq_2 = Image.open(os.sep.join([app_data_folder, 'sequence_2.png']))
 
-        self.data_1 = Image.open(os.sep.join([app_data_path, 'FB_data_prep.png']))
-        self.data_2 = Image.open(os.sep.join([app_data_path, 'CBOE_data_prep.png']))
-        self.results1 = Image.open(os.sep.join([app_data_path, 'FB_arima_results.png']))
-        self.results2 = Image.open(os.sep.join([app_data_path, 'FB_prophet_results.png']))
-        self.results31 = Image.open(os.sep.join([app_data_path, 'FB_lstm1_loss.png']))
-        self.results32 = Image.open(os.sep.join([app_data_path, 'FB_lstm1_results.png']))
-        self.results41 = Image.open(os.sep.join([app_data_path, 'FB_lstm2_loss.png']))
-        self.results42 = Image.open(os.sep.join([app_data_path, 'FB_lstm2_results.png']))
+        self.data_1 = Image.open(os.sep.join([app_data_folder, 'FB_data_prep.png']))
+        self.data_2 = Image.open(os.sep.join([app_data_folder, 'CBOE_data_prep.png']))
+        self.results1 = Image.open(os.sep.join([app_data_folder, 'FB_arima_results.png']))
+        self.results2 = Image.open(os.sep.join([app_data_folder, 'FB_prophet_results.png']))
+        self.results31 = Image.open(os.sep.join([app_data_folder, 'FB_lstm1_loss.png']))
+        self.results32 = Image.open(os.sep.join([app_data_folder, 'FB_lstm1_results.png']))
+        self.results41 = Image.open(os.sep.join([app_data_folder, 'FB_lstm2_loss.png']))
+        self.results42 = Image.open(os.sep.join([app_data_folder, 'FB_lstm2_results.png']))
 
     def run_app(self):
         # primary app call will run everything contained in frame()
@@ -137,7 +137,7 @@ class Application():
             # dummy data directories and paths
             try:
                 historical_news_filename = 'news.json'
-                class_data_folder = os.sep.join([os.environ['PWD'], 'src', 'data', 'class_data'])
+                class_data_folder = os.sep.join([os.environ['PWD'], 'data', 'class_data'])
                 historical_news_path = os.sep.join([class_data_folder, historical_news_filename])
                 tickers = get_stock_tickers(historical_news_path)
             except:

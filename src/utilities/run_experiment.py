@@ -1,14 +1,14 @@
-from utilities.get_data import get_news_dummies, get_stock_dummies, get_news_real, get_stock_real, get_stock_tickers
-from utilities.clean_data import trading_days
-from utilities.run_arima import run_arima
-from utilities.run_prophet import run_prophet
-from utilities.data_chunker import chunk_data
-from utilities.evaluate_model import assess_model
-from utilities.prep_stock_data import split_stock_data, scale_stock_data
-from utilities.combine_experiment_data import combine_news_stock
+from src.utilities.get_data import get_news_dummies, get_stock_dummies, get_news_real, get_stock_real, get_stock_tickers
+from src.utilities.clean_data import trading_days
+from src.utilities.run_arima import run_arima
+from src.utilities.run_prophet import run_prophet
+from src.utilities.data_chunker import chunk_data
+from src.utilities.evaluate_model import assess_model
+from src.utilities.prep_stock_data import split_stock_data, scale_stock_data
+from src.utilities.combine_experiment_data import combine_news_stock
 
-from model.run_lstm import train_model
-from model.LSTM import Model
+from src.model.run_lstm import train_model
+from src.model.LSTM import Model
 
 from tqdm import tqdm
 import torch.multiprocessing as mp
