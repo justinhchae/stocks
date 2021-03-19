@@ -10,7 +10,7 @@ Based on the paper ["Stock Price Prediction Using News Sentiment Analysis"](http
 
 ## High-level Results
 
-* See our [streamlit app](https://share.streamlit.io/justinhchae/stocks/presentation_only/app.py) for more details. 
+* Download this repo and run the streamlit app for more details!
 
 * Based on preliminary analysis, all models tend to perform well when the variance of price and sentiment data is relatively lower. 
 
