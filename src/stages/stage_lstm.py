@@ -50,10 +50,10 @@ def train_model(train_data, model, sequence_length, pin_memory, epochs=20, learn
     # new train function, replace train_model1 with this
     # https://pytorch.org/docs/stable/notes/multiprocessing.html
     # TODO: don't do this, fix how to better pass results folder
-    # if kwargs['model_results_folder']:
-    #     model_results_folder = kwargs['model_results_folder']
-    # else:
-    model_results_folder = None
+
+    model_results_folder = kwargs['model_results_folder']
+    write_data = kwargs['write_data']
+
 
     # return data_loader objects for train, validation, and test
     train_set = Data(train_data, sequence_length)
@@ -137,7 +137,7 @@ def train_model(train_data, model, sequence_length, pin_memory, epochs=20, learn
                 break
 
     # plot losses
-    if model_results_folder is not None:
+    if write_data:
 
         plot_losses(train_loss=train_losses
                     , valid_loss=valid_losses
@@ -157,6 +157,7 @@ def train_model(train_data, model, sequence_length, pin_memory, epochs=20, learn
                , n_epochs=actual_run_epochs
                , stop_reason=stop_reason
                , model_results_folder=model_results_folder
+               , write_data=write_data
                )
 
     return results
@@ -246,7 +247,19 @@ def plot_losses(train_loss, valid_loss, stock_name, model_type, model_results_fo
     out_path = os.sep.join([model_results_folder, out_filename])
     df.to_csv(out_path, index=False)
 
-def test_model(model, data_loader, stock_name, model_type, loss_function, test_data, n_hidden, stop_reason, n_epochs, model_results_folder):
+
+def test_model(model
+               , data_loader
+               , stock_name
+               , model_type
+               , loss_function
+               , test_data
+               , n_hidden
+               , stop_reason
+               , n_epochs
+               , model_results_folder
+               , write_data
+               ):
 
     # initialize empty lists to capture data
     losses = []
@@ -293,7 +306,17 @@ def test_model(model, data_loader, stock_name, model_type, loss_function, test_d
     df['targets'] = targets
     df['predictions'] = predictions
 
-    if model_results_folder is not None:
+    results = {'ticker': stock_name
+        , 'N': len(test_data)
+        , 'MAPE': error
+        , 'date_start': min(test_data['t'])
+        , 'date_end': max(test_data['t'])
+        , 'model_type': model_type
+        , 'notes': stop_reason
+        , 'n_epochs': n_epochs
+               }
+
+    if write_data:
 
         # plot the data
         fig, ax, = plt.subplots()
@@ -328,21 +351,9 @@ def test_model(model, data_loader, stock_name, model_type, loss_function, test_d
         fig.savefig(out_path)
         # plt.show()
 
-
-
         df['model_type'] = model_type
         out_filename = f'{stock_name}_{model_type}_results.csv'
         out_path = os.sep.join([model_results_folder, out_filename])
         df.to_csv(out_path, index=False)
-        # df.to_csv(f'data/model_results/{stock_name}_{model_type}_results.csv', index=False)
 
-    results = {'ticker': stock_name
-        , 'N': len(test_data)
-        , 'MAPE': error
-        , 'date_start': min(test_data['t'])
-        , 'date_end': max(test_data['t'])
-        , 'model_type': model_type
-        , 'notes': stop_reason
-        , 'n_epochs': n_epochs
-               }
     return results

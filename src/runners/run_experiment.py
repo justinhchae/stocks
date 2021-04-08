@@ -1,13 +1,13 @@
-from src.utilities.get_data import get_news_dummies, get_stock_dummies, get_news_real, get_stock_real, get_stock_tickers
+from src.utilities.get_data import get_news_dummies, get_stock_dummies, get_news_real, get_stock_real
 from src.utilities.clean_data import trading_days
-from src.utilities.run_arima import run_arima
-from src.utilities.run_prophet import run_prophet
+from src.stages.stage_arima import run_arima
+from src.stages.stage_prophet import run_prophet
 from src.utilities.data_chunker import chunk_data
 from src.utilities.evaluate_model import assess_model
 from src.utilities.prep_stock_data import split_stock_data, scale_stock_data
 from src.utilities.combine_experiment_data import combine_news_stock
 
-from src.model.run_lstm import train_model
+from src.stages.stage_lstm import train_model
 from src.model.LSTM import Model
 
 from tqdm import tqdm
@@ -25,6 +25,9 @@ def run_experiment(ticker
                    , historical_stock_path
                    , model_results_folder
                    , run_modes
+                   , write_data
+                   , time_col='t'
+                   , price_col='c'
                    ):
     #TODO: data struct error when running baseline exps in series from arima, prohpet to lstms
     # problem: cannot run all exps in a loop for demo mode
@@ -40,19 +43,20 @@ def run_experiment(ticker
         stock_df = get_stock_dummies(dummy_stock_path)
         # transform to minute-by-minute sentiment score and stock price
         df = trading_days(news_df, stock_df)
-        ## run data splits on just price data
+        # run data splits on just price data
         # split data into train, validation, and testing
-        train, valid, test = split_stock_data(df=df[['t', 'c']], time_col='t')
+        train, valid, test = split_stock_data(df=df[[time_col, price_col]], time_col=time_col)
         # scale stock data
-        train_scaled_price, valid_scaled_price, test_scaled_price, scaler = scale_stock_data(train=train, valid=valid,
-                                                                                             test=test)
+        train_scaled_price, valid_scaled_price, test_scaled_price, scaler = scale_stock_data(train=train
+                                                                                           , valid=valid
+                                                                                           , test=test)
         # set parameters unique to demonstration/dummy data
-        ## run data splits with both price and sentiment data
-        train, valid, test = split_stock_data(df=df, time_col='t')
+        # run data splits with both price and sentiment data
+        train, valid, test = split_stock_data(df=df, time_col=time_col)
         # scale stock data
-        train_scaled_sentiment, valid_scaled_sentiment, test_scaled_sentiment, scaler = scale_stock_data(train=train,
-                                                                                                         valid=valid,
-                                                                                                         test=test)
+        train_scaled_sentiment, valid_scaled_sentiment, test_scaled_sentiment, scaler = scale_stock_data(train=train
+                                                                                                       , valid=valid
+                                                                                                       , test=test)
         # set parameters unique to demonstration/dummy data
         params = {'stock_name': ticker
                 , 'train_data': train_scaled_price
@@ -76,7 +80,10 @@ def run_experiment(ticker
                 , 'device': device
                 , 'max_processes': CPUs // 2
                 , 'pin_memory': False
-                , 'enable_mp': True # only run mp for demo mode for child processes
+                  # only run mp in demo mode for child processes
+                , 'enable_mp': True
+                , 'write_data': write_data
+                , 'model_results_folder': model_results_folder
                 }
 
     elif experiment_mode == 'class_data':
@@ -169,44 +176,21 @@ def run_experiment(ticker
                 model_ = partial(model
                                  , n_prediction_units=params['n_prediction_units']
                                  , seasonal_unit=params['seasonal_unit']
-                                 , prediction_frequency=params['prediction_unit'])
-                try:
-                    # with pooling, iterate through model and data
-                    results = list(p.imap(model_, chunked_data_pbar))
-                    p.close()
-                    p.join()
-                except:
-                    # trouble.append((ticker, run_mode))
-                    # tqdm.write(f'Trouble with {ticker}, skipping to next.')
-                    result = {'ticker': ticker
-                             , 'N': ' '
-                             , 'MAPE': ' '
-                             , 'date_start': ' '
-                             , 'date_end': ' '
-                             , 'model_type': ' '
-                             , 'notes': f'error during {run_mode}'
-                              }
-                    continue
+                                 , prediction_frequency=params['prediction_unit']
+                                 )
+
+                # with pooling, iterate through model and data
+                results = list(p.imap(model_, chunked_data_pbar))
+                p.close()
+                p.join()
 
             else:
-                # tqdm.write('Forecasting Without Pooling')
                 # list comprehension through the same model and data without pooling
-                try:
-                    results = [model(i
-                                     , n_prediction_units=params['n_prediction_units']
-                                     , seasonal_unit=params['seasonal_unit']
-                                     , prediction_frequency=params['prediction_unit']) for i in chunked_data_pbar]
-                    # assess model results with MAPE and visualize predict V target
-                except:
-                    result = {'ticker': ticker
-                             , 'N': ' '
-                             , 'MAPE': ' '
-                             , 'date_start': ' '
-                             , 'date_end': ' '
-                             , 'model_type': ' '
-                             , 'notes': f'error during {run_mode}'
-                              }
-                    pass
+                results = [model(i
+                                 , n_prediction_units=params['n_prediction_units']
+                                 , seasonal_unit=params['seasonal_unit']
+                                 , prediction_frequency=params['prediction_unit']) for i in chunked_data_pbar]
+                # assess model results with MAPE and visualize predict V target
 
             if results:
                 result = assess_model(results
@@ -214,6 +198,7 @@ def run_experiment(ticker
                                       , stock_name=params['stock_name']
                                       , seasonal_unit=params['seasonal_unit']
                                       , model_results_folder=model_results_folder
+                                      , write_data=write_data
                                       )
 
                 result.update({'sentiment_variance':sentiment_variance
@@ -269,21 +254,11 @@ def run_experiment(ticker
                 for p in tqdm(processes):
                     p.join()
             else:
-                try:
-                    # run train, validation, and test
-                    # TODO: integrate folder path dirs fully into params dict
-                    params.update({'model_results_folder':model_results_folder})
-                    result = train_model(**params)
-                except:
-                    result = {'ticker': ticker
-                             , 'N': ' '
-                             , 'MAPE': ' '
-                             , 'date_start': ' '
-                             , 'date_end': ' '
-                             , 'model_type': ' '
-                             , 'notes': f'error during {run_mode}'
-                               }
-                    pass
+
+                # run train, validation, and test
+                # TODO: integrate folder path dirs fully into params dict
+                params.update({'model_results_folder': model_results_folder})
+                result = train_model(**params)
 
                 result.update({'sentiment_variance': sentiment_variance
                              , 'price_variance': price_variance

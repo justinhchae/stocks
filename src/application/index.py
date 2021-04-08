@@ -11,7 +11,7 @@ from src.utilities.get_data import get_stock_tickers
 import pandas as pd
 from PIL import Image
 
-from main import main
+from main import run_main
 
 class Application():
     def __init__(self):
@@ -38,7 +38,7 @@ class Application():
         self.frame()
 
     def frame(self):
-        # place main components of page here, add more as necessary
+        # place run_main components of page here, add more as necessary
         self.title()
         self.body()
         self.footer()
@@ -158,10 +158,10 @@ class Application():
 
             with st.spinner('Running The Experiment!...'):
                 if demo_run_mode:
-                    results_df = main(experiment_mode=experiment_mode, tickers=tickers, debug_mode=debug_type, demo_run_mode=demo_run_mode)
+                    results_df = run_main(experiment_mode=experiment_mode, tickers=tickers, debug_mode=debug_type, demo_run_mode=demo_run_mode)
 
                 else:
-                    results_df = main(experiment_mode=experiment_mode, tickers=tickers, debug_mode=debug_type)
+                    results_df = run_main(experiment_mode=experiment_mode, tickers=tickers, debug_mode=debug_type)
 
             st.success('Yay! Made Predictions.')
 
