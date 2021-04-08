@@ -33,8 +33,8 @@ def main(experiment_mode, tickers, debug_mode, demo_run_mode=None):
     else:
         # for demo, default to running baseline forecasting
         # can switch to lstm1 and lstm2 here or through app UI
-        run_modes = ['arima', 'prophet']
-        # run_modes = ['lstm1', 'lstm2']
+        # run_modes = ['arima', 'prophet']
+        run_modes = ['lstm1', 'lstm2']
 
     # make model_results folder if not exists
     data_folder = os.sep.join([os.environ['PWD'], 'data'])

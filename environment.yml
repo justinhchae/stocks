@@ -1,7 +1,7 @@
 name: stocks
 channels:
-  - anaconda
   - conda-forge
+  - anaconda
   - defaults
 dependencies:
   - appnope=0.1.0=py38_1001
@@ -176,9 +176,7 @@ dependencies:
     - srsly==2.4.0
     - statsmodels==0.12.2
     - streamlit==0.78.0
-    - tensorboard==2.4.1
     - tensorboard-plugin-wit==1.8.0
-    - tensorflow==2.4.1
     - tensorflow-estimator==2.4.0
     - termcolor==1.1.0
     - texthero==1.0.9
@@ -204,4 +202,4 @@ dependencies:
     - werkzeug==1.0.1
     - wordcloud==1.8.1
     - wrapt==1.12.1
-prefix: /opt/anaconda3/envs/stocks
+prefix: /Users/cheese/opt/anaconda3/envs/stocks
