@@ -251,7 +251,7 @@ def run_experiment(ticker
             # update the model in the dict (not sure if this is 100% necessary), check again later
             params.update({'model': model})
             # force no multiprocessing due to performance issues
-            params.update({'enable_mp': False})
+            # params.update({'enable_mp': False})
 
             if params['enable_mp']:
                 params['model'].share_memory()

@@ -50,10 +50,10 @@ def train_model(train_data, model, sequence_length, pin_memory, epochs=20, learn
     # new train function, replace train_model1 with this
     # https://pytorch.org/docs/stable/notes/multiprocessing.html
     # TODO: don't do this, fix how to better pass results folder
-    if kwargs['model_results_folder']:
-        model_results_folder = kwargs['model_results_folder']
-    else:
-        model_results_folder = None
+    # if kwargs['model_results_folder']:
+    #     model_results_folder = kwargs['model_results_folder']
+    # else:
+    model_results_folder = None
 
     # return data_loader objects for train, validation, and test
     train_set = Data(train_data, sequence_length)
@@ -137,12 +137,14 @@ def train_model(train_data, model, sequence_length, pin_memory, epochs=20, learn
                 break
 
     # plot losses
-    plot_losses(train_loss=train_losses
-                , valid_loss=valid_losses
-                , stock_name=kwargs['stock_name']
-                , model_type=kwargs['run_mode']
-                , model_results_folder=model_results_folder
-                )
+    if model_results_folder is not None:
+
+        plot_losses(train_loss=train_losses
+                    , valid_loss=valid_losses
+                    , stock_name=kwargs['stock_name']
+                    , model_type=kwargs['run_mode']
+                    , model_results_folder=model_results_folder
+                    )
 
     # test model
     results = test_model(model
@@ -291,53 +293,56 @@ def test_model(model, data_loader, stock_name, model_type, loss_function, test_d
     df['targets'] = targets
     df['predictions'] = predictions
 
-    # plot the data
-    fig, ax, = plt.subplots()
+    if model_results_folder is not None:
 
-    # the actual data
-    ax.plot(test_data['t']
-          , test_data['c']
-          , color='red'
-          , label='Scaled Price'
-            )
+        # plot the data
+        fig, ax, = plt.subplots()
 
-    # the predicted data at the equivalent index of target
-    ax.plot(test_data['t'][:len(predictions)]
-          , predictions
-          , color='blue'
-          , marker='o'
-          , markersize=3
-          , linestyle='dashed'
-          , linewidth=1
-          , label='Predicted Price'
-           )
+        # the actual data
+        ax.plot(test_data['t']
+              , test_data['c']
+              , color='red'
+              , label='Scaled Price'
+                )
 
-    h = n_hidden
-    ax.set_title('{} Stock Price Prediction | Hidden: {} | Epochs: {}\nWith {}, Test MAPE: {:.4f}, Mean Test Loss:{:.4f}'.format(stock_name, h, n_epochs,model_type, error, average_loss))
-    plt.xlabel('Time')
-    plt.ylabel('Stock Price')
-    plt.legend(loc="upper left")
-    fig.autofmt_xdate()
-    plt.tight_layout()
-    out_filename = f'{stock_name}_{model_type}_results.png'
-    out_path = os.sep.join([model_results_folder, out_filename])
-    fig.savefig(out_path)
-    # plt.show()
+        # the predicted data at the equivalent index of target
+        ax.plot(test_data['t'][:len(predictions)]
+              , predictions
+              , color='blue'
+              , marker='o'
+              , markersize=3
+              , linestyle='dashed'
+              , linewidth=1
+              , label='Predicted Price'
+               )
+
+        h = n_hidden
+        ax.set_title('{} Stock Price Prediction | Hidden: {} | Epochs: {}\nWith {}, Test MAPE: {:.4f}, Mean Test Loss:{:.4f}'.format(stock_name, h, n_epochs,model_type, error, average_loss))
+        plt.xlabel('Time')
+        plt.ylabel('Stock Price')
+        plt.legend(loc="upper left")
+        fig.autofmt_xdate()
+        plt.tight_layout()
+        out_filename = f'{stock_name}_{model_type}_results.png'
+        out_path = os.sep.join([model_results_folder, out_filename])
+        fig.savefig(out_path)
+        # plt.show()
+
+
+
+        df['model_type'] = model_type
+        out_filename = f'{stock_name}_{model_type}_results.csv'
+        out_path = os.sep.join([model_results_folder, out_filename])
+        df.to_csv(out_path, index=False)
+        # df.to_csv(f'data/model_results/{stock_name}_{model_type}_results.csv', index=False)
 
     results = {'ticker': stock_name
-             , 'N': len(test_data)
-             , 'MAPE': error
-             , 'date_start': min(test_data['t'])
-             , 'date_end': max(test_data['t'])
-             , 'model_type': model_type
-             , 'notes': stop_reason
-             , 'n_epochs': n_epochs
-              }
-
-    df['model_type'] = model_type
-    out_filename = f'{stock_name}_{model_type}_results.csv'
-    out_path = os.sep.join([model_results_folder, out_filename])
-    df.to_csv(out_path, index=False)
-    # df.to_csv(f'data/model_results/{stock_name}_{model_type}_results.csv', index=False)
-
+        , 'N': len(test_data)
+        , 'MAPE': error
+        , 'date_start': min(test_data['t'])
+        , 'date_end': max(test_data['t'])
+        , 'model_type': model_type
+        , 'notes': stop_reason
+        , 'n_epochs': n_epochs
+               }
     return results
