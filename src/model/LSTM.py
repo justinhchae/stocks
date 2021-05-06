@@ -11,6 +11,7 @@ class Model(nn.Module):
                  , hidden_dim=16
                  , output_dim=1
                  , num_layers=1
+                 , dropout=.1
                  , **kwargs
                  ):
 
@@ -33,6 +34,8 @@ class Model(nn.Module):
 
         # Define the output layer
         self.linear = nn.Linear(self.hidden_dim * self.seq_length, output_dim)
+        # add dropout
+        self.dropout = nn.Dropout(dropout)
 
     def init_hidden(self, batch_size):
         # This is what we'll initialise our hidden state as
@@ -42,6 +45,7 @@ class Model(nn.Module):
     def forward(self, x):
         batch_size, seq_len, _ = x.size()
         # Forward pass through LSTM layer
+        x = self.dropout(x)
         lstm_out, self.hidden = self.lstm(x, self.hidden)
         predictions = self.linear(lstm_out.contiguous().view(batch_size, -1))
         return predictions

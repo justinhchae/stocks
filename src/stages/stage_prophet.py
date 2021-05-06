@@ -37,7 +37,13 @@ class suppress_stdout_stderr(object):
         for fd in self.null_fds + self.save_fds:
             os.close(fd)
 
-def run_prophet(chunked_data, seasonal_unit, prediction_frequency, n_prediction_units=1):
+
+def run_prophet(chunked_data
+                , seasonal_unit
+                , prediction_frequency
+                , n_prediction_units=1
+                , progress_bar=None
+                ):
     # install gotcha: https://github.com/facebook/prophet/issues/775#issuecomment-449139135
     ds_col = 'ds'
     results = []

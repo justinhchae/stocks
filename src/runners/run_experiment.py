@@ -28,9 +28,8 @@ def run_experiment(ticker
                    , write_data
                    , time_col='t'
                    , price_col='c'
+                   , progress_bar=None
                    ):
-    #TODO: data struct error when running baseline exps in series from arima, prohpet to lstms
-    # problem: cannot run all exps in a loop for demo mode
 
     params = {}
     experiment_results = []
@@ -77,6 +76,7 @@ def run_experiment(ticker
                 , 'batch_size': 16
                 , 'hidden_dim': 64
                 , 'n_prediction_units': 15
+                , 'dropout': .1
                 , 'device': device
                 , 'max_processes': CPUs // 2
                 , 'pin_memory': False
@@ -84,6 +84,7 @@ def run_experiment(ticker
                 , 'enable_mp': True
                 , 'write_data': write_data
                 , 'model_results_folder': model_results_folder
+                , 'progress_bar': progress_bar
                 }
 
     elif experiment_mode == 'class_data':
@@ -147,6 +148,8 @@ def run_experiment(ticker
         params.update({'run_mode': run_mode})
 
         if params['run_mode'] == 'arima' or params['run_mode'] == 'prophet':
+            params['progress_bar'].set_description(desc=f'Starting {params["run_mode"]} Experiment for {ticker}')
+            params['progress_bar'].refresh()
             results = None
             # tqdm.write('\nForecasting for {} with Approach run_mode: {}'.format(params['stock_name'], run_mode))
             ## baselines can be trained on all data, but for comparison to lstm, train predict on test set
@@ -161,9 +164,9 @@ def run_experiment(ticker
 
             # chunk data
             chunked_data = chunk_data(**params)
-            desc = '{}-{}'.format(params['stock_name'], params['run_mode'])
+            # desc = '{}-{}'.format(params['stock_name'], params['run_mode'])
 
-            chunked_data_pbar = tqdm(chunked_data, desc=desc, position=0, leave=True)
+            chunked_data_pbar = tqdm(chunked_data, desc=f'Running {params["run_mode"]} on {ticker}', position=0, leave=False)
 
             # the model_ object is a temporary object to be updated during mp with partial()
             model = run_arima if run_mode == 'arima' else run_prophet if run_mode == 'prophet' else None
@@ -208,11 +211,12 @@ def run_experiment(ticker
             experiment_results.append(result)
 
         elif params['run_mode'] == 'lstm1' or params['run_mode'] == 'lstm2':
-
+            params['progress_bar'].set_description(desc=f'Running {params["run_mode"]} Experiment for {ticker}')
+            params['progress_bar'].refresh()
             result = None
             # tqdm.write('Forecasting for {} with Approach run_mode: {}'.format(params['stock_name'], run_mode))
             # if a cuda is available
-            if device=='cpu':
+            if device == 'cpu':
                 params.update({'num_workers': 1, 'pin_memory': True})
 
             # lstm1 has one input feature, lstm2 has two input features
@@ -235,8 +239,8 @@ def run_experiment(ticker
             model = Model(**params)
             # update the model in the dict (not sure if this is 100% necessary), check again later
             params.update({'model': model})
-            # force no multiprocessing due to performance issues
-            # params.update({'enable_mp': False})
+            # force no multiprocessing on nn experiements due to performance issues
+            params.update({'enable_mp': False})
 
             if params['enable_mp']:
                 params['model'].share_memory()
@@ -244,7 +248,6 @@ def run_experiment(ticker
                 processes = []
                 # tqdm.write('Pooling {}x Processes with Multiprocessor'.format(params['max_processes']))
                 # assign processes
-                # pooling lstm on cpu is mothball for now due to performance issues, come back later to debug
                 for rank in tqdm(range(params['max_processes'])):
                     # pool data for train_scaled to function train_model
                     p = mp.Process(target=train_model, kwargs=params)

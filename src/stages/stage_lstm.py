@@ -46,14 +46,21 @@ class Data(Dataset):
     def __getsize__(self):
         return (self.__len__())
 
-def train_model(train_data, model, sequence_length, pin_memory, epochs=20, learning_rate=0.001, batch_size=16, **kwargs):
+
+def train_model(train_data
+                , model
+                , sequence_length
+                , pin_memory
+                , epochs=20
+                , learning_rate=0.001
+                , batch_size=16
+                , **kwargs):
     # new train function, replace train_model1 with this
     # https://pytorch.org/docs/stable/notes/multiprocessing.html
-    # TODO: don't do this, fix how to better pass results folder
 
     model_results_folder = kwargs['model_results_folder']
     write_data = kwargs['write_data']
-
+    progress_bar = kwargs['progress_bar']
 
     # return data_loader objects for train, validation, and test
     train_set = Data(train_data, sequence_length)
@@ -76,7 +83,7 @@ def train_model(train_data, model, sequence_length, pin_memory, epochs=20, learn
 
     # init a progress bar object of range epoch
     # ref: https://stackoverflow.com/questions/37506645/can-i-add-message-to-the-tqdm-progressbar
-    pbar = tqdm(range(epochs), desc='Epoch', position=0, leave=True)
+    # pbar = tqdm(range(epochs), desc=kwargs['run_mode'], position=0, leave=True)
 
     # patience value for early stopping
     patience = 2
@@ -89,7 +96,8 @@ def train_model(train_data, model, sequence_length, pin_memory, epochs=20, learn
     # stopping reason for tracking
     stop_reason = 'ran all planned epochs'
     # iterate through n pbars
-    for epoch in pbar:
+    # for epoch in pbar:
+    for epoch in range(epochs):
         # if the epoch is reset more than max_epochs, break
         if actual_run_epochs > max_epochs:
             stop_reason = 'model could not converge'
@@ -109,8 +117,9 @@ def train_model(train_data, model, sequence_length, pin_memory, epochs=20, learn
         epoch_valid_loss = np.mean(valid_loss)
 
         # update and refresh progress bar each epoch
-        pbar.set_description('{}-{} Epoch {}...Mean Train Loss: {:.5f}...Mean Valid Loss: {:.5f}'.format(kwargs['stock_name'],kwargs['run_mode'], epoch, epoch_train_loss, epoch_valid_loss))
-        pbar.refresh()
+        if progress_bar is not None:
+            progress_bar.set_description('{}-{} Epoch {}/{}...Mean Train Loss: {:.5f}...Mean Valid Loss: {:.5f}'.format(kwargs['stock_name'],kwargs['run_mode'], epoch, epochs, epoch_train_loss, epoch_valid_loss))
+            progress_bar.refresh()
 
         # testing some early stopping criteria
         if epoch > patience:

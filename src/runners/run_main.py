@@ -44,6 +44,7 @@ def run_main(experiment_mode
     else:
         # EDIT this list to tailor run modes
         run_modes = ['arima', 'prophet', 'lstm1', 'lstm2']
+        # run_modes = ['lstm1']
 
     # dummy data directories and paths
     dummy_news_path = os.sep.join([data_folder, 'dummies', dummy_news_filename])
@@ -59,15 +60,11 @@ def run_main(experiment_mode
     CPUs = mp.cpu_count()
     max_process = CPUs // 2
 
-    # print what's happening for warm fuzzy feels
-    n_tickers = len(tickers)
-    logging.info(f'Experimenting with {n_tickers} tickers:')
-
     # capture exp start time for performance evaluation
     exp_start = time.time()
 
     # assign list of tickers to tqdm object for status tracking
-    exp_pbar = tqdm(tickers, desc='Experiment Framework', position=0, leave=True)
+    exp_pbar = tqdm(tickers, desc='Experiments', leave=True)
 
     if not debug_mode and experiment_mode != 'demo':
         # by default run experiments in parallel for all tickers
@@ -92,8 +89,7 @@ def run_main(experiment_mode
         exp_pool.close()
         exp_pool.join()
     else:
-        # in debug or demo mode, run the experiment in series
-        # sub processes ARE pooled
+        # outside of debug, run each forecasting thing in series but have each one run with multiprocessor
 
         exp_results = [run_experiment(experiment_mode=experiment_mode
                                       , device=device
@@ -106,6 +102,7 @@ def run_main(experiment_mode
                                       , model_results_folder=model_results_folder
                                       , run_modes=run_modes
                                       , write_data=write_data
+                                      , progress_bar=exp_pbar
                                       ) for i in exp_pbar]
 
     # capture total clock time in experiment

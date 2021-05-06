@@ -27,7 +27,13 @@ def setup_arima(train_data
     plt.show()
 
 
-def run_arima(chunked_data, seasonal_unit, price_col='y', n_prediction_units=1, prediction_frequency='1min'):
+def run_arima(chunked_data
+              , seasonal_unit
+              , price_col='y'
+              , n_prediction_units=1
+              , prediction_frequency='1min'
+              , progress_bar=None
+              ):
     # supress trivial warnings from ARIMA
     warnings.simplefilter('ignore', ConvergenceWarning)
 
